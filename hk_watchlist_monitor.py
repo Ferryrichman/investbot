@@ -29,8 +29,8 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 # ============================================================
 # ★ 配置區 ★
 # ============================================================
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
-CHAT_ID        = os.environ.get("CHAT_ID", "")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8784672432:AAFx5xQoF0oWSFQcbRm62ucVgssgMgDzqtc")
+CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
 
 # ── Watchlist ──────────────────────────────────────────────
 # 格式: "股票號碼": {"board": "main"/"gem", "shell_m": 殼價百萬(可選), "lot": 每手股數(可選)}
