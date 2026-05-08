@@ -1,0 +1,9 @@
+name = "investbot-tg-webhook"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Set these in Cloudflare Dashboard → Settings → Variables
+# Or use: wrangler secret put TELEGRAM_TOKEN
+#          wrangler secret put CHAT_ID
+#          wrangler secret put GITHUB_TOKEN
+#          wrangler secret put GITHUB_REPO

@@ -29,8 +29,8 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 # ============================================================
 # ★ 配置區 ★
 # ============================================================
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8784672432:AAFx5xQoF0oWSFQcbRm62ucVgssgMgDzqtc")
-CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+CHAT_ID        = os.environ.get("CHAT_ID", "")
 
 # ── Watchlist ──────────────────────────────────────────────
 # 格式: "股票號碼": {"board": "main"/"gem", "shell_m": 殼價百萬(可選), "lot": 每手股數(可選)}
@@ -107,7 +107,11 @@ WATCHLIST: dict[str, dict] = {
 }
 
 # ── 每注固定金額 (HKD) ────────────────────────────────────
-TRANCHE_SIZE = 10_000   # 每次買入 $10,000
+TRANCHE_SIZE = 8_000    # 每次買入 $8,000
+
+# ── 資金管理 ─────────────────────────────────────────────
+TOTAL_PORTFOLIO = 411_500   # 帳面總值 (定期更新)
+MIN_CASH_PCT    = 0.35      # 保持至少35%現金
 
 # ── 主板買入觸發市值 (百萬 HKD) ───────────────────────────
 # 每個數字係一個買入層，市值跌穿就入一注 TRANCHE_SIZE
@@ -485,23 +489,13 @@ def check_take_profit(
         m1_gain_ok = m1["gain_pct"] is not None and gain_pct >= m1["gain_pct"]
 
         if m1_mcap_ok or m1_gain_ok:
-            triggers = []
-            if m1_mcap_ok:
-                triggers.append(f"市值{mcap_m:.0f}M≥{m1['mcap_m']}M + 浮盈{gain_pct:.0f}%≥{m1.get('mcap_gain_pct',100):.0f}%")
-            if m1_gain_ok:
-                triggers.append(f"浮盈{gain_pct:.0f}%≥{m1['gain_pct']:.0f}%")
-            trigger_desc = " / ".join(triggers)
             signals.append({
                 "type": "ZERO_COST",
-                "msg": (
-                    f"[0成本+M1] {trigger_desc}  "
-                    f"賣 {sell_lots}手 ({sell_shares:,}股, {sell_pct:.0f}%)  "
-                    f"≈ HKD {recv_hkd:,.0f}  →  {remain:,}股 0成本持倉  (完成後M1自動done)"
-                ),
-                "shares_to_sell": sell_shares,
-                "lots_to_sell":   sell_lots,
-                "hkd_to_receive": recv_hkd,
-                "auto_m1_done":   True,   # zerocost 指令記錄時自動 mark post_zero_done=[0]
+                "sell_lots": sell_lots,
+                "sell_shares": sell_shares,
+                "recv_hkd": recv_hkd,
+                "remain": remain,
+                "auto_m1_done": True,
             })
 
     # ── 階段二：已達0成本，追蹤後市目標 ──────────────────
@@ -539,43 +533,32 @@ def check_take_profit(
                 triggers.append(f"浮盈{gain_pct:.0f}%≥{ms['gain_pct']:.0f}%")
             trigger_desc = " / ".join(triggers)
 
-            # 計算賣出股數
             sell_frac = ms["sell_frac"]
             if sell_frac is None:
-                # M1：鏡像建議（與0成本賣出量相同），唔計入 shares_to_sell
                 mirror = round_to_lots(zero_sold, lot_size, "down") or lot_size
-                mirror = min(mirror, zero_shares)  # 唔能超過剩餘
+                mirror = min(mirror, zero_shares)
                 mirror_lots = mirror // lot_size
                 signals.append({
                     "type": f"POST_ZERO_{i}",
-                    "msg": (
-                        f"[後市止賺] {ms['label']}  {trigger_desc}  "
-                        f"建議賣 {mirror_lots}手 ({mirror:,}股) ≈ HKD {mirror*current_price:,.0f}  "
-                        f"(鏡像0成本賣出量，可自行調整)  剩餘{zero_shares-mirror:,}股免費持有"
-                    ),
-                    "shares_to_sell": mirror,
-                    "lots_to_sell": mirror_lots,
-                    "hkd_to_receive": mirror * current_price,
+                    "label": ms["label"],
+                    "sell_lots": mirror_lots,
+                    "sell_shares": mirror,
+                    "recv_hkd": mirror * current_price,
+                    "remain": zero_shares - mirror,
                     "milestone_idx": i,
-                    "manual_adjust": True,
                 })
             else:
                 raw_sell    = zero_shares * sell_frac
                 shares_sell = round_to_lots(raw_sell, lot_size, "down")
                 lots_sell   = shares_sell // lot_size
-                recv_hkd    = shares_sell * current_price
                 signals.append({
                     "type": f"POST_ZERO_{i}",
-                    "msg": (
-                        f"[後市止賺] {ms['label']}  {trigger_desc}  "
-                        f"賣 {lots_sell}手 ({shares_sell:,}股, {sell_frac*100:.0f}%剩餘)  "
-                        f"≈ HKD {recv_hkd:,.0f}  餘下{zero_shares-shares_sell:,}股免費持有"
-                    ),
-                    "shares_to_sell": shares_sell,
-                    "lots_to_sell": lots_sell,
-                    "hkd_to_receive": recv_hkd,
+                    "label": ms["label"],
+                    "sell_lots": lots_sell,
+                    "sell_shares": shares_sell,
+                    "recv_hkd": shares_sell * current_price,
+                    "remain": zero_shares - shares_sell,
                     "milestone_idx": i,
-                    "manual_adjust": False,
                 })
 
     return signals
@@ -606,6 +589,13 @@ def fmt_mcap(mcap_m: float) -> str:
 BOARD_LABEL = {"main": "主板", "gem": "創業板"}
 
 
+def _get_shares(tranches: list[dict], lot_size: int) -> int:
+    return sum(
+        t.get("shares") or round_to_lots(t["hkd"] / t["price"], lot_size, "down")
+        for t in tranches if t.get("price", 0) > 0
+    )
+
+
 def build_stock_block(
     code: str, board: str, quote: dict,
     stock_st: dict, new_tiers: list[int],
@@ -625,54 +615,54 @@ def build_stock_block(
     avg_cost = calc_avg_cost(tranches) if tranches else None
     gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else None
 
-    # ── 頭部一行 ──
-    prefix = ""
-    if new_tiers:   prefix = "[買入] "
-    if tp_signals:  prefix = "[止賺] "
-    if new_tiers and tp_signals: prefix = "[買入+止賺] "
+    lines = []
 
-    zero_tag = " [0成本]" if zero_done else ""
-    gain_tag = f"  浮盈{gain_pct:+.0f}%" if gain_pct is not None else ""
-    inv_tag  = f"  已投${total_invested:,.0f}" if tranches and not zero_done else ""
-    z_shares = stock_st.get("zero_cost_shares", 0) or 0
-    z_tag    = f"  免費{z_shares:,}股" if zero_done and z_shares else ""
+    # ── 第一行：股票名 + 價格 + 市值 ──
+    code4 = f"{int(code):04d}"
+    chg_str = f" {sign}{chg:.1f}%" if chg != 0 else ""
+    lines.append(f"{code4} {name}  ${price:.3f}{chg_str}  {fmt_mcap(mcap_m)}")
 
-    lines = [
-        f"{prefix}[{int(code):04d}] {name}{zero_tag}  "
-        f"${price:.3f} {sign}{chg:.1f}%  {fmt_mcap(mcap_m)}{gain_tag}{inv_tag}{z_tag}"
-    ]
+    # ── 第二行：持倉 ──
+    if zero_done:
+        z_shares = stock_st.get("zero_cost_shares", 0) or 0
+        z_val = z_shares * price
+        lines.append(f"  免費{z_shares:,}股 值${z_val:,.0f}")
+    elif tranches:
+        shares = _get_shares(tranches, lot_size)
+        val = shares * price
+        gain_str = f" {gain_pct:+.0f}%" if gain_pct is not None else ""
+        lines.append(f"  持{shares:,}股 值${val:,.0f} 投${total_invested:,.0f}{gain_str}")
 
     # ── 買入訊號 ──
     for nt in new_tiers:
         est_shares = round_to_lots(TRANCHE_SIZE / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else "?"
         lines.append(
-            f"  → 買入 市值跌穿{fmt_mcap(nt)} "
-            f"{est_lots}手({est_shares:,}股) ≈ ${est_shares*price:,.0f}"
+            f"  >> 買入 {est_lots}手({est_shares:,}股) ${est_shares*price:,.0f}"
         )
 
     # ── 止賺訊號 ──
     for sig in tp_signals:
-        lines.append(f"  → {sig['msg']}")
+        sl = sig.get("sell_lots", 0)
+        ss = sig.get("sell_shares", 0)
+        rv = sig.get("recv_hkd", 0)
+        rm = sig.get("remain", 0)
+        label = sig.get("label", "0成本")
+        if sig["type"] == "ZERO_COST":
+            lines.append(f"  >> 賣{sl}手({ss:,}股)收${rv:,.0f} 剩{rm:,}股免費")
+        else:
+            lines.append(f"  >> {label} 賣{sl}手({ss:,}股)收${rv:,.0f} 剩{rm:,}股")
 
-    # ── 0成本後市目標進度 ──
-    if zero_done and z_shares:
+    # ── 0成本後市目標 ──
+    if zero_done:
+        z_shares = stock_st.get("zero_cost_shares", 0) or 0
         milestones = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
-        done_idx   = stock_st.get("post_zero_done", [])
-        for i, ms in enumerate(milestones):
-            if i in done_idx:
-                continue
-            mcap_req = ms["mcap_m"]
-            label    = ms["label"]
-            if ms["sell_frac"]:
-                sell_q = round_to_lots(z_shares * ms["sell_frac"], lot_size, "down")
-                action = f"賣{sell_q:,}股({sell_q*price:,.0f}$)"
-            else:
-                action = "按持倉決定賣出量"
-            curr = " ← 已達到!" if mcap_m >= mcap_req else ""
-            lines.append(f"  [後市{i+1}] {label}: {action}{curr}")
+        done_idx = stock_st.get("post_zero_done", [])
+        next_ms = next((ms for i, ms in enumerate(milestones) if i not in done_idx), None)
+        if next_ms:
+            lines.append(f"  下一目標: {next_ms['label']}")
 
-    # ── CCASS 警示 + 備注 ──
+    # ── CCASS + 備注 ──
     for a in (ccass_alerts or []):
         lines.append(f"  ! {a}")
     for n in stock_st.get("notes", []):
@@ -829,8 +819,8 @@ def monitor_report(alert_only: bool = False) -> str:
     save_state(new_state)
 
     # ── 持倉總覽 ──
-    total_inv = total_val = total_gain = 0.0
-    n_holdings = n_zero = 0
+    total_inv = total_val = 0.0
+    n_holdings = n_zero = n_can_zero = 0
     for code2, st2 in new_state.items():
         tr = st2.get("tranches", [])
         if not tr:
@@ -840,52 +830,72 @@ def monitor_report(alert_only: bool = False) -> str:
         total_inv += inv
         p2 = st2.get("last_price") or 0
         ls = st2.get("lot_size", 1)
-        shares2 = sum(
-            round_to_lots(t["hkd"] / t["price"], ls, "down")
-            for t in tr if t.get("price", 0) > 0
-        )
+        shares2 = _get_shares(tr, ls)
         if st2.get("zero_cost_achieved"):
             n_zero += 1
             val2 = (st2.get("zero_cost_shares") or 0) * p2
         else:
             val2 = shares2 * p2
-        total_val  += val2
-        total_gain += val2 - inv
+            avg2 = calc_avg_cost(tr)
+            g2 = calc_gain_pct(avg2, p2) if avg2 and p2 else 0
+            mcap2 = st2.get("last_mcap_m", 0)
+            board2 = get_board(WATCHLIST.get(code2, {}))
+            m1 = (POST_ZERO_MAIN if board2 == "main" else POST_ZERO_GEM)[0]
+            if (g2 >= (m1.get("gain_pct") or 999)) or \
+               (mcap2 >= m1["mcap_m"] and g2 >= (m1.get("mcap_gain_pct") or 100)):
+                n_can_zero += 1
+        total_val += val2
 
+    total_gain     = total_val - total_inv
     gain_pct_total = total_gain / total_inv * 100 if total_inv > 0 else 0
-    gain_sign      = "+" if total_gain >= 0 else ""
+    gs             = "+" if total_gain >= 0 else ""
+    cash_est       = TOTAL_PORTFOLIO - total_inv
+    cash_pct       = cash_est / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
+    cash_ok        = cash_pct >= MIN_CASH_PCT * 100
+    cash_icon      = "OK" if cash_ok else "LOW"
+    deploy_limit   = TOTAL_PORTFOLIO * (1 - MIN_CASH_PCT)
 
-    # ── 買入層表（一次性）──
-    main_tiers_str = "/".join(fmt_mcap(t) for t in MAIN_TIERS_M)
-    gem_tiers_str  = "/".join(fmt_mcap(t) for t in GEM_TIERS_M)
-    max_main = TRANCHE_SIZE * len(MAIN_TIERS_M)
-    max_gem  = TRANCHE_SIZE * len(GEM_TIERS_M)
+    sep = "\n"
 
-    sep  = "\n" + "-" * 40 + "\n"
-    sep2 = "\n" + "=" * 40 + "\n"
+    zero_str = f"已0成本{n_zero}隻"
+    if n_can_zero:
+        zero_str += f" 可0成本{n_can_zero}隻"
 
     summary = (
-        f"Watchlist | {now} HKT\n"
-        f"{'='*40}\n"
-        f"持倉: {n_holdings}隻 | 已0成本: {n_zero}隻\n"
-        f"已投: ${total_inv:,.0f}  現值: ${total_val:,.0f}  浮盈: {gain_sign}${total_gain:,.0f} ({gain_sign}{gain_pct_total:.1f}%)\n"
-        f"{'='*40}\n"
-        f"買入計劃 (每注${TRANCHE_SIZE:,})\n"
-        f"  主板 {len(MAIN_TIERS_M)}層 ≤ {main_tiers_str} (最多${max_main:,})\n"
-        f"  創業板 {len(GEM_TIERS_M)}層 ≤ {gem_tiers_str} (最多${max_gem:,})\n"
-        f"  0成本: 主板市值≥4億+浮盈≥100% / 浮盈≥200% | 創業板市值≥1.5億+浮盈≥100% / 浮盈≥200%\n"
-        f"{'='*40}"
+        f"Watchlist {now}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"持倉{n_holdings}隻 | {zero_str}\n"
+        f"已投${total_inv:,.0f} 現值${total_val:,.0f}\n"
+        f"浮盈{gs}${total_gain:,.0f} ({gs}{gain_pct_total:.0f}%)\n"
+        f"現金{cash_pct:.0f}% [{cash_icon}] "
+        f"可用${cash_est:,.0f}/${TOTAL_PORTFOLIO:,.0f}\n"
+        f"━━━━━━━━━━━━━━━━━━━━"
     )
+
+    if not cash_ok:
+        summary += f"\n⚠ 現金低於{MIN_CASH_PCT*100:.0f}%! 暫停買入"
 
     if alert_only:
         if not signal_blocks:
-            return f"{summary}\n\n[OK] 暫無新訊號"
-        return summary + "\n\n" + sep.join(signal_blocks)
+            return f"{summary}\n\n暫無新訊號"
+        n_sig = len(signal_blocks)
+        return summary + f"\n\n止賺信號 ({n_sig}隻)\n" + sep.join(signal_blocks)
 
-    body = sep.join(all_blocks) if all_blocks else "(WATCHLIST 為空)"
+    # ── Full report: signals first, then others ──
+    parts = [summary]
+    if signal_blocks:
+        parts.append(f"\n止賺/買入信號 ({len(signal_blocks)}隻)")
+        parts.extend(signal_blocks)
+        parts.append("━━━━━━━━━━━━━━━━━━━━")
+
+    quiet = [b for b in all_blocks if b not in signal_blocks]
+    if quiet:
+        parts.append("其餘持倉")
+        parts.extend(quiet)
+
     if no_data:
-        body += f"\n\n[無數據] {', '.join(no_data)}"
-    return summary + "\n\n" + body
+        parts.append(f"\n[無數據] {', '.join(no_data)}")
+    return sep.join(parts)
 
 
 # ============================================================
