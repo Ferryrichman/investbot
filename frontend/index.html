@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HK 財技股 Monitor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>🎯 HK 財技股 Monitor</h1>
+  <div class="meta">
+    Updated: <span id="generated_at">—</span>
+    &nbsp;·&nbsp;
+    <span id="stock_count">0</span> stocks
+  </div>
+</header>
+
+<main>
+  <aside id="filters">
+    <h2>篩選條件</h2>
+    <div class="filter-group">
+      <label><input type="checkbox" id="f_hard_pass" checked> 只睇全部硬條件命中</label>
+      <label><input type="checkbox" id="f_hide_unknown_raise"> 隱藏 raise 未填</label>
+    </div>
+
+    <h3>板塊</h3>
+    <div class="filter-group">
+      <label><input type="checkbox" class="board_filter" value="Main" checked> 主板</label>
+      <label><input type="checkbox" class="board_filter" value="GEM" checked> 創業板</label>
+    </div>
+
+    <h3>個別硬條件</h3>
+    <div class="filter-group">
+      <label><input type="checkbox" class="check_filter" value="mcap" checked>市值 (主≤4億 / GEM≤2億)</label>
+      <label><input type="checkbox" class="check_filter" value="raise"> IPO集資 (主≤1.5億 / GEM≤0.8億)</label>
+      <label><input type="checkbox" class="check_filter" value="recent_ipo"> 近 4 年上市</label>
+      <label><input type="checkbox" class="check_filter" value="concentration"> 大莊 ≥ 75%</label>
+      <label><input type="checkbox" class="check_filter" value="brokers"> 券商 &lt; 120 間</label>
+      <label><input type="checkbox" class="check_filter" value="turnover"> 成交 &lt; 100萬</label>
+      <label><input type="checkbox" class="check_filter" value="sideways"> 300日 range &lt; 30%</label>
+      <label><input type="checkbox" class="check_filter" value="sponsor"> 保薦人有炒作記錄</label>
+    </div>
+
+    <h3>行業 Tag</h3>
+    <div class="filter-group">
+      <label><input type="checkbox" class="tag_filter" value="shell_friendly"> 殼價較高 (建築/金融/地產)</label>
+      <label><input type="checkbox" class="tag_filter" value="acct_friendly"> 易做數 (建築/IT)</label>
+      <label><input type="checkbox" class="tag_filter" value="sunset"> 夕陽/奇怪行業</label>
+    </div>
+
+    <h3>排除</h3>
+    <div class="filter-group">
+      <label><input type="checkbox" id="exclude_hshare" checked> 排除 H 股 / 內資</label>
+      <label><input type="checkbox" id="exclude_ch21" checked> 排除 21 章公司</label>
+    </div>
+
+    <button id="reset_btn">重設</button>
+    <div class="legend">
+      <h3>圖例</h3>
+      <div>✅ pass · ❌ fail · ❓ data missing</div>
+    </div>
+  </aside>
+
+  <section id="results">
+    <table id="stock_table">
+      <thead>
+        <tr>
+          <th>分</th>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th>板塊</th>
+          <th>市值</th>
+          <th>上市日期</th>
+          <th>集資額</th>
+          <th>保薦人 (命中率)</th>
+          <th>大莊</th>
+          <th>券商</th>
+          <th>成交</th>
+          <th>Range%</th>
+          <th>行業</th>
+          <th>條件</th>
+        </tr>
+      </thead>
+      <tbody id="stock_tbody"></tbody>
+    </table>
+    <div id="empty_state" style="display:none;padding:40px;text-align:center;color:#888">
+      冇符合條件嘅股票。試下放寬 filter。
+    </div>
+  </section>
+</main>
+
+<dialog id="detail_modal">
+  <button id="close_detail">×</button>
+  <div id="detail_content"></div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

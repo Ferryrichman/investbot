@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code per-user state
+.claude/settings.local.json
+
+# SQLite write-ahead-log files (lock state, not data)
+data/screener.db-journal
+data/screener.db-wal
+data/screener.db-shm
+# Note: data/screener.db IS tracked - GH Actions appends daily history to it
+
+# Local logs
+*.log
+
+# Telegram bot legacy (含 secrets,唔好 push)
+investment_bot.py
