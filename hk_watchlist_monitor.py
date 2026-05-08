@@ -29,7 +29,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 # ============================================================
 # ★ 配置區 ★
 # ============================================================
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8784672432:AAFx5xQoF0oWSFQcbRm62ucVgssgMgDzqtc")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8795735773:AAEeKN_eIc1_TEcxqAZvFSVHh85GAbfE8vA")
 CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
 
 # ── Watchlist ──────────────────────────────────────────────
