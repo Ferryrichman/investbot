@@ -309,9 +309,14 @@ def fetch_hk_quote(code: str) -> dict | None:
         if not res:
             return None
         q = res[0]
+        short = q.get("shortName", symbol)
+        long_ = q.get("longName", "")
+        # prefer longName if it contains Chinese characters
+        name = long_ if long_ and any('一' <= c <= '鿿' for c in long_) else short
         return {
             "symbol": symbol,
-            "name":   q.get("shortName", symbol),
+            "name":   name,
+            "name_en": short,
             "price":  q.get("regularMarketPrice"),
             "chg":    q.get("regularMarketChangePercent", 0),
             "mcap":   q.get("marketCap"),
@@ -592,6 +597,12 @@ def fmt_hkd(val: float) -> str:
     return f"${val:,.0f}"
 
 
+def fmt_mcap(mcap_m: float) -> str:
+    """Market cap in 億 HKD"""
+    yi = mcap_m / 100
+    return f"{yi:.2f}億" if yi < 10 else f"{yi:.1f}億"
+
+
 BOARD_LABEL = {"main": "主板", "gem": "創業板"}
 
 
@@ -601,95 +612,71 @@ def build_stock_block(
     tp_signals: list[dict],
     ccass_alerts: list[str] | None = None,
 ) -> str:
-    mcap     = quote["mcap"]
-    mcap_m   = mcap / 1e6
-    lot_size = stock_st.get("lot_size", 1)
-    price    = quote["price"]
-    chg      = quote.get("chg") or 0
-    name     = quote["name"]
-    tiers    = get_tiers(board)
-    shell_m  = get_shell_m(board)
-    tranches = stock_st.get("tranches", [])
+    mcap_m    = quote["mcap"] / 1e6
+    lot_size  = stock_st.get("lot_size", 1)
+    price     = quote["price"]
+    chg       = quote.get("chg") or 0
+    name      = quote["name"]
+    tranches  = stock_st.get("tranches", [])
     zero_done = stock_st.get("zero_cost_achieved", False)
 
-    arrow = "+" if chg >= 0 else ""
-    triggered = tiers_triggered(mcap_m, board)
+    sign = "+" if chg >= 0 else ""
     total_invested = sum(t["hkd"] for t in tranches)
-    max_position   = TRANCHE_SIZE * len(tiers)
-
     avg_cost = calc_avg_cost(tranches) if tranches else None
     gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else None
 
-    lines = []
+    # ── 頭部一行 ──
+    prefix = ""
+    if new_tiers:   prefix = "[買入] "
+    if tp_signals:  prefix = "[止賺] "
+    if new_tiers and tp_signals: prefix = "[買入+止賺] "
 
-    # ── 頭部 ──
-    alert_prefix = "[BUY SIGNAL] " if new_tiers else ""
-    tp_prefix    = "[TAKE PROFIT] " if tp_signals else ""
-    zero_tag     = " [0成本持倉]" if zero_done else ""
-    lines.append(f"{alert_prefix}{tp_prefix}[{int(code):04d}.HK] {name} ({BOARD_LABEL[board]}){zero_tag}")
-    lines.append(f"  價格: {price:.3f}  {arrow}{chg:.2f}%  |  市值: {mcap_m:.1f}M")
+    zero_tag = " [0成本]" if zero_done else ""
+    gain_tag = f"  浮盈{gain_pct:+.0f}%" if gain_pct is not None else ""
+    inv_tag  = f"  已投${total_invested:,.0f}" if tranches and not zero_done else ""
+    z_shares = stock_st.get("zero_cost_shares", 0) or 0
+    z_tag    = f"  免費{z_shares:,}股" if zero_done and z_shares else ""
 
-    # ── 持倉狀況 ──
-    if tranches:
-        gain_str = f"{gain_pct:+.1f}%" if gain_pct is not None else "N/A"
-        if zero_done:
-            z_shares = stock_st.get("zero_cost_shares", 0) or 0
-            z_val    = z_shares * price
-            lines.append(
-                f"  [0成本持倉]  剩餘 {z_shares:,.0f} 股  "
-                f"市值 HKD {z_val:,.0f}  (原投: HKD {total_invested:,.0f} 已全回收)"
-            )
-            # 後市目標進度
-            done_idx = stock_st.get("post_zero_done", [])
-            lines.append(f"  -- 後市目標 (殼價={shell_m}M) --")
-            for i, (mult, frac, label) in enumerate(POST_ZERO_MILESTONES):
-                target_m  = shell_m * mult
-                done_mark = "done" if i in done_idx else "wait"
-                curr_mark = " << 現達到" if (mcap_m >= target_m and i not in done_idx) else ""
-                lines.append(
-                    f"    [{done_mark}] {label}  市值>={target_m:.0f}M  "
-                    f"→ 賣 {frac*100:.0f}% 剩餘股 ({z_shares*frac:,.0f}股){curr_mark}"
-                )
-            lines.append(f"    [hold] 最後25% — 等 CCASS OUT / 大戶信號")
-        else:
-            lines.append(
-                f"  平均成本: {avg_cost:.4f}  |  浮盈: {gain_str}  "
-                f"|  已投: HKD {total_invested:,.0f}"
-            )
+    lines = [
+        f"{prefix}[{int(code):04d}] {name}{zero_tag}  "
+        f"${price:.3f} {sign}{chg:.1f}%  {fmt_mcap(mcap_m)}{gain_tag}{inv_tag}{z_tag}"
+    ]
 
-    # ── 新買入訊號（顯示整手數量）──
-    if new_tiers:
-        for nt in new_tiers:
-            est_shares = round_to_lots(TRANCHE_SIZE / price, lot_size, "down")
-            est_lots   = est_shares // lot_size if lot_size > 0 else "?"
-            lines.append(
-                f"  *** 買入: 市值跌穿 {nt}M → "
-                f"{est_lots}手 ({est_shares:,}股) ≈ HKD {est_shares*price:,.0f} ***"
-            )
+    # ── 買入訊號 ──
+    for nt in new_tiers:
+        est_shares = round_to_lots(TRANCHE_SIZE / price, lot_size, "down")
+        est_lots   = est_shares // lot_size if lot_size > 0 else "?"
+        lines.append(
+            f"  → 買入 市值跌穿{fmt_mcap(nt)} "
+            f"{est_lots}手({est_shares:,}股) ≈ ${est_shares*price:,.0f}"
+        )
 
     # ── 止賺訊號 ──
     for sig in tp_signals:
-        lines.append(f"  !!! {sig['msg']} !!!")
+        lines.append(f"  → {sig['msg']}")
 
-    # ── 買入計劃進度 ──
-    if not zero_done:
-        lines.append(f"  -- 買入計劃 (每注 HKD {TRANCHE_SIZE:,}, 最大 HKD {max_position:,}) --")
-        for t in tiers:
-            is_done = mcap_m <= t
-            status  = "done" if is_done else "wait"
-            current = " << 當前層" if (is_done and t == max(triggered, default=0)) else ""
-            lines.append(f"    [{status}] 市值<{t}M → HKD {TRANCHE_SIZE:,}{current}")
-        lines.append(f"  已投: HKD {total_invested:,} / {max_position:,}  |  殼價: {shell_m}M")
+    # ── 0成本後市目標進度 ──
+    if zero_done and z_shares:
+        milestones = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
+        done_idx   = stock_st.get("post_zero_done", [])
+        for i, ms in enumerate(milestones):
+            if i in done_idx:
+                continue
+            mcap_req = ms["mcap_m"]
+            label    = ms["label"]
+            if ms["sell_frac"]:
+                sell_q = round_to_lots(z_shares * ms["sell_frac"], lot_size, "down")
+                action = f"賣{sell_q:,}股({sell_q*price:,.0f}$)"
+            else:
+                action = "按持倉決定賣出量"
+            curr = " ← 已達到!" if mcap_m >= mcap_req else ""
+            lines.append(f"  [後市{i+1}] {label}: {action}{curr}")
 
-    # ── 止損備注 ──
-    notes       = stock_st.get("notes", [])
-    auto_alerts = ccass_alerts or []
-    if notes or auto_alerts:
-        lines.append("  [STOP SIGNALS]")
-        for alert in auto_alerts:
-            lines.append(f"    ! {alert}")
-        for n in notes:
-            lines.append(f"    - {n}")
+    # ── CCASS 警示 + 備注 ──
+    for a in (ccass_alerts or []):
+        lines.append(f"  ! {a}")
+    for n in stock_st.get("notes", []):
+        lines.append(f"  - {n}")
 
     return "\n".join(lines)
 
@@ -841,19 +828,64 @@ def monitor_report(alert_only: bool = False) -> str:
 
     save_state(new_state)
 
-    sep = "\n" + "-" * 40 + "\n"
+    # ── 持倉總覽 ──
+    total_inv = total_val = total_gain = 0.0
+    n_holdings = n_zero = 0
+    for code2, st2 in new_state.items():
+        tr = st2.get("tranches", [])
+        if not tr:
+            continue
+        n_holdings += 1
+        inv = sum(t["hkd"] for t in tr)
+        total_inv += inv
+        p2 = st2.get("last_price") or 0
+        ls = st2.get("lot_size", 1)
+        shares2 = sum(
+            round_to_lots(t["hkd"] / t["price"], ls, "down")
+            for t in tr if t.get("price", 0) > 0
+        )
+        if st2.get("zero_cost_achieved"):
+            n_zero += 1
+            val2 = (st2.get("zero_cost_shares") or 0) * p2
+        else:
+            val2 = shares2 * p2
+        total_val  += val2
+        total_gain += val2 - inv
+
+    gain_pct_total = total_gain / total_inv * 100 if total_inv > 0 else 0
+    gain_sign      = "+" if total_gain >= 0 else ""
+
+    # ── 買入層表（一次性）──
+    main_tiers_str = "/".join(fmt_mcap(t) for t in MAIN_TIERS_M)
+    gem_tiers_str  = "/".join(fmt_mcap(t) for t in GEM_TIERS_M)
+    max_main = TRANCHE_SIZE * len(MAIN_TIERS_M)
+    max_gem  = TRANCHE_SIZE * len(GEM_TIERS_M)
+
+    sep  = "\n" + "-" * 40 + "\n"
+    sep2 = "\n" + "=" * 40 + "\n"
+
+    summary = (
+        f"Watchlist | {now} HKT\n"
+        f"{'='*40}\n"
+        f"持倉: {n_holdings}隻 | 已0成本: {n_zero}隻\n"
+        f"已投: ${total_inv:,.0f}  現值: ${total_val:,.0f}  浮盈: {gain_sign}${total_gain:,.0f} ({gain_sign}{gain_pct_total:.1f}%)\n"
+        f"{'='*40}\n"
+        f"買入計劃 (每注${TRANCHE_SIZE:,})\n"
+        f"  主板 {len(MAIN_TIERS_M)}層 ≤ {main_tiers_str} (最多${max_main:,})\n"
+        f"  創業板 {len(GEM_TIERS_M)}層 ≤ {gem_tiers_str} (最多${max_gem:,})\n"
+        f"  0成本: 主板市值≥4億+浮盈≥100% / 浮盈≥200% | 創業板市值≥1.5億+浮盈≥100% / 浮盈≥200%\n"
+        f"{'='*40}"
+    )
 
     if alert_only:
         if not signal_blocks:
-            return f"Watchlist Monitor | {now}\n[OK] 暫無新訊號"
-        header = f"[SIGNALS] Watchlist | {now}\n{'='*40}\n"
-        return header + sep.join(signal_blocks)
+            return f"{summary}\n\n[OK] 暫無新訊號"
+        return summary + "\n\n" + sep.join(signal_blocks)
 
-    header = f"Watchlist Monitor | {now}\n{'='*40}\n"
-    body = sep.join(all_blocks) if all_blocks else "(WATCHLIST 為空，請填入股票號碼)"
+    body = sep.join(all_blocks) if all_blocks else "(WATCHLIST 為空)"
     if no_data:
         body += f"\n\n[無數據] {', '.join(no_data)}"
-    return header + body
+    return summary + "\n\n" + body
 
 
 # ============================================================
@@ -1025,7 +1057,6 @@ if __name__ == "__main__":
         print_allocation_plan()
 
     elif mode == "check":
-        print_allocation_plan()
         print(monitor_report(alert_only=False))
 
     elif mode == "alert":

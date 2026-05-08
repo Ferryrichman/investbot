@@ -2,8 +2,6 @@ name: HK Watchlist Monitor
 
 on:
   schedule:
-    # 港股收市後 check (HKT 16:30 = UTC 08:30)
-    - cron: '30 8 * * 1-5'   # 週一至週五 16:30 HKT
     # 早上開市前 check (HKT 09:00 = UTC 01:00)
     - cron: '0 1 * * 1-5'    # 週一至週五 09:00 HKT
   workflow_dispatch:
@@ -35,7 +33,7 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           MODE="${{ inputs.mode }}"
-          python hk_watchlist_monitor.py ${MODE:-send}
+          python hk_watchlist_monitor.py ${MODE:-alert}
 
       - name: Save state
         run: |
