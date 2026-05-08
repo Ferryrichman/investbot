@@ -616,22 +616,25 @@ def build_stock_block(
     gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else None
 
     lines = []
-
-    # ── 第一行：股票名 + 價格 + 市值 ──
     code4 = f"{int(code):04d}"
     chg_str = f" {sign}{chg:.1f}%" if chg != 0 else ""
-    lines.append(f"{code4} {name}  ${price:.3f}{chg_str}  {fmt_mcap(mcap_m)}")
 
-    # ── 第二行：持倉 ──
+    # ── 股票名 ──
+    lines.append(f"{code4} {name}")
+    # ── 價格 + 市值 ──
+    lines.append(f" ${price:.3f}{chg_str} [{fmt_mcap(mcap_m)}]")
+
+    # ── 持倉 ──
     if zero_done:
         z_shares = stock_st.get("zero_cost_shares", 0) or 0
         z_val = z_shares * price
-        lines.append(f"  免費{z_shares:,}股 值${z_val:,.0f}")
+        lines.append(f"  0成本{z_shares:,}股 值${z_val:,.0f}")
     elif tranches:
         shares = _get_shares(tranches, lot_size)
         val = shares * price
-        gain_str = f" {gain_pct:+.0f}%" if gain_pct is not None else ""
-        lines.append(f"  持{shares:,}股 值${val:,.0f} 投${total_invested:,.0f}{gain_str}")
+        lines.append(f"  持{shares:,}股 值${val:,.0f}")
+        gain_str = f" [{gain_pct:+.0f}%]" if gain_pct is not None else ""
+        lines.append(f"成本投入${total_invested:,.0f}{gain_str}")
 
     # ── 買入訊號 ──
     for nt in new_tiers:
@@ -647,11 +650,11 @@ def build_stock_block(
         ss = sig.get("sell_shares", 0)
         rv = sig.get("recv_hkd", 0)
         rm = sig.get("remain", 0)
-        label = sig.get("label", "0成本")
+        label = sig.get("label", "")
         if sig["type"] == "ZERO_COST":
-            lines.append(f"  >> 賣{sl}手({ss:,}股)收${rv:,.0f} 剩{rm:,}股免費")
+            lines.append(f"  >> 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股0成本")
         else:
-            lines.append(f"  >> {label} 賣{sl}手({ss:,}股)收${rv:,.0f} 剩{rm:,}股")
+            lines.append(f"  >> {label} 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股")
 
     # ── 0成本後市目標 ──
     if zero_done:
@@ -875,17 +878,26 @@ def monitor_report(alert_only: bool = False) -> str:
     if not cash_ok:
         summary += f"\n⚠ 現金低於{MIN_CASH_PCT*100:.0f}%! 暫停買入"
 
+    dash = "-------------------"
+
+    def _numbered(blocks):
+        out = []
+        for i, b in enumerate(blocks, 1):
+            first_line, rest = b.split("\n", 1)
+            out.append(f"{i}. {first_line}\n{rest}")
+        return f"\n{dash}\n".join(out)
+
     if alert_only:
         if not signal_blocks:
             return f"{summary}\n\n暫無新訊號"
         n_sig = len(signal_blocks)
-        return summary + f"\n\n止賺信號 ({n_sig}隻)\n" + sep.join(signal_blocks)
+        return summary + f"\n\n止賺信號 ({n_sig}隻)\n{dash}\n" + _numbered(signal_blocks)
 
     # ── Full report: signals first, then others ──
     parts = [summary]
     if signal_blocks:
-        parts.append(f"\n止賺/買入信號 ({len(signal_blocks)}隻)")
-        parts.extend(signal_blocks)
+        parts.append(f"\n止賺/買入信號 ({len(signal_blocks)}隻)\n{dash}")
+        parts.append(_numbered(signal_blocks))
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
     quiet = [b for b in all_blocks if b not in signal_blocks]
