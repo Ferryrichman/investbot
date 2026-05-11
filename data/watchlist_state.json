@@ -852,13 +852,11 @@
     "tier_reached": 6,
     "tranches": [
       {
-        "tier_m": 60,
-        "price": 0.2,
-        "hkd": 3300,
+        "price": 0.412,
+        "hkd": 6798,
         "shares": 16500,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "date": "2026-05-11 06:12",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
