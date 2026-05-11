@@ -326,7 +326,15 @@
   },
   "1473": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.425,
+        "hkd": -1700.0,
+        "shares": 4000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -471,7 +479,15 @@
   },
   "1643": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.001,
+        "hkd": 0.0,
+        "shares": 3000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1146,7 +1162,15 @@
   },
   "6939": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.008,
+        "hkd": -32.0,
+        "shares": 4000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1161,7 +1185,15 @@
   },
   "9929": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.26,
+        "hkd": -2600.0,
+        "shares": 10000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1203,13 +1235,11 @@
     "tier_reached": 3,
     "tranches": [
       {
-        "tier_m": 120,
-        "price": 0.112,
-        "hkd": 6160.0,
-        "shares": 55000,
-        "lots": 0,
+        "price": 0.114,
+        "hkd": 7980.0,
+        "shares": 70000,
         "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "note": "corrected via TG status"
       }
     ],
     "zero_cost_achieved": false,
@@ -1251,7 +1281,15 @@
   },
   "1429": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.001,
+        "hkd": 0.0,
+        "shares": 8000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1291,7 +1329,15 @@
   },
   "2205": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.01,
+        "hkd": -10.0,
+        "shares": 1000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1308,13 +1354,11 @@
     "tier_reached": 6,
     "tranches": [
       {
-        "tier_m": 60,
-        "price": 0.2,
-        "hkd": 3300.0,
+        "price": 0.412,
+        "hkd": 6798.0,
         "shares": 16500,
-        "lots": 0,
         "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "note": "corrected via TG status"
       }
     ],
     "zero_cost_achieved": false,
@@ -1333,13 +1377,11 @@
     "tier_reached": 1,
     "tranches": [
       {
-        "tier_m": 200,
         "price": 0.075,
-        "hkd": 225.0,
-        "shares": 3000,
-        "lots": 0,
+        "hkd": 450.0,
+        "shares": 6000,
         "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "note": "corrected via TG status"
       }
     ],
     "zero_cost_achieved": false,
@@ -1353,5 +1395,24 @@
     "last_price": 0.92,
     "last_check": "2026-05-11 06:39",
     "board": "main"
+  },
+  "1965": {
+    "board": "main",
+    "tier_reached": 0,
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "tranches": [
+      {
+        "price": 0.143,
+        "hkd": 4719.0,
+        "shares": 33000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ]
   }
 }
