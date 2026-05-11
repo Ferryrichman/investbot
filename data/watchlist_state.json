@@ -211,11 +211,11 @@
     "tier_reached": 1,
     "tranches": [
       {
-        "price": 4000,
-        "hkd": -0.425,
-        "shares": -1,
+        "price": -0.425,
+        "hkd": -1700,
+        "shares": 4000,
         "date": "2026-05-11 06:06",
-        "note": "via TG"
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
