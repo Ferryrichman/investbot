@@ -74,6 +74,20 @@ th {
   border-bottom: 1px solid #30363d;
   white-space: nowrap;
 }
+th[data-sort] { cursor: pointer; user-select: none; }
+th[data-sort]:hover { color: #e6edf3; }
+th.sorted-asc::after { content: " ▲"; font-size: 10px; color: #58a6ff; }
+th.sorted-desc::after { content: " ▼"; font-size: 10px; color: #58a6ff; }
+
+.star {
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+  color: #484f58;
+  transition: color 0.15s;
+}
+.star:hover { color: #f8c555; }
+.star.active { color: #f8c555; }
 tbody tr {
   border-bottom: 1px solid #21262d;
   cursor: pointer;

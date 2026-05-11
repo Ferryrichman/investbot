@@ -15,6 +15,89 @@ const CHECK_ORDER = ['mcap','raise','recent_ipo','concentration','brokers','turn
 
 let RAW = null;
 
+// ============================================================
+// Watchlist - persisted in localStorage
+// ============================================================
+const WATCHLIST_KEY = 'hk_screener_watchlist';
+function loadWatchlist() {
+  try { return new Set(JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function saveWatchlist(s) {
+  localStorage.setItem(WATCHLIST_KEY, JSON.stringify([...s]));
+}
+let WATCHLIST = loadWatchlist();
+
+function toggleWatch(code) {
+  if (WATCHLIST.has(code)) WATCHLIST.delete(code);
+  else WATCHLIST.add(code);
+  saveWatchlist(WATCHLIST);
+  updateWatchlistCount();
+  render();
+}
+function updateWatchlistCount() {
+  document.getElementById('watchlist_count').textContent = WATCHLIST.size;
+}
+
+// ============================================================
+// Sort state
+// ============================================================
+let SORT = { col: 'score', dir: 'desc' };  // default
+
+function cmpVal(a, b, col) {
+  let va, vb;
+  if (col === 'watchlist') {
+    va = WATCHLIST.has(a.code) ? 1 : 0;
+    vb = WATCHLIST.has(b.code) ? 1 : 0;
+  } else if (col === 'sponsor_hit_rate') {
+    va = a.sponsor_hit_rate ?? -1;
+    vb = b.sponsor_hit_rate ?? -1;
+  } else if (col === 'code') {
+    va = parseInt(a.code, 10) || 0;
+    vb = parseInt(b.code, 10) || 0;
+  } else {
+    va = a[col]; vb = b[col];
+  }
+  if (va == null && vb == null) return 0;
+  if (va == null) return 1;   // nulls last
+  if (vb == null) return -1;
+  if (typeof va === 'number' && typeof vb === 'number') return va - vb;
+  return String(va).localeCompare(String(vb), 'zh-Hant');
+}
+
+function applySort(arr) {
+  const dir = SORT.dir === 'asc' ? 1 : -1;
+  return [...arr].sort((a, b) => {
+    const c = cmpVal(a, b, SORT.col);
+    if (c !== 0) return c * dir;
+    // tiebreaker: score desc, then code asc
+    const s = (b.score || 0) - (a.score || 0);
+    if (s !== 0) return s;
+    return parseInt(a.code) - parseInt(b.code);
+  });
+}
+
+function setSort(col) {
+  if (SORT.col === col) {
+    SORT.dir = SORT.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    SORT.col = col;
+    // numeric columns default desc, text default asc
+    SORT.dir = ['code', 'name', 'board', 'industry', 'listing_date'].includes(col) ? 'asc' : 'desc';
+  }
+  updateSortIndicator();
+  render();
+}
+
+function updateSortIndicator() {
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+    if (th.dataset.sort === SORT.col) {
+      th.classList.add(SORT.dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    }
+  });
+}
+
 async function load() {
   try {
     const r = await fetch('data.json?t=' + Date.now());
@@ -54,11 +137,14 @@ function getActiveFilters() {
     requiredTags: [...document.querySelectorAll('.tag_filter:checked')].map(c => c.value),
     excludeHshare: document.getElementById('exclude_hshare').checked,
     excludeCh21: document.getElementById('exclude_ch21').checked,
+    watchlistOnly: document.getElementById('watchlist_only').checked,
   };
 }
 
 function applyFilters(stocks, f) {
   return stocks.filter(s => {
+    // Watchlist-only mode takes precedence
+    if (f.watchlistOnly && !WATCHLIST.has(s.code)) return false;
     // Board
     if (!f.boards.includes(s.board)) return false;
     // Exclusions
@@ -95,7 +181,7 @@ function checkSymbol(v) {
 function render() {
   if (!RAW) return;
   const f = getActiveFilters();
-  const filtered = applyFilters(RAW.stocks, f);
+  const filtered = applySort(applyFilters(RAW.stocks, f));
   const tbody = document.getElementById('stock_tbody');
   const empty = document.getElementById('empty_state');
   tbody.innerHTML = '';
@@ -119,8 +205,10 @@ function render() {
     const sponsorTxt = s.sponsor
       ? `${s.sponsor.substring(0,18)} ${s.sponsor_hit_rate != null ? `(${(s.sponsor_hit_rate*100).toFixed(0)}%)` : ''}`
       : '—';
+    const starred = WATCHLIST.has(s.code);
 
     tr.innerHTML = `
+      <td><span class="star ${starred ? 'active' : ''}" data-code="${s.code}" title="Watchlist">${starred ? '★' : '☆'}</span></td>
       <td class="score ${scoreClass}">${s.score}/${s.score_max}</td>
       <td class="code">${s.code}</td>
       <td class="name" title="${s.name_zh || s.name || ''}">${s.name || ''}${getAnomalyBadges(s)}</td>
@@ -136,7 +224,15 @@ function render() {
       <td>${tagsHtml}<br><small style="color:#7d8590">${(s.industry||'').substring(0,28)}</small></td>
       <td><div class="checks">${checksHtml}</div></td>
     `;
-    tr.addEventListener('click', () => showDetail(s));
+    // Row click → detail (except star click)
+    tr.addEventListener('click', (e) => {
+      if (e.target.classList.contains('star')) {
+        e.stopPropagation();
+        toggleWatch(s.code);
+      } else {
+        showDetail(s);
+      }
+    });
     frag.appendChild(tr);
   }
   tbody.appendChild(frag);
@@ -298,6 +394,41 @@ function wireFilters() {
   });
   document.getElementById('close_detail').addEventListener('click', () =>
     document.getElementById('detail_modal').close());
+
+  // Sortable headers
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => setSort(th.dataset.sort));
+  });
+  updateSortIndicator();
+
+  // Watchlist buttons
+  document.getElementById('export_watchlist').addEventListener('click', () => {
+    const codes = [...WATCHLIST].sort((a, b) => parseInt(a) - parseInt(b));
+    const text = codes.join(',');
+    navigator.clipboard.writeText(text).then(() =>
+      alert(`已 copy ${codes.length} 隻股票代碼到剪貼簿:\n${text}`)
+    ).catch(() => prompt('Copy 失敗,自己 copy:', text));
+  });
+  document.getElementById('import_watchlist').addEventListener('click', () => {
+    const input = prompt('貼入股票代碼(逗號分隔,eg. 2347,1284,8549):');
+    if (!input) return;
+    const codes = input.split(/[,\s]+/).map(c => c.trim()).filter(c => /^\d+$/.test(c));
+    codes.forEach(c => WATCHLIST.add(c));
+    saveWatchlist(WATCHLIST);
+    updateWatchlistCount();
+    render();
+    alert(`已加入 ${codes.length} 隻`);
+  });
+  document.getElementById('clear_watchlist').addEventListener('click', () => {
+    if (!WATCHLIST.size) return;
+    if (confirm(`清空 ${WATCHLIST.size} 隻 watchlist?`)) {
+      WATCHLIST.clear();
+      saveWatchlist(WATCHLIST);
+      updateWatchlistCount();
+      render();
+    }
+  });
+  updateWatchlistCount();
 }
 
 wireFilters();

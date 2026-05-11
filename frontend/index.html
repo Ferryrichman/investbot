@@ -55,6 +55,16 @@
       <label><input type="checkbox" id="exclude_ch21" checked> 排除 21 章公司</label>
     </div>
 
+    <h3>Watchlist</h3>
+    <div class="filter-group">
+      <label><input type="checkbox" id="watchlist_only"> 只睇 Watchlist (<span id="watchlist_count">0</span>)</label>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button id="export_watchlist" style="flex:1;padding:4px 8px;background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:3px;cursor:pointer;font-size:11px">匯出</button>
+        <button id="import_watchlist" style="flex:1;padding:4px 8px;background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:3px;cursor:pointer;font-size:11px">匯入</button>
+        <button id="clear_watchlist" style="flex:1;padding:4px 8px;background:#3d1f1f;border:1px solid #30363d;color:#ff7b72;border-radius:3px;cursor:pointer;font-size:11px">清空</button>
+      </div>
+    </div>
+
     <button id="reset_btn">重設</button>
     <div class="legend">
       <h3>圖例</h3>
@@ -66,19 +76,20 @@
     <table id="stock_table">
       <thead>
         <tr>
-          <th>分</th>
-          <th>代碼</th>
-          <th>名稱</th>
-          <th>板塊</th>
-          <th>市值</th>
-          <th>上市日期</th>
-          <th>集資額</th>
-          <th>保薦人 (命中率)</th>
-          <th>大莊</th>
-          <th>券商</th>
-          <th>成交</th>
-          <th>Range%</th>
-          <th>行業</th>
+          <th data-sort="watchlist" style="width:30px">★</th>
+          <th data-sort="score">分</th>
+          <th data-sort="code">代碼</th>
+          <th data-sort="name">名稱</th>
+          <th data-sort="board">板塊</th>
+          <th data-sort="market_cap_hkd">市值</th>
+          <th data-sort="listing_date">上市日期</th>
+          <th data-sort="raise_amount_hkd">集資額</th>
+          <th data-sort="sponsor_hit_rate">保薦人 (命中率)</th>
+          <th data-sort="top10_pct">大莊</th>
+          <th data-sort="broker_count">券商</th>
+          <th data-sort="avg_turnover">成交</th>
+          <th data-sort="range_pct">Range%</th>
+          <th data-sort="industry">行業</th>
           <th>條件</th>
         </tr>
       </thead>
