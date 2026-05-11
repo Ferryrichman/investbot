@@ -578,6 +578,9 @@ def build_stock_block(
         lines.append(
             f"  >> 買入 {est_lots}手({est_shares:,}股) ${est_shares*price:,.0f}"
         )
+        lines.append(
+            f"  /buy {code} {est_shares} {price}"
+        )
 
     # ── 止賺訊號 ──
     for sig in tp_signals:
@@ -588,8 +591,10 @@ def build_stock_block(
         label = sig.get("label", "")
         if sig["type"] == "ZERO_COST":
             lines.append(f"  >> 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股0成本")
+            lines.append(f"  /sell {code} {ss} {price}")
         else:
             lines.append(f"  >> {label} 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股")
+            lines.append(f"  /sell {code} {ss} {price}")
 
     # ── 0成本後市目標 ──
     if zero_done:
@@ -712,22 +717,11 @@ def monitor_report(alert_only: bool = False) -> str:
         prev_tier_reached = stock_st.get("tier_reached", 0)
         new_tier_reached  = current_tier_reached(mcap_m, board)
 
-        # 找出新觸發的層，記錄每注（股數對齊整手）
+        # 找出新觸發的層（只提醒，唔自動寫 tranche，由用戶 TG /buy 記帳）
         new_tiers = []
         if new_tier_reached > prev_tier_reached:
             newly     = tiers[prev_tier_reached:new_tier_reached]
             new_tiers = newly
-            for nt in newly:
-                bought_shares = round_to_lots(TRANCHE_SIZE / price, lot_size, "down")
-                actual_hkd    = bought_shares * price
-                stock_st.setdefault("tranches", []).append({
-                    "tier_m": nt,
-                    "price":  price,
-                    "hkd":    actual_hkd,
-                    "shares": bought_shares,
-                    "lots":   bought_shares // lot_size,
-                    "date":   now,
-                })
 
         tranches = stock_st.get("tranches", [])
         avg_cost = calc_avg_cost(tranches) if tranches else None
