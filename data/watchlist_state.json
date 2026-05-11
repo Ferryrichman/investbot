@@ -9,9 +9,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 237.21,
-    "last_price": 0.116,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 249.48,
+    "last_price": 0.122,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8447": {
@@ -34,9 +34,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 80.0,
-    "last_price": 0.08,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 83.0,
+    "last_price": 0.083,
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1156": {
@@ -59,9 +59,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 123.85,
-    "last_price": 0.21,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 122.67,
+    "last_price": 0.208,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8400": {
@@ -84,9 +84,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 141.0,
-    "last_price": 0.141,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 148.0,
+    "last_price": 0.148,
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1284": {
@@ -111,7 +111,7 @@
     "lot_size": 5000,
     "last_mcap_m": 267.0,
     "last_price": 0.445,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8532": {
@@ -124,9 +124,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 16000,
-    "last_mcap_m": 5.6,
-    "last_price": 0.066,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 5.94,
+    "last_price": 0.07,
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1346": {
@@ -141,7 +141,7 @@
     "lot_size": 4000,
     "last_mcap_m": 894.74,
     "last_price": 1.4,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8495": {
@@ -154,9 +154,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 105.6,
-    "last_price": 0.275,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 109.44,
+    "last_price": 0.285,
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1407": {
@@ -181,7 +181,7 @@
     "lot_size": 2000,
     "last_mcap_m": 255.2,
     "last_price": 0.58,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8620": {
@@ -206,7 +206,7 @@
     "lot_size": 5000,
     "last_mcap_m": 79.2,
     "last_price": 0.15,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1433": {
@@ -231,7 +231,7 @@
     "lot_size": 10000,
     "last_mcap_m": 161.15,
     "last_price": 0.081,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8241": {
@@ -254,9 +254,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 42.67,
-    "last_price": 0.118,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 43.04,
+    "last_price": 0.119,
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1449": {
@@ -279,9 +279,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 186.67,
-    "last_price": 0.28,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 180.0,
+    "last_price": 0.27,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1455": {
@@ -294,9 +294,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 297.91,
-    "last_price": 0.233,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 292.79,
+    "last_price": 0.229,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "8103": {
@@ -321,7 +321,7 @@
     "lot_size": 1500,
     "last_mcap_m": 22.39,
     "last_price": 0.173,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "gem"
   },
   "1473": {
@@ -342,9 +342,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 597.72,
-    "last_price": 0.51,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 586.0,
+    "last_price": 0.5,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1489": {
@@ -357,9 +357,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 550.0,
-    "last_price": 0.55,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 580.0,
+    "last_price": 0.58,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1545": {
@@ -382,9 +382,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 248.0,
-    "last_price": 0.124,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 252.0,
+    "last_price": 0.126,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1553": {
@@ -397,9 +397,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 707.09,
-    "last_price": 1.63,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 702.76,
+    "last_price": 1.62,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1582": {
@@ -424,7 +424,7 @@
     "lot_size": 2500,
     "last_mcap_m": 212.5,
     "last_price": 0.425,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1615": {
@@ -449,7 +449,7 @@
     "lot_size": 5000,
     "last_mcap_m": 222.0,
     "last_price": 0.37,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1620": {
@@ -474,7 +474,7 @@
     "lot_size": 10000,
     "last_mcap_m": 142.8,
     "last_price": 0.119,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1643": {
@@ -495,9 +495,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 3000,
-    "last_mcap_m": 2268.0,
-    "last_price": 3.15,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 2260.8,
+    "last_price": 3.14,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1650": {
@@ -520,9 +520,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 270.0,
-    "last_price": 0.135,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 280.0,
+    "last_price": 0.14,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1767": {
@@ -535,9 +535,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 330.0,
-    "last_price": 0.33,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 325.0,
+    "last_price": 0.325,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1793": {
@@ -562,7 +562,7 @@
     "lot_size": 4000,
     "last_mcap_m": 214.17,
     "last_price": 0.27,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1795": {
@@ -577,7 +577,7 @@
     "lot_size": 3000,
     "last_mcap_m": 318.0,
     "last_price": 0.53,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1832": {
@@ -602,7 +602,7 @@
     "lot_size": 1000,
     "last_mcap_m": 316.8,
     "last_price": 0.88,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1843": {
@@ -627,7 +627,7 @@
     "lot_size": 4000,
     "last_mcap_m": 184.0,
     "last_price": 0.23,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1871": {
@@ -650,9 +650,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 159.12,
-    "last_price": 0.365,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 156.94,
+    "last_price": 0.36,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1891": {
@@ -677,7 +677,7 @@
     "lot_size": 4000,
     "last_mcap_m": 163.0,
     "last_price": 0.163,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1927": {
@@ -702,7 +702,7 @@
     "lot_size": 5000,
     "last_mcap_m": 162.36,
     "last_price": 0.205,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1941": {
@@ -725,9 +725,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 139.83,
-    "last_price": 0.345,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 141.86,
+    "last_price": 0.35,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1947": {
@@ -752,7 +752,7 @@
     "lot_size": 5000,
     "last_mcap_m": 252.06,
     "last_price": 0.42,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1955": {
@@ -767,7 +767,7 @@
     "lot_size": 2000,
     "last_mcap_m": 290.0,
     "last_price": 0.58,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1960": {
@@ -780,9 +780,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 385.0,
-    "last_price": 0.385,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 380.0,
+    "last_price": 0.38,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2108": {
@@ -807,7 +807,7 @@
     "lot_size": 4000,
     "last_mcap_m": 352.0,
     "last_price": 0.44,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2129": {
@@ -832,7 +832,7 @@
     "lot_size": 5000,
     "last_mcap_m": 200.0,
     "last_price": 0.16,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2159": {
@@ -845,9 +845,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 423.45,
-    "last_price": 1.56,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 431.59,
+    "last_price": 1.59,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2230": {
@@ -860,9 +860,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 496.01,
-    "last_price": 0.249,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 498.0,
+    "last_price": 0.25,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2263": {
@@ -875,9 +875,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 375.0,
-    "last_price": 0.375,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 370.0,
+    "last_price": 0.37,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2347": {
@@ -892,7 +892,7 @@
     "lot_size": 2000,
     "last_mcap_m": 338.86,
     "last_price": 0.7,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2350": {
@@ -907,7 +907,7 @@
     "lot_size": 5000,
     "last_mcap_m": 487.5,
     "last_price": 0.78,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2372": {
@@ -932,7 +932,7 @@
     "lot_size": 4000,
     "last_mcap_m": 372.0,
     "last_price": 0.465,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2381": {
@@ -957,7 +957,7 @@
     "lot_size": 10000,
     "last_mcap_m": 354.0,
     "last_price": 0.177,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2455": {
@@ -982,7 +982,7 @@
     "lot_size": 2000,
     "last_mcap_m": 211.99,
     "last_price": 0.72,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2457": {
@@ -1005,9 +1005,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 350.0,
-    "last_price": 0.35,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 345.0,
+    "last_price": 0.345,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2497": {
@@ -1022,7 +1022,7 @@
     "lot_size": 2000,
     "last_mcap_m": 310.0,
     "last_price": 0.62,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2501": {
@@ -1045,9 +1045,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 555.0,
-    "last_price": 1.11,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 550.0,
+    "last_price": 1.1,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2528": {
@@ -1072,7 +1072,7 @@
     "lot_size": 2000,
     "last_mcap_m": 220.0,
     "last_price": 0.55,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2529": {
@@ -1087,7 +1087,7 @@
     "lot_size": 1000,
     "last_mcap_m": 504.0,
     "last_price": 3.15,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2545": {
@@ -1102,7 +1102,7 @@
     "lot_size": 2000,
     "last_mcap_m": 275.2,
     "last_price": 0.43,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2885": {
@@ -1115,9 +1115,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 372.0,
-    "last_price": 0.93,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 368.0,
+    "last_price": 0.92,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "3348": {
@@ -1130,9 +1130,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 660.0,
-    "last_price": 1.32,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 635.0,
+    "last_price": 1.27,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "3830": {
@@ -1155,9 +1155,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 203.0,
-    "last_price": 0.203,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 193.0,
+    "last_price": 0.193,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "6939": {
@@ -1178,9 +1178,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 850.75,
-    "last_price": 1.64,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 840.38,
+    "last_price": 1.62,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "9929": {
@@ -1203,7 +1203,7 @@
     "lot_size": 10000,
     "last_mcap_m": 2660.0,
     "last_price": 1.33,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "0368": {
@@ -1226,9 +1226,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 616.0,
-    "last_price": 0.77,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 632.0,
+    "last_price": 0.79,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1740": {
@@ -1249,9 +1249,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 124.5,
-    "last_price": 0.12,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 123.46,
+    "last_price": 0.119,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1408": {
@@ -1276,7 +1276,7 @@
     "lot_size": 2000,
     "last_mcap_m": 215.0,
     "last_price": 0.43,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1429": {
@@ -1297,9 +1297,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 400.0,
-    "last_price": 0.25,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 408.0,
+    "last_price": 0.255,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1971": {
@@ -1322,9 +1322,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 166.0,
-    "last_price": 0.4,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 157.7,
+    "last_price": 0.38,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2205": {
@@ -1345,9 +1345,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 798.0,
-    "last_price": 1.14,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 728.0,
+    "last_price": 1.04,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2370": {
@@ -1370,7 +1370,7 @@
     "lot_size": 500,
     "last_mcap_m": 192.0,
     "last_price": 0.96,
-    "last_check": "2026-05-11 06:39",
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "2505": {
@@ -1391,20 +1391,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 410.22,
-    "last_price": 0.92,
-    "last_check": "2026-05-11 06:39",
+    "last_mcap_m": 405.76,
+    "last_price": 0.91,
+    "last_check": "2026-05-11 12:28",
     "board": "main"
   },
   "1965": {
-    "board": "main",
-    "tier_reached": 0,
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
+    "tier_reached": 6,
     "tranches": [
       {
         "price": 0.143,
@@ -1413,6 +1406,17 @@
         "date": "2025-01-01 00:00",
         "note": "corrected via TG status"
       }
-    ]
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "board": "main",
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 54.92,
+    "last_price": 0.142,
+    "last_check": "2026-05-11 12:28"
   }
 }
