@@ -127,10 +127,10 @@
     "tier_reached": 1,
     "tranches": [
       {
-        "price": 8000,
+        "price": 0,
         "hkd": 0,
-        "shares": 0,
-        "date": "2026-05-11 06:05",
+        "shares": 8000,
+        "date": "2026-05-11 06:08",
         "note": "modified via TG"
       }
     ],
