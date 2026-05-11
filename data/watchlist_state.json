@@ -13,37 +13,13 @@
     "last_price": 0.114,
     "last_check": "2026-05-08 15:57"
   },
-  "8447": {
-    "tier_reached": 2,
-    "tranches": [
-      {
-        "tier_m": 60,
-        "price": 0.044,
-        "hkd": 2200.0,
-        "shares": 50000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 10000,
-    "last_mcap_m": 75.0,
-    "last_price": 0.075,
-    "last_check": "2026-05-08 15:57"
-  },
   "1156": {
     "tier_reached": 3,
     "tranches": [
       {
         "tier_m": 120,
         "price": 0.117,
-        "hkd": 4212.0,
+        "hkd": 4212,
         "shares": 36000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -61,37 +37,13 @@
     "last_price": 0.207,
     "last_check": "2026-05-08 15:57"
   },
-  "8400": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 80,
-        "price": 0.006,
-        "hkd": 540.0,
-        "shares": 90000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 10000,
-    "last_mcap_m": 138.0,
-    "last_price": 0.138,
-    "last_check": "2026-05-08 15:57"
-  },
   "1284": {
     "tier_reached": 1,
     "tranches": [
       {
         "tier_m": 200,
         "price": 0.285,
-        "hkd": 2850.0,
+        "hkd": 2850,
         "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -105,22 +57,8 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 261.0,
+    "last_mcap_m": 261,
     "last_price": 0.435,
-    "last_check": "2026-05-08 15:57"
-  },
-  "8532": {
-    "tier_reached": 5,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 16000,
-    "last_mcap_m": 6.37,
-    "last_price": 0.075,
     "last_check": "2026-05-08 15:57"
   },
   "1346": {
@@ -137,27 +75,13 @@
     "last_price": 1.4,
     "last_check": "2026-05-08 15:57"
   },
-  "8495": {
-    "tier_reached": 1,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 4000,
-    "last_mcap_m": 109.44,
-    "last_price": 0.285,
-    "last_check": "2026-05-08 15:57"
-  },
   "1407": {
     "tier_reached": 1,
     "tranches": [
       {
         "tier_m": 200,
         "price": 0.517,
-        "hkd": 2068.0,
+        "hkd": 2068,
         "shares": 4000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -175,14 +99,14 @@
     "last_price": 0.58,
     "last_check": "2026-05-08 15:57"
   },
-  "8620": {
+  "1408": {
     "tier_reached": 1,
     "tranches": [
       {
-        "tier_m": 80,
-        "price": 0.154,
-        "hkd": 3080.0,
-        "shares": 20000,
+        "tier_m": 200,
+        "price": 0.237,
+        "hkd": 2370,
+        "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
         "note": "imported from Excel"
@@ -194,9 +118,23 @@
     "post_zero_done": [],
     "notes": [],
     "zero_cost_date": null,
-    "lot_size": 5000,
-    "last_mcap_m": 80.26,
-    "last_price": 0.152,
+    "lot_size": 2000,
+    "last_mcap_m": 222.5,
+    "last_price": 0.445,
+    "last_check": "2026-05-08 15:57"
+  },
+  "1429": {
+    "tier_reached": 1,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 8000,
+    "last_mcap_m": 424,
+    "last_price": 0.265,
     "last_check": "2026-05-08 15:57"
   },
   "1433": {
@@ -205,7 +143,7 @@
       {
         "tier_m": 150,
         "price": 0.098,
-        "hkd": 980.0,
+        "hkd": 980,
         "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -223,37 +161,13 @@
     "last_price": 0.081,
     "last_check": "2026-05-08 15:57"
   },
-  "8241": {
-    "tier_reached": 4,
-    "tranches": [
-      {
-        "tier_m": 40,
-        "price": 0.102,
-        "hkd": 5610.0,
-        "shares": 55000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 5000,
-    "last_mcap_m": 42.67,
-    "last_price": 0.118,
-    "last_check": "2026-05-08 15:57"
-  },
   "1449": {
     "tier_reached": 2,
     "tranches": [
       {
         "tier_m": 150,
         "price": 0.256,
-        "hkd": 3072.0,
+        "hkd": 3072,
         "shares": 12000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -267,7 +181,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 180.0,
+    "last_mcap_m": 180,
     "last_price": 0.27,
     "last_check": "2026-05-08 15:57"
   },
@@ -283,30 +197,6 @@
     "lot_size": 5000,
     "last_mcap_m": 282.56,
     "last_price": 0.221,
-    "last_check": "2026-05-08 15:57"
-  },
-  "8103": {
-    "tier_reached": 5,
-    "tranches": [
-      {
-        "tier_m": 30,
-        "price": 0.235,
-        "hkd": 1410.0,
-        "shares": 6000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1500,
-    "last_mcap_m": 22.39,
-    "last_price": 0.173,
     "last_check": "2026-05-08 15:57"
   },
   "1473": {
@@ -333,7 +223,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 530.0,
+    "last_mcap_m": 530,
     "last_price": 0.53,
     "last_check": "2026-05-08 15:57"
   },
@@ -343,7 +233,7 @@
       {
         "tier_m": 200,
         "price": 0.08,
-        "hkd": 1600.0,
+        "hkd": 1600,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -357,7 +247,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 240.0,
+    "last_mcap_m": 240,
     "last_price": 0.12,
     "last_check": "2026-05-08 15:57"
   },
@@ -381,7 +271,7 @@
       {
         "tier_m": 200,
         "price": 0.378,
-        "hkd": 2835.0,
+        "hkd": 2835,
         "shares": 7500,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -395,7 +285,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2500,
-    "last_mcap_m": 210.0,
+    "last_mcap_m": 210,
     "last_price": 0.42,
     "last_check": "2026-05-08 15:57"
   },
@@ -405,7 +295,7 @@
       {
         "tier_m": 200,
         "price": 0.229,
-        "hkd": 2290.0,
+        "hkd": 2290,
         "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -419,7 +309,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 231.0,
+    "last_mcap_m": 231,
     "last_price": 0.385,
     "last_check": "2026-05-08 15:57"
   },
@@ -429,7 +319,7 @@
       {
         "tier_m": 120,
         "price": 0.075,
-        "hkd": 5250.0,
+        "hkd": 5250,
         "shares": 70000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -467,7 +357,7 @@
       {
         "tier_m": 200,
         "price": 0.089,
-        "hkd": 712.0,
+        "hkd": 712,
         "shares": 8000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -481,8 +371,39 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 280.0,
+    "last_mcap_m": 280,
     "last_price": 0.14,
+    "last_check": "2026-05-08 15:57"
+  },
+  "1740": {
+    "tier_reached": 3,
+    "tranches": [
+      {
+        "tier_m": 120,
+        "price": 0.112,
+        "hkd": 6160,
+        "shares": 55000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      },
+      {
+        "price": 0.12,
+        "hkd": 15000,
+        "shares": 125000,
+        "date": "2026-05-11 04:40",
+        "note": "via TG"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 5000,
+    "last_mcap_m": 129.69,
+    "last_price": 0.125,
     "last_check": "2026-05-08 15:57"
   },
   "1767": {
@@ -495,7 +416,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 335.0,
+    "last_mcap_m": 335,
     "last_price": 0.335,
     "last_check": "2026-05-08 15:57"
   },
@@ -505,7 +426,7 @@
       {
         "tier_m": 200,
         "price": 0.216,
-        "hkd": 3456.0,
+        "hkd": 3456,
         "shares": 16000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -533,7 +454,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 3000,
-    "last_mcap_m": 300.0,
+    "last_mcap_m": 300,
     "last_price": 0.5,
     "last_check": "2026-05-08 15:57"
   },
@@ -543,7 +464,7 @@
       {
         "tier_m": 200,
         "price": 0.495,
-        "hkd": 990.0,
+        "hkd": 990,
         "shares": 2000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -567,7 +488,7 @@
       {
         "tier_m": 150,
         "price": 0.13,
-        "hkd": 7280.0,
+        "hkd": 7280,
         "shares": 56000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -581,7 +502,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 184.0,
+    "last_mcap_m": 184,
     "last_price": 0.23,
     "last_check": "2026-05-08 15:57"
   },
@@ -591,7 +512,7 @@
       {
         "tier_m": 150,
         "price": 0.249,
-        "hkd": 5976.0,
+        "hkd": 5976,
         "shares": 24000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -615,7 +536,7 @@
       {
         "tier_m": 150,
         "price": 0.139,
-        "hkd": 7228.0,
+        "hkd": 7228,
         "shares": 52000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -629,7 +550,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 153.0,
+    "last_mcap_m": 153,
     "last_price": 0.153,
     "last_check": "2026-05-08 15:57"
   },
@@ -639,7 +560,7 @@
       {
         "tier_m": 120,
         "price": 0.135,
-        "hkd": 6750.0,
+        "hkd": 6750,
         "shares": 50000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -663,7 +584,7 @@
       {
         "tier_m": 120,
         "price": 0.176,
-        "hkd": 8096.0,
+        "hkd": 8096,
         "shares": 46000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -687,7 +608,7 @@
       {
         "tier_m": 200,
         "price": 0.354,
-        "hkd": 7080.0,
+        "hkd": 7080,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -715,7 +636,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 290.0,
+    "last_mcap_m": 290,
     "last_price": 0.58,
     "last_check": "2026-05-08 15:57"
   },
@@ -729,8 +650,32 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 390.0,
+    "last_mcap_m": 390,
     "last_price": 0.39,
+    "last_check": "2026-05-08 15:57"
+  },
+  "1971": {
+    "tier_reached": 2,
+    "tranches": [
+      {
+        "tier_m": 150,
+        "price": 0.285,
+        "hkd": 3135,
+        "shares": 11000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 157.7,
+    "last_price": 0.38,
     "last_check": "2026-05-08 15:57"
   },
   "2108": {
@@ -739,7 +684,7 @@
       {
         "tier_m": 200,
         "price": 0.119,
-        "hkd": 952.0,
+        "hkd": 952,
         "shares": 8000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -753,7 +698,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 376.0,
+    "last_mcap_m": 376,
     "last_price": 0.47,
     "last_check": "2026-05-08 15:57"
   },
@@ -763,7 +708,7 @@
       {
         "tier_m": 150,
         "price": 0.127,
-        "hkd": 2540.0,
+        "hkd": 2540,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -795,6 +740,20 @@
     "last_price": 1.59,
     "last_check": "2026-05-08 15:57"
   },
+  "2205": {
+    "tier_reached": 1,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 763,
+    "last_price": 1.09,
+    "last_check": "2026-05-08 15:57"
+  },
   "2230": {
     "tier_reached": 1,
     "tranches": [],
@@ -805,7 +764,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 498.0,
+    "last_mcap_m": 498,
     "last_price": 0.25,
     "last_check": "2026-05-08 15:57"
   },
@@ -819,7 +778,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 385.0,
+    "last_mcap_m": 385,
     "last_price": 0.385,
     "last_check": "2026-05-08 15:57"
   },
@@ -847,8 +806,32 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 500.0,
+    "last_mcap_m": 500,
     "last_price": 0.8,
+    "last_check": "2026-05-08 15:57"
+  },
+  "2370": {
+    "tier_reached": 6,
+    "tranches": [
+      {
+        "tier_m": 60,
+        "price": 0.2,
+        "hkd": 3300,
+        "shares": 16500,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 500,
+    "last_mcap_m": 200,
+    "last_price": 1,
     "last_check": "2026-05-08 15:57"
   },
   "2372": {
@@ -857,7 +840,7 @@
       {
         "tier_m": 200,
         "price": 0.2,
-        "hkd": 1600.0,
+        "hkd": 1600,
         "shares": 8000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -871,7 +854,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 372.0,
+    "last_mcap_m": 372,
     "last_price": 0.465,
     "last_check": "2026-05-08 15:57"
   },
@@ -881,7 +864,7 @@
       {
         "tier_m": 200,
         "price": 0.099,
-        "hkd": 1980.0,
+        "hkd": 1980,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -895,7 +878,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 340.0,
+    "last_mcap_m": 340,
     "last_price": 0.17,
     "last_check": "2026-05-08 15:57"
   },
@@ -905,7 +888,7 @@
       {
         "tier_m": 200,
         "price": 0.68,
-        "hkd": 2720.0,
+        "hkd": 2720,
         "shares": 4000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -929,7 +912,7 @@
       {
         "tier_m": 200,
         "price": 0.289,
-        "hkd": 4335.0,
+        "hkd": 4335,
         "shares": 15000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -943,7 +926,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 365.0,
+    "last_mcap_m": 365,
     "last_price": 0.365,
     "last_check": "2026-05-08 15:57"
   },
@@ -957,7 +940,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 310.0,
+    "last_mcap_m": 310,
     "last_price": 0.62,
     "last_check": "2026-05-08 15:57"
   },
@@ -967,7 +950,7 @@
       {
         "tier_m": 200,
         "price": 0.86,
-        "hkd": 1720.0,
+        "hkd": 1720,
         "shares": 2000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -981,8 +964,32 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 570.0,
+    "last_mcap_m": 570,
     "last_price": 1.14,
+    "last_check": "2026-05-08 15:57"
+  },
+  "2505": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "tier_m": 200,
+        "price": 0.075,
+        "hkd": 225,
+        "shares": 3000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 423.6,
+    "last_price": 0.95,
     "last_check": "2026-05-08 15:57"
   },
   "2528": {
@@ -991,7 +998,7 @@
       {
         "tier_m": 200,
         "price": 0.254,
-        "hkd": 5080.0,
+        "hkd": 5080,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -1005,7 +1012,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 212.0,
+    "last_mcap_m": 212,
     "last_price": 0.53,
     "last_check": "2026-05-08 15:57"
   },
@@ -1019,7 +1026,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 504.0,
+    "last_mcap_m": 504,
     "last_price": 3.15,
     "last_check": "2026-05-08 15:57"
   },
@@ -1047,7 +1054,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 372.0,
+    "last_mcap_m": 372,
     "last_price": 0.93,
     "last_check": "2026-05-08 15:57"
   },
@@ -1061,7 +1068,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 660.0,
+    "last_mcap_m": 660,
     "last_price": 1.32,
     "last_check": "2026-05-08 15:57"
   },
@@ -1071,7 +1078,7 @@
       {
         "tier_m": 150,
         "price": 0.064,
-        "hkd": 2560.0,
+        "hkd": 2560,
         "shares": 40000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -1085,7 +1092,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 184.0,
+    "last_mcap_m": 184,
     "last_price": 0.184,
     "last_check": "2026-05-08 15:57"
   },
@@ -1103,28 +1110,14 @@
     "last_price": 1.69,
     "last_check": "2026-05-08 15:57"
   },
-  "9929": {
-    "tier_reached": 1,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 10000,
-    "last_mcap_m": 2720.0,
-    "last_price": 1.36,
-    "last_check": "2026-05-08 15:57"
-  },
-  "0368": {
-    "tier_reached": 1,
+  "8103": {
+    "tier_reached": 5,
     "tranches": [
       {
-        "tier_m": 200,
-        "price": 0.26,
-        "hkd": 1040.0,
-        "shares": 4000,
+        "tier_m": 30,
+        "price": 0.235,
+        "hkd": 1410,
+        "shares": 6000,
         "lots": 0,
         "date": "2025-01-01 00:00",
         "note": "imported from Excel"
@@ -1136,18 +1129,18 @@
     "post_zero_done": [],
     "notes": [],
     "zero_cost_date": null,
-    "lot_size": 2000,
-    "last_mcap_m": 632.0,
-    "last_price": 0.79,
+    "lot_size": 1500,
+    "last_mcap_m": 22.39,
+    "last_price": 0.173,
     "last_check": "2026-05-08 15:57"
   },
-  "1740": {
-    "tier_reached": 3,
+  "8241": {
+    "tier_reached": 4,
     "tranches": [
       {
-        "tier_m": 120,
-        "price": 0.112,
-        "hkd": 6160.0,
+        "tier_m": 40,
+        "price": 0.102,
+        "hkd": 5610,
         "shares": 55000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -1161,18 +1154,132 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 129.69,
-    "last_price": 0.125,
+    "last_mcap_m": 42.67,
+    "last_price": 0.118,
     "last_check": "2026-05-08 15:57"
   },
-  "1408": {
+  "8400": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "tier_m": 80,
+        "price": 0.006,
+        "hkd": 540,
+        "shares": 90000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 10000,
+    "last_mcap_m": 138,
+    "last_price": 0.138,
+    "last_check": "2026-05-08 15:57"
+  },
+  "8447": {
+    "tier_reached": 2,
+    "tranches": [
+      {
+        "tier_m": 60,
+        "price": 0.044,
+        "hkd": 2200,
+        "shares": 50000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 10000,
+    "last_mcap_m": 75,
+    "last_price": 0.075,
+    "last_check": "2026-05-08 15:57"
+  },
+  "8495": {
+    "tier_reached": 1,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 4000,
+    "last_mcap_m": 109.44,
+    "last_price": 0.285,
+    "last_check": "2026-05-08 15:57"
+  },
+  "8532": {
+    "tier_reached": 5,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 16000,
+    "last_mcap_m": 6.37,
+    "last_price": 0.075,
+    "last_check": "2026-05-08 15:57"
+  },
+  "8620": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "tier_m": 80,
+        "price": 0.154,
+        "hkd": 3080,
+        "shares": 20000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 5000,
+    "last_mcap_m": 80.26,
+    "last_price": 0.152,
+    "last_check": "2026-05-08 15:57"
+  },
+  "9929": {
+    "tier_reached": 1,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 10000,
+    "last_mcap_m": 2720,
+    "last_price": 1.36,
+    "last_check": "2026-05-08 15:57"
+  },
+  "0368": {
     "tier_reached": 1,
     "tranches": [
       {
         "tier_m": 200,
-        "price": 0.237,
-        "hkd": 2370.0,
-        "shares": 10000,
+        "price": 0.26,
+        "hkd": 1040,
+        "shares": 4000,
         "lots": 0,
         "date": "2025-01-01 00:00",
         "note": "imported from Excel"
@@ -1185,108 +1292,8 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 222.5,
-    "last_price": 0.445,
-    "last_check": "2026-05-08 15:57"
-  },
-  "1429": {
-    "tier_reached": 1,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 8000,
-    "last_mcap_m": 424.0,
-    "last_price": 0.265,
-    "last_check": "2026-05-08 15:57"
-  },
-  "1971": {
-    "tier_reached": 2,
-    "tranches": [
-      {
-        "tier_m": 150,
-        "price": 0.285,
-        "hkd": 3135.0,
-        "shares": 11000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 157.7,
-    "last_price": 0.38,
-    "last_check": "2026-05-08 15:57"
-  },
-  "2205": {
-    "tier_reached": 1,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 763.0,
-    "last_price": 1.09,
-    "last_check": "2026-05-08 15:57"
-  },
-  "2370": {
-    "tier_reached": 6,
-    "tranches": [
-      {
-        "tier_m": 60,
-        "price": 0.2,
-        "hkd": 3300.0,
-        "shares": 16500,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 500,
-    "last_mcap_m": 200.0,
-    "last_price": 1.0,
-    "last_check": "2026-05-08 15:57"
-  },
-  "2505": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 200,
-        "price": 0.075,
-        "hkd": 225.0,
-        "shares": 3000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 423.6,
-    "last_price": 0.95,
+    "last_mcap_m": 632,
+    "last_price": 0.79,
     "last_check": "2026-05-08 15:57"
   }
 }
