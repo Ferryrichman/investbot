@@ -669,6 +669,21 @@
     "last_price": 0.39,
     "last_check": "2026-05-08 15:57"
   },
+  "1965": {
+    "tier_reached": 0,
+    "tranches": [
+      {
+        "price": 0.143,
+        "hkd": 4719,
+        "shares": 33000,
+        "date": "2026-05-11 06:11",
+        "note": "via TG"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "post_zero_done": [],
+    "notes": []
+  },
   "1971": {
     "tier_reached": 2,
     "tranches": [
