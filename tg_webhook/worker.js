@@ -19,18 +19,26 @@ export default {
       return new Response("OK", { status: 200 });
     }
 
-    const body = await request.json();
-    const msg = body.message;
-    if (!msg || !msg.text || String(msg.chat.id) !== env.CHAT_ID) {
+    try {
+      const body = await request.json();
+      const msg = body.message;
+      const chatId = (env.CHAT_ID || "").trim();
+      if (!msg || !msg.text || String(msg.chat.id) !== chatId) {
+        return new Response("OK", { status: 200 });
+      }
+
+      const text = msg.text.trim();
+      const reply = await handleCommand(text, env);
+      if (reply) {
+        await sendTG(env.TELEGRAM_TOKEN.trim(), chatId, reply);
+      }
+      return new Response("OK", { status: 200 });
+    } catch (err) {
+      try {
+        await sendTG(env.TELEGRAM_TOKEN.trim(), (env.CHAT_ID || "").trim(), `Error: ${err.message}`);
+      } catch (_) {}
       return new Response("OK", { status: 200 });
     }
-
-    const text = msg.text.trim();
-    const reply = await handleCommand(text, env);
-    if (reply) {
-      await sendTG(env.TELEGRAM_TOKEN, env.CHAT_ID, reply);
-    }
-    return new Response("OK", { status: 200 });
   },
 };
 
@@ -38,20 +46,20 @@ async function handleCommand(text, env) {
   const parts = text.split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  if (cmd === "/buy" && parts.length >= 4) {
-    // /buy 2370 0.95 10000
+  if (cmd === "/buy") {
+    if (parts.length < 4) return "用法: /buy CODE PRICE HKD\n例: /buy 2370 1.05 8000";
     const [, code, price, hkd] = parts;
     return await recordBuy(code, parseFloat(price), parseFloat(hkd), env);
   }
 
-  if (cmd === "/sell" && parts.length >= 4) {
-    // /sell 2370 1.20 3500  (3500 = shares sold)
+  if (cmd === "/sell") {
+    if (parts.length < 4) return "用法: /sell CODE PRICE SHARES\n例: /sell 2370 1.20 4000";
     const [, code, price, shares] = parts;
     return await recordSell(code, parseFloat(price), parseInt(shares), env);
   }
 
-  if (cmd === "/zerocost" && parts.length >= 3) {
-    // /zerocost 2370 13000  (remaining shares)
+  if (cmd === "/zerocost") {
+    if (parts.length < 3) return "用法: /zerocost CODE SHARES\n例: /zerocost 2370 13000";
     const [, code, remaining] = parts;
     return await markZeroCost(code, parseInt(remaining), env);
   }
@@ -78,26 +86,34 @@ async function handleCommand(text, env) {
 // ── GitHub API helpers ──
 
 async function getState(env) {
-  const url = `https://api.github.com/repos/${env.GITHUB_REPO}/contents/${STATE_PATH}?ref=${BRANCH}`;
+  const token = (env.GITHUB_TOKEN || "").trim();
+  const repo = (env.GITHUB_REPO || "").trim();
+  const url = `https://api.github.com/repos/${repo}/contents/${STATE_PATH}?ref=${BRANCH}`;
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github.v3+json",
       "User-Agent": "investbot-tg-worker",
     },
   });
+  if (!res.ok) {
+    throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
+  }
   const data = await res.json();
-  const content = atob(data.content.replace(/\n/g, ""));
+  const raw = atob(data.content.replace(/\n/g, ""));
+  const content = decodeURIComponent(escape(raw));
   return { state: JSON.parse(content), sha: data.sha };
 }
 
 async function saveState(state, sha, message, env) {
-  const url = `https://api.github.com/repos/${env.GITHUB_REPO}/contents/${STATE_PATH}`;
+  const token = (env.GITHUB_TOKEN || "").trim();
+  const repo = (env.GITHUB_REPO || "").trim();
+  const url = `https://api.github.com/repos/${repo}/contents/${STATE_PATH}`;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
   const res = await fetch(url, {
     method: "PUT",
     headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github.v3+json",
       "User-Agent": "investbot-tg-worker",
     },
@@ -108,7 +124,11 @@ async function saveState(state, sha, message, env) {
       branch: BRANCH,
     }),
   });
-  return res.ok;
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`GitHub save ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return true;
 }
 
 async function recordBuy(code, price, hkd, env) {
@@ -121,8 +141,7 @@ async function recordBuy(code, price, hkd, env) {
   const shares = Math.floor(hkd / price);
   state[code4].tranches.push({ price, hkd, shares, date: now, note: "via TG" });
 
-  const ok = await saveState(state, sha, `tg: buy ${code4} @${price} $${hkd}`, env);
-  if (!ok) return `Failed to save`;
+  await saveState(state, sha, `tg: buy ${code4} @${price} $${hkd}`, env);
 
   const total = state[code4].tranches.reduce((s, t) => s + t.hkd, 0);
   return `${code4} 買入 ${shares}股 @$${price} 投$${hkd}\n累計投入$${total.toLocaleString()}`;
@@ -138,8 +157,7 @@ async function recordSell(code, price, sharesSold, env) {
   const hkd = sharesSold * price;
   state[code4].tranches.push({ price, hkd: -hkd, shares: -sharesSold, date: now, note: `sell via TG` });
 
-  const ok = await saveState(state, sha, `tg: sell ${code4} ${sharesSold}股 @${price}`, env);
-  if (!ok) return `Failed to save`;
+  await saveState(state, sha, `tg: sell ${code4} ${sharesSold}股 @${price}`, env);
   return `${code4} 賣出 ${sharesSold}股 @$${price} 收$${hkd.toLocaleString()}`;
 }
 
@@ -157,8 +175,7 @@ async function markZeroCost(code, remainShares, env) {
     state[code4].post_zero_done.push(0);
   }
 
-  const ok = await saveState(state, sha, `tg: zerocost ${code4} remain=${remainShares}`, env);
-  if (!ok) return `Failed to save`;
+  await saveState(state, sha, `tg: zerocost ${code4} remain=${remainShares}`, env);
   return `${code4} 已標記0成本 剩${remainShares}股免費持倉`;
 }
 
@@ -185,7 +202,7 @@ async function getStatus(code, env) {
 // ── Telegram ──
 
 async function sendTG(token, chatId, text) {
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+  return fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text }),
