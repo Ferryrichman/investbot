@@ -14,8 +14,47 @@ header {
   align-items: center;
   background: #161b22;
 }
-header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+header h1 { margin: 0; font-size: 18px; font-weight: 600; display: flex; align-items: baseline; gap: 12px; }
+header h1 .powered-by {
+  font-size: 11px;
+  font-weight: 400;
+  color: #7d8590;
+  letter-spacing: 0.3px;
+}
 header .meta { color: #7d8590; font-size: 12px; }
+
+/* 全頁斜向重複水印 - 唔阻擋互動 */
+.watermark {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background-image: repeating-linear-gradient(
+    -30deg,
+    transparent,
+    transparent 180px,
+    rgba(88, 166, 255, 0.025) 180px,
+    rgba(88, 166, 255, 0.025) 181px
+  );
+}
+.watermark::before {
+  content: "FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN  ·  FERRYRICHMAN";
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 60px;
+  font-weight: 700;
+  color: rgba(88, 166, 255, 0.035);
+  white-space: nowrap;
+  line-height: 1.6;
+  font-family: "Arial Black", sans-serif;
+  letter-spacing: 6px;
+  width: 250%;
+  text-align: center;
+}
+/* 確保所有 content 喺水印之上 */
+header, main, dialog { position: relative; z-index: 1; }
 
 main {
   display: flex;
@@ -99,14 +138,27 @@ td {
   vertical-align: middle;
   white-space: nowrap;
 }
+/* Default header alignment matches body */
+th { text-align: left; }
+th.num, th[data-sort="market_cap_hkd"], th[data-sort="raise_amount_hkd"],
+th[data-sort="top10_pct"], th[data-sort="broker_count"], th[data-sort="avg_turnover"],
+th[data-sort="range_pct"] { text-align: right; }
+th.center, th[data-sort="watchlist"], th[data-sort="score"], th[data-sort="board"],
+th[data-sort="listing_date"] { text-align: center; }
+
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
-td.code { font-weight: 600; color: #58a6ff; }
-td.name { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+td.center { text-align: center; }
+td.code { font-weight: 600; color: #58a6ff; text-align: center; font-variant-numeric: tabular-nums; }
+td.name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+td.board { text-align: center; font-size: 11px; }
+td.date  { text-align: center; font-variant-numeric: tabular-nums; color: #c9d1d9; }
 td.score {
   font-weight: 600;
   text-align: center;
   width: 50px;
+  font-variant-numeric: tabular-nums;
 }
+td.star-cell { text-align: center; width: 30px; padding: 6px 4px; }
 .score-high { color: #3fb950; }
 .score-mid { color: #d29922; }
 .score-low { color: #7d8590; }

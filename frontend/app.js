@@ -208,13 +208,13 @@ function render() {
     const starred = WATCHLIST.has(s.code);
 
     tr.innerHTML = `
-      <td><span class="star ${starred ? 'active' : ''}" data-code="${s.code}" title="Watchlist">${starred ? '★' : '☆'}</span></td>
+      <td class="star-cell"><span class="star ${starred ? 'active' : ''}" data-code="${s.code}" title="Watchlist">${starred ? '★' : '☆'}</span></td>
       <td class="score ${scoreClass}">${s.score}/${s.score_max}</td>
       <td class="code">${s.code}</td>
       <td class="name" title="${s.name_zh || s.name || ''}">${s.name || ''}${getAnomalyBadges(s)}</td>
-      <td>${s.board}</td>
+      <td class="board">${s.board}</td>
       <td class="num">${fmtHKD(s.market_cap_hkd)}</td>
-      <td>${s.listing_date || '—'}</td>
+      <td class="date">${s.listing_date || '—'}</td>
       <td class="num">${fmtHKD(s.raise_amount_hkd)}</td>
       <td>${sponsorTxt}</td>
       <td class="num">${fmtPct(s.top10_pct)}</td>
