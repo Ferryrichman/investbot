@@ -37,74 +37,9 @@ CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
 # board: main=主板, gem=創業板
 # shell_m: 可個別override殼價（唔填就用預設）
 # lot: 每手股數（唔填就從HKEX自動抓取）
-WATCHLIST: dict[str, dict] = {
-    # 格式: "CODE": {"board": "main"/"gem", "shell_m": 殼價百萬(可選), "lot": 每手(可選)}
-    "0368": {"board": "main"},
-    "1147": {"board": "main"},
-    "1156": {"board": "main"},
-    "1284": {"board": "main"},
-    "1346": {"board": "main"},
-    "1407": {"board": "main"},
-    "1408": {"board": "main"},
-    "1429": {"board": "main"},
-    "1433": {"board": "main"},
-    "1449": {"board": "main"},
-    "1455": {"board": "main"},
-    "1473": {"board": "main"},
-    "1489": {"board": "main"},
-    "1545": {"board": "main"},
-    "1553": {"board": "main"},
-    "1582": {"board": "main"},
-    "1615": {"board": "main"},
-    "1620": {"board": "main"},
-    "1643": {"board": "main"},
-    "1650": {"board": "main"},
-    "1740": {"board": "main"},
-    "1767": {"board": "main"},
-    "1793": {"board": "main"},
-    "1795": {"board": "main"},
-    "1832": {"board": "main"},
-    "1843": {"board": "main"},
-    "1871": {"board": "main"},
-    "1891": {"board": "main"},
-    "1927": {"board": "main"},
-    "1941": {"board": "main"},
-    "1947": {"board": "main"},
-    "1955": {"board": "main"},
-    "1960": {"board": "main"},
-    "1971": {"board": "main"},
-    "2108": {"board": "main"},
-    "2129": {"board": "main"},
-    "2159": {"board": "main"},
-    "2205": {"board": "main"},
-    "2230": {"board": "main"},
-    "2263": {"board": "main"},
-    "2347": {"board": "main"},
-    "2350": {"board": "main"},
-    "2370": {"board": "main"},
-    "2372": {"board": "main"},
-    "2381": {"board": "main"},
-    "2455": {"board": "main"},
-    "2457": {"board": "main"},
-    "2497": {"board": "main"},
-    "2501": {"board": "main"},
-    "2505": {"board": "main"},
-    "2528": {"board": "main"},
-    "2529": {"board": "main"},
-    "2545": {"board": "main"},
-    "2885": {"board": "main"},
-    "3348": {"board": "main"},
-    "3830": {"board": "main"},
-    "6939": {"board": "main"},
-    "9929": {"board": "main"},
-    "8103": {"board": "gem"},
-    "8241": {"board": "gem"},
-    "8400": {"board": "gem"},
-    "8447": {"board": "gem"},
-    "8495": {"board": "gem"},
-    "8532": {"board": "gem"},
-    "8620": {"board": "gem"},
-}
+# WATCHLIST 已遷移至 data/watchlist_state.json
+# 每隻股票嘅 "board" 欄位決定主板/創業板
+# 用 TG Bot /add /remove 管理，唔再 hardcode
 
 # ── 每注固定金額 (HKD) ────────────────────────────────────
 TRANCHE_SIZE = 8_000    # 每次買入 $8,000
@@ -754,9 +689,12 @@ def monitor_report(alert_only: bool = False) -> str:
 
     load_lot_cache()  # 預先載入每手快取
 
-    for code, entry in WATCHLIST.items():
-        board    = get_board(entry)
-        lot_size = get_lot_size(code, entry if isinstance(entry, dict) else None)
+    # 從 state.json 讀 watchlist（每隻股有 board 欄位）
+    watchlist = {code: st for code, st in state.items() if st.get("board")}
+
+    for code, entry in watchlist.items():
+        board    = entry.get("board", "main")
+        lot_size = get_lot_size(code, entry)
 
         quote = fetch_hk_quote(code)
         time.sleep(0.2)
@@ -768,7 +706,7 @@ def monitor_report(alert_only: bool = False) -> str:
         mcap_m   = quote["mcap"] / 1e6
         price    = quote["price"]
         tiers    = get_tiers(board)
-        shell_m  = get_shell_m(board, entry if isinstance(entry, dict) else None)
+        shell_m  = get_shell_m(board, entry)
         stock_st = get_stock_state(state, code)
 
         prev_tier_reached = stock_st.get("tier_reached", 0)
@@ -798,7 +736,7 @@ def monitor_report(alert_only: bool = False) -> str:
         tp_signals = check_take_profit(
             price, mcap_m, board, avg_cost, gain_pct,
             tranches, stock_st, lot_size,
-            entry if isinstance(entry, dict) else None,
+            entry,
         )
 
         # CCASS 集中度自動警示（唔寫入 state，每次動態查詢）
@@ -842,7 +780,7 @@ def monitor_report(alert_only: bool = False) -> str:
             avg2 = calc_avg_cost(tr)
             g2 = calc_gain_pct(avg2, p2) if avg2 and p2 else 0
             mcap2 = st2.get("last_mcap_m", 0)
-            board2 = get_board(WATCHLIST.get(code2, {}))
+            board2 = new_state.get(code2, {}).get("board", "main")
             m1 = (POST_ZERO_MAIN if board2 == "main" else POST_ZERO_GEM)[0]
             if (g2 >= (m1.get("gain_pct") or 999)) or \
                (mcap2 >= m1["mcap_m"] and g2 >= (m1.get("mcap_gain_pct") or 100)):
@@ -1111,15 +1049,13 @@ if __name__ == "__main__":
         if result:
             print(f"成功更新 {len(result)} 隻股票每手股數快取")
             # 顯示 Watchlist 股票的每手資訊
-            if WATCHLIST:
+            wl = load_state()
+            if wl:
                 print("\nWatchlist 每手股數:")
-                for code, entry in WATCHLIST.items():
-                    lot = get_lot_size(code, entry if isinstance(entry, dict) else None)
-                    print(f"  {int(code):04d}.HK  每手 {lot:,} 股")
-
-    elif not WATCHLIST:
-        print("WATCHLIST is empty. Add stock codes to hk_watchlist_monitor.py")
-        print_allocation_plan()
+                for code, entry in wl.items():
+                    if entry.get("board"):
+                        lot = get_lot_size(code, entry)
+                        print(f"  {int(code):04d}.HK  每手 {lot:,} 股")
 
     else:
         # 預設：全部報告 + 發 TG

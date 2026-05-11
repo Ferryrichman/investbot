@@ -47,21 +47,47 @@ async function handleCommand(text, env) {
   const cmd = parts[0].toLowerCase();
 
   if (cmd === "/buy") {
-    if (parts.length < 4) return "用法: /buy CODE PRICE HKD\n例: /buy 2370 1.05 8000";
-    const [, code, price, hkd] = parts;
-    return await recordBuy(code, parseFloat(price), parseFloat(hkd), env);
+    if (parts.length < 4) return "用法: /buy CODE 股數 價錢\n例: /buy 1740 70000 0.114";
+    const [, code, shares, price] = parts;
+    return await recordBuy(code, parseInt(shares), parseFloat(price), env);
   }
 
   if (cmd === "/sell") {
-    if (parts.length < 4) return "用法: /sell CODE PRICE SHARES\n例: /sell 2370 1.20 4000";
-    const [, code, price, shares] = parts;
-    return await recordSell(code, parseFloat(price), parseInt(shares), env);
+    if (parts.length < 4) return "用法: /sell CODE 股數 價錢\n例: /sell 1740 10000 0.20";
+    const [, code, shares, price] = parts;
+    return await recordSell(code, parseInt(shares), parseFloat(price), env);
   }
 
   if (cmd === "/zerocost") {
-    if (parts.length < 3) return "用法: /zerocost CODE SHARES\n例: /zerocost 2370 13000";
+    if (parts.length < 3) return "用法: /zerocost CODE 剩餘股數\n例: /zerocost 2370 13000";
     const [, code, remaining] = parts;
     return await markZeroCost(code, parseInt(remaining), env);
+  }
+
+  if (cmd === "/modify") {
+    if (parts.length < 4) return "用法: /modify CODE 股數 平均價\n例: /modify 1740 70000 0.114";
+    const [, code, shares, avgPrice] = parts;
+    return await modifyHolding(code, parseInt(shares), parseFloat(avgPrice), env);
+  }
+
+  if (cmd === "/del") {
+    if (parts.length < 2) return "用法: /del CODE\n例: /del 0368";
+    return await delHolding(parts[1], env);
+  }
+
+  if (cmd === "/add") {
+    if (parts.length < 2) return "用法: /add CODE [main/gem]\n例: /add 1234\n例: /add 8888 gem";
+    const board = (parts[2] || "").toLowerCase() === "gem" ? "gem" : "main";
+    return await addToWatchlist(parts[1], board, env);
+  }
+
+  if (cmd === "/remove") {
+    if (parts.length < 2) return "用法: /remove CODE\n例: /remove 1234";
+    return await removeFromWatchlist(parts[1], env);
+  }
+
+  if (cmd === "/watchlist") {
+    return await getWatchlist(env);
   }
 
   if (cmd === "/status") {
@@ -72,9 +98,14 @@ async function handleCommand(text, env) {
   if (cmd === "/help" || cmd === "/start") {
     return (
       "指令:\n" +
-      "/buy CODE PRICE HKD — 記錄買入\n" +
-      "/sell CODE PRICE SHARES — 記錄賣出\n" +
-      "/zerocost CODE SHARES — 標記0成本(剩餘股數)\n" +
+      "/buy CODE 股數 價錢 — 記錄買入\n" +
+      "/sell CODE 股數 價錢 — 記錄賣出\n" +
+      "/modify CODE 股數 平均價 — 修正持倉\n" +
+      "/del CODE — 刪除持倉\n" +
+      "/add CODE [main/gem] — 加入監察\n" +
+      "/remove CODE — 移除監察\n" +
+      "/watchlist — 睇監察清單\n" +
+      "/zerocost CODE 剩餘股數 — 標記0成本\n" +
       "/status CODE — 查看持倉\n" +
       "/status — 查看全部"
     );
@@ -131,23 +162,90 @@ async function saveState(state, sha, message, env) {
   return true;
 }
 
-async function recordBuy(code, price, hkd, env) {
+async function recordBuy(code, shares, price, env) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
   const now = new Date().toISOString().slice(0, 16).replace("T", " ");
-  const shares = Math.floor(hkd / price);
+  const hkd = shares * price;
   state[code4].tranches.push({ price, hkd, shares, date: now, note: "via TG" });
 
-  await saveState(state, sha, `tg: buy ${code4} @${price} $${hkd}`, env);
+  await saveState(state, sha, `tg: buy ${code4} ${shares}股 @${price}`, env);
 
   const total = state[code4].tranches.reduce((s, t) => s + t.hkd, 0);
-  return `${code4} 買入 ${shares}股 @$${price} 投$${hkd}\n累計投入$${total.toLocaleString()}`;
+  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}`;
 }
 
-async function recordSell(code, price, sharesSold, env) {
+async function addToWatchlist(code, board, env) {
+  const code4 = String(code).padStart(4, "0");
+  const { state, sha } = await getState(env);
+  if (state[code4] && state[code4].board) {
+    return `${code4} 已經喺監察清單 (${state[code4].board})`;
+  }
+  if (!state[code4]) {
+    state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
+  }
+  state[code4].board = board;
+
+  await saveState(state, sha, `tg: add ${code4} (${board})`, env);
+  return `${code4} 已加入監察 (${board === "gem" ? "創業板" : "主板"})\n每朝09:00自動檢查`;
+}
+
+async function removeFromWatchlist(code, env) {
+  const code4 = String(code).padStart(4, "0");
+  const { state, sha } = await getState(env);
+  if (!state[code4]) return `${code4} 唔存在`;
+  delete state[code4].board;
+
+  await saveState(state, sha, `tg: remove ${code4}`, env);
+  return `${code4} 已移除監察`;
+}
+
+async function getWatchlist(env) {
+  const { state } = await getState(env);
+  const watched = Object.entries(state).filter(([, v]) => v.board);
+  const mainList = watched.filter(([, v]) => v.board === "main").map(([c]) => c).sort();
+  const gemList = watched.filter(([, v]) => v.board === "gem").map(([c]) => c).sort();
+  const hasHolding = (v) => v.tranches && v.tranches.length > 0;
+  const mainHeld = watched.filter(([, v]) => v.board === "main" && hasHolding(v)).length;
+  const gemHeld = watched.filter(([, v]) => v.board === "gem" && hasHolding(v)).length;
+
+  let msg = `監察清單 ${watched.length}隻\n`;
+  msg += `\n主板 ${mainList.length}隻 (持倉${mainHeld}):\n${mainList.join(" ")}\n`;
+  msg += `\n創業板 ${gemList.length}隻 (持倉${gemHeld}):\n${gemList.join(" ")}`;
+  return msg;
+}
+
+async function delHolding(code, env) {
+  const code4 = String(code).padStart(4, "0");
+  const { state, sha } = await getState(env);
+  if (!state[code4]) return `${code4} 唔存在`;
+  if (!state[code4].tranches || !state[code4].tranches.length) return `${code4} 無持倉`;
+  state[code4].tranches = [];
+  state[code4].zero_cost_achieved = false;
+  state[code4].zero_cost_shares = null;
+
+  await saveState(state, sha, `tg: del ${code4}`, env);
+  return `${code4} 已刪除持倉`;
+}
+
+async function modifyHolding(code, shares, avgPrice, env) {
+  const code4 = String(code).padStart(4, "0");
+  const { state, sha } = await getState(env);
+  if (!state[code4]) {
+    state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
+  }
+  const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const hkd = shares * avgPrice;
+  state[code4].tranches = [{ price: avgPrice, hkd, shares, date: now, note: "modified via TG" }];
+
+  await saveState(state, sha, `tg: modify ${code4} ${shares}股 @${avgPrice}`, env);
+  return `${code4} 已修正\n${shares.toLocaleString()}股 @$${avgPrice}\n總投入$${hkd.toLocaleString()}`;
+}
+
+async function recordSell(code, sharesSold, price, env) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
   if (!state[code4] || !state[code4].tranches.length) {
@@ -158,7 +256,7 @@ async function recordSell(code, price, sharesSold, env) {
   state[code4].tranches.push({ price, hkd: -hkd, shares: -sharesSold, date: now, note: `sell via TG` });
 
   await saveState(state, sha, `tg: sell ${code4} ${sharesSold}股 @${price}`, env);
-  return `${code4} 賣出 ${sharesSold}股 @$${price} 收$${hkd.toLocaleString()}`;
+  return `${code4} 賣出 ${sharesSold.toLocaleString()}股 @$${price} 收$${hkd.toLocaleString()}`;
 }
 
 async function markZeroCost(code, remainShares, env) {
@@ -179,24 +277,46 @@ async function markZeroCost(code, remainShares, env) {
   return `${code4} 已標記0成本 剩${remainShares}股免費持倉`;
 }
 
+function _pnl(inv, val) {
+  const diff = val - inv;
+  const pct = inv > 0 ? (diff / inv * 100).toFixed(0) : 0;
+  const sign = diff >= 0 ? "+" : "";
+  return `${sign}$${diff.toLocaleString(undefined, {maximumFractionDigits: 0})} (${sign}${pct}%)`;
+}
+
+function _shares(tranches) {
+  return tranches.reduce((s, t) => s + (t.shares || 0), 0);
+}
+
 async function getStatus(code, env) {
   const { state } = await getState(env);
   if (!code) {
     const held = Object.entries(state).filter(([, v]) => v.tranches && v.tranches.length);
+    let totalInv = 0, totalVal = 0;
     const lines = held.map(([c, v]) => {
       const inv = v.tranches.reduce((s, t) => s + t.hkd, 0);
+      const shares = _shares(v.tranches);
+      const price = v.last_price || 0;
+      const val = shares * price;
+      totalInv += inv;
+      totalVal += val;
       const z = v.zero_cost_achieved ? " [0成本]" : "";
-      return `${c}${z} 投$${inv.toLocaleString()}`;
+      const avg = shares > 0 ? (inv / shares) : 0;
+      return `${c}${z} | ${shares.toLocaleString()}股 | @$${avg.toFixed(3)} | ${_pnl(inv, val)}`;
     });
-    return `持倉 ${held.length}隻:\n${lines.join("\n")}`;
+    const summary = `\n——\n總投$${totalInv.toLocaleString()} 現值$${totalVal.toLocaleString(undefined, {maximumFractionDigits: 0})} ${_pnl(totalInv, totalVal)}`;
+    return `持倉 ${held.length}隻:\n${lines.join("\n")}${summary}`;
   }
   const code4 = String(code).padStart(4, "0");
   const st = state[code4];
   if (!st) return `${code4} 唔存在`;
   if (!st.tranches || !st.tranches.length) return `${code4} 無持倉`;
   const inv = st.tranches.reduce((s, t) => s + t.hkd, 0);
+  const shares = _shares(st.tranches);
+  const price = st.last_price || 0;
+  const val = shares * price;
   const z = st.zero_cost_achieved ? `\n0成本 剩${st.zero_cost_shares}股` : "";
-  return `${code4}\n投$${inv.toLocaleString()}\n${st.tranches.length}筆交易${z}`;
+  return `${code4}\n${shares.toLocaleString()}股 @$${price}\n投$${inv.toLocaleString()} 值$${val.toLocaleString(undefined, {maximumFractionDigits: 0})} ${_pnl(inv, val)}${z}`;
 }
 
 // ── Telegram ──
