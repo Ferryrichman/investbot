@@ -14,6 +14,8 @@ const CHECK_LABELS = {
 const CHECK_ORDER = ['mcap','raise','recent_ipo','concentration','brokers','turnover','sideways','sponsor'];
 
 let RAW = null;
+let IS_UNLOCKED = false;
+const PASSPHRASE_KEY = 'fr_pe_passphrase';
 
 // ============================================================
 // Watchlist - persisted in localStorage
@@ -98,17 +100,73 @@ function updateSortIndicator() {
   });
 }
 
-async function load() {
+async function loadPreview() {
   try {
-    const r = await fetch('data.json?t=' + Date.now());
+    const r = await fetch('data_preview.json?t=' + Date.now());
     RAW = await r.json();
+    IS_UNLOCKED = false;
   } catch (e) {
     document.getElementById('stock_count').textContent = 'load failed';
     return;
   }
   document.getElementById('generated_at').textContent = new Date(RAW.generated_at).toLocaleString();
   document.getElementById('stock_count').textContent = RAW.stocks.length;
+  updateLockUI();
   render();
+}
+
+async function tryUnlock(passphrase, silent = false) {
+  try {
+    const r = await fetch('data.enc.json?t=' + Date.now());
+    if (!r.ok) throw new Error('encrypted blob not found');
+    const blob = await r.json();
+    const decrypted = await window.FRCrypto.decryptBlob(blob, passphrase);
+    RAW = decrypted;
+    IS_UNLOCKED = true;
+    localStorage.setItem(PASSPHRASE_KEY, passphrase);
+    document.getElementById('generated_at').textContent = new Date(RAW.generated_at).toLocaleString();
+    document.getElementById('stock_count').textContent = RAW.stocks.length;
+    updateLockUI();
+    render();
+    return true;
+  } catch (e) {
+    if (!silent) {
+      console.error('Unlock failed:', e);
+    }
+    return false;
+  }
+}
+
+function updateLockUI() {
+  const el = document.getElementById('lock_status');
+  const btn = document.getElementById('unlock_btn');
+  if (IS_UNLOCKED) {
+    el.textContent = '🔓 UNLOCKED · Full data';
+    el.className = 'lock-status unlocked';
+    btn.textContent = '🔒 Lock';
+    btn.onclick = () => {
+      localStorage.removeItem(PASSPHRASE_KEY);
+      location.reload();
+    };
+  } else {
+    el.textContent = `🔒 PREVIEW · ${RAW ? RAW.stocks.length : 5} stocks`;
+    el.className = 'lock-status locked';
+    btn.textContent = '🔓 Unlock';
+    btn.onclick = () => document.getElementById('unlock_modal').showModal();
+  }
+}
+
+async function load() {
+  await loadPreview();
+  // Auto-unlock if passphrase cached
+  const cached = localStorage.getItem(PASSPHRASE_KEY);
+  if (cached) {
+    const ok = await tryUnlock(cached, true);
+    if (!ok) {
+      // Cached pass invalid (rotation) — clear silently
+      localStorage.removeItem(PASSPHRASE_KEY);
+    }
+  }
 }
 
 function fmtHKD(n) {
@@ -429,6 +487,29 @@ function wireFilters() {
     }
   });
   updateWatchlistCount();
+
+  // Unlock modal wiring
+  const modal = document.getElementById('unlock_modal');
+  const input = document.getElementById('passphrase_input');
+  const submitBtn = document.getElementById('passphrase_submit');
+  const errEl = document.getElementById('unlock_error');
+  document.getElementById('unlock_close').addEventListener('click', () => modal.close());
+  const doSubmit = async () => {
+    errEl.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = '解鎖中...';
+    const ok = await tryUnlock(input.value.trim());
+    submitBtn.disabled = false;
+    submitBtn.textContent = '解鎖';
+    if (ok) {
+      modal.close();
+      input.value = '';
+    } else {
+      errEl.style.display = 'block';
+    }
+  };
+  submitBtn.addEventListener('click', doSubmit);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
 }
 
 wireFilters();

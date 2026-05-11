@@ -5,16 +5,39 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>啤 Monitor · Ferryrichman</title>
 <link rel="stylesheet" href="style.css">
+<script src="crypto.js" defer></script>
 </head>
 <body>
 <header>
-  <h1>🎯 啤 Monitor <small class="powered-by">Powered by Ferryrichman Limited</small></h1>
+  <h1>
+    <a href="../" class="back-link" title="返回 Ferryrichman">←</a>
+    🎯 啤 Monitor <small class="powered-by">Powered by Ferryrichman</small>
+  </h1>
   <div class="meta">
+    <span id="lock_status" class="lock-status locked">🔒 PREVIEW · 5 stocks</span>
+    &nbsp;·&nbsp;
     Updated: <span id="generated_at">—</span>
     &nbsp;·&nbsp;
     <span id="stock_count">0</span> stocks
+    &nbsp;·&nbsp;
+    <button id="unlock_btn" class="unlock-btn">🔓 Unlock</button>
   </div>
 </header>
+
+<!-- Unlock modal -->
+<dialog id="unlock_modal" class="unlock-modal">
+  <button id="unlock_close" class="close">×</button>
+  <h2>🔓 Unlock 完整版</h2>
+  <p>輸入 access passphrase 解鎖完整 1500+ 隻篩選結果 + CCASS 異動 alert。</p>
+  <input type="password" id="passphrase_input" placeholder="輸入 passphrase" autocomplete="off" />
+  <button id="passphrase_submit" class="btn-primary">解鎖</button>
+  <div id="unlock_error" class="error" style="display:none">❌ Passphrase 錯誤,請再試。</div>
+  <div class="unlock-hint">
+    冇 passphrase? TG 聯絡 <strong>@Ferryrichman</strong> 注明「啤 Monitor 解鎖」。
+    <br>
+    <a href="../#unlock">睇詳細 →</a>
+  </div>
+</dialog>
 
 <!-- 全頁水印 -->
 <div class="watermark"></div>

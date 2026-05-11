@@ -9,6 +9,7 @@ Daily orchestrator
 7. Generate data.json for frontend
 """
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -155,6 +156,12 @@ def screen_candidates():
 
 
 def export_json(out_path=JSON_OUT):
+    """
+    Export 3 files:
+      data.json       — full unencrypted (local dev only, gitignored)
+      data_preview.json — top 5 candidates (public)
+      data.enc.json   — full encrypted with INVESTBOT_PE_PASSPHRASE (if set)
+    """
     candidates = screen_candidates()
 
     # Trim - frontend 唔需要全部 raw 資料
@@ -216,6 +223,38 @@ def export_json(out_path=JSON_OUT):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     print(f"[pipeline] Wrote {len(summary)} stocks → {out_path}")
+
+    # ── Preview (top 5,公開可見)──
+    preview_summary = sorted(summary, key=lambda x: -x["score"])[:5]
+    # 隱藏敏感欄位
+    for s in preview_summary:
+        s.pop("trend", None)  # 唔派 sparkline
+    preview_out = {
+        "generated_at": out["generated_at"],
+        "thresholds": out["thresholds"],
+        "stocks": preview_summary,
+        "is_preview": True,
+    }
+    preview_path = out_path.parent / "data_preview.json"
+    with open(preview_path, "w", encoding="utf-8") as f:
+        json.dump(preview_out, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"[pipeline] Wrote preview ({len(preview_summary)} stocks) → {preview_path}")
+
+    # ── Encrypted full data ──
+    passphrase = os.environ.get("INVESTBOT_PE_PASSPHRASE")
+    if passphrase:
+        try:
+            from shared.encrypt import encrypt_bytes
+            plaintext = json.dumps(out, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            blob = encrypt_bytes(plaintext, passphrase)
+            enc_path = out_path.parent / "data.enc.json"
+            with open(enc_path, "w", encoding="utf-8") as f:
+                json.dump(blob, f, separators=(",", ":"))
+            print(f"[pipeline] Wrote encrypted blob → {enc_path}")
+        except Exception as e:
+            print(f"[pipeline] ❌ Encryption failed: {e}")
+    else:
+        print("[pipeline] INVESTBOT_PE_PASSPHRASE not set — skipping encrypted export")
 
 
 def run_full(skip_hkex=False, skip_price=False, skip_ipo=False,

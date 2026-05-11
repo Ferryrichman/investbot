@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'frontend/**'
+      - 'landing/**'
+      - 'build.sh'
       - '.github/workflows/deploy_pages.yml'
   workflow_dispatch:
 
@@ -25,9 +27,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Build dist/ structure
+        run: bash build.sh
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./frontend
+          path: ./dist
+
       - id: deployment
         uses: actions/deploy-pages@v4
