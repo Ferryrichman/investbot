@@ -1015,6 +1015,13 @@
         "lots": 0,
         "date": "2025-01-01 00:00",
         "note": "imported from Excel"
+      },
+      {
+        "price": 0.075,
+        "hkd": 225,
+        "shares": 3000,
+        "date": "2026-05-11 06:12",
+        "note": "via TG"
       }
     ],
     "zero_cost_achieved": false,
