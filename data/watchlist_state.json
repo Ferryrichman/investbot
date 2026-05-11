@@ -125,7 +125,15 @@
   },
   "1429": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0,
+        "hkd": 8,
+        "shares": null,
+        "date": "2026-05-11 06:02",
+        "note": "via TG"
+      }
+    ],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
