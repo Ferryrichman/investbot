@@ -59,7 +59,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 264.0,
+    "last_mcap_m": 264,
     "last_price": 0.44,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -99,7 +99,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 264.0,
+    "last_mcap_m": 264,
     "last_price": 0.6,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -124,7 +124,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 220.0,
+    "last_mcap_m": 220,
     "last_price": 0.44,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -147,7 +147,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 416.0,
+    "last_mcap_m": 416,
     "last_price": 0.26,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -250,7 +250,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 550.0,
+    "last_mcap_m": 550,
     "last_price": 0.55,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -275,7 +275,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 264.0,
+    "last_mcap_m": 264,
     "last_price": 0.132,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -340,7 +340,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 228.0,
+    "last_mcap_m": 228,
     "last_price": 0.38,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -413,7 +413,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 276.0,
+    "last_mcap_m": 276,
     "last_price": 0.138,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -451,7 +451,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 340.0,
+    "last_mcap_m": 340,
     "last_price": 0.34,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -491,7 +491,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 3000,
-    "last_mcap_m": 318.0,
+    "last_mcap_m": 318,
     "last_price": 0.53,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -591,7 +591,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 187.0,
+    "last_mcap_m": 187,
     "last_price": 0.187,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -681,7 +681,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 295.0,
+    "last_mcap_m": 295,
     "last_price": 0.59,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -696,7 +696,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 355.0,
+    "last_mcap_m": 355,
     "last_price": 0.355,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -769,7 +769,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 368.0,
+    "last_mcap_m": 368,
     "last_price": 0.46,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -794,7 +794,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 200.0,
+    "last_mcap_m": 200,
     "last_price": 0.16,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -832,8 +832,8 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 700.0,
-    "last_price": 1.0,
+    "last_mcap_m": 700,
+    "last_price": 1,
     "last_check": "2026-05-14 09:43",
     "board": "main"
   },
@@ -862,7 +862,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 385.0,
+    "last_mcap_m": 385,
     "last_price": 0.385,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -892,7 +892,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 500.0,
+    "last_mcap_m": 500,
     "last_price": 0.8,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -915,7 +915,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 500,
-    "last_mcap_m": 190.0,
+    "last_mcap_m": 190,
     "last_price": 0.95,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -940,7 +940,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 396.0,
+    "last_mcap_m": 396,
     "last_price": 0.495,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -965,7 +965,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 346.0,
+    "last_mcap_m": 346,
     "last_price": 0.173,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1015,7 +1015,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 360.0,
+    "last_mcap_m": 360,
     "last_price": 0.36,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1030,7 +1030,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 300.0,
+    "last_mcap_m": 300,
     "last_price": 0.6,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1055,7 +1055,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 545.0,
+    "last_mcap_m": 545,
     "last_price": 1.09,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1103,7 +1103,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 256.0,
+    "last_mcap_m": 256,
     "last_price": 0.64,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1148,7 +1148,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 380.0,
+    "last_mcap_m": 380,
     "last_price": 0.95,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1163,7 +1163,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 645.0,
+    "last_mcap_m": 645,
     "last_price": 1.29,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1188,7 +1188,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 195.0,
+    "last_mcap_m": 195,
     "last_price": 0.195,
     "last_check": "2026-05-14 09:43",
     "board": "main"
@@ -1212,7 +1212,7 @@
     "zero_cost_date": null,
     "lot_size": 2000,
     "last_mcap_m": 1037.5,
-    "last_price": 2.0,
+    "last_price": 2,
     "last_check": "2026-05-14 09:43",
     "board": "main"
   },
@@ -1300,7 +1300,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 107.0,
+    "last_mcap_m": 107,
     "last_price": 0.107,
     "last_check": "2026-05-14 09:43",
     "board": "gem"
@@ -1325,7 +1325,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 76.0,
+    "last_mcap_m": 76,
     "last_price": 0.076,
     "last_check": "2026-05-14 09:43",
     "board": "gem"
@@ -1403,24 +1403,14 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 3180.0,
+    "last_mcap_m": 3180,
     "last_price": 1.59,
     "last_check": "2026-05-14 09:43",
     "board": "main"
   },
   "0368": {
     "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 200,
-        "price": 0.26,
-        "hkd": 1040,
-        "shares": 4000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
+    "tranches": [],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1428,7 +1418,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 640.0,
+    "last_mcap_m": 640,
     "last_price": 0.8,
     "last_check": "2026-05-14 09:43",
     "board": "main"
