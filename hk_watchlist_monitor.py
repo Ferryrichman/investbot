@@ -738,8 +738,8 @@ def monitor_report(alert_only: bool = False) -> str:
         ccass_alert = check_ccass_concentration(code)
         ccass_alerts = [ccass_alert] if ccass_alert else []
 
-        # 更新狀態（tier_reached 只升不降——高水位，防止市值反彈後重複觸發同層）
-        stock_st["tier_reached"] = max(prev_tier_reached, new_tier_reached)
+        # tier_reached 唔再由 monitor 更新，只由 TG /buy 記帳時更新
+        # 咁未買入嘅層會每日重複提醒直到用戶行動
         stock_st["lot_size"]     = lot_size
         stock_st["last_mcap_m"]  = round(mcap_m, 2)
         stock_st["last_price"]   = price
