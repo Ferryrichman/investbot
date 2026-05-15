@@ -71,7 +71,11 @@ async function handleCommand(text, env) {
   }
 
   if (cmd === "/del") {
-    if (parts.length < 2) return "用法: /del CODE\n例: /del 0368";
+    if (parts.length < 2) return "用法:\n/del CODE — 刪除持倉\n/del CODE watchlist — 刪除持倉+移除監察";
+    const delWL = (parts[2] || "").toLowerCase();
+    if (delWL === "watchlist" || delWL === "wl") {
+      return await delAll(parts[1], env);
+    }
     return await delHolding(parts[1], env);
   }
 
@@ -122,7 +126,8 @@ async function handleCommand(text, env) {
       "/buy CODE 股數 價錢 — 記錄買入\n" +
       "/sell CODE 股數 價錢 — 記錄賣出\n" +
       "/modify CODE 股數 平均價 — 修正持倉\n" +
-      "/del CODE — 刪除持倉\n" +
+      "/del CODE — 刪除持倉（保留監察）\n" +
+      "/del CODE watchlist — 刪除持倉+移除監察\n" +
       "/add CODE [main/gem] — 加入監察\n" +
       "/remove CODE — 移除監察\n" +
       "/watchlist — 睇監察清單\n" +
@@ -257,8 +262,18 @@ async function delHolding(code, env) {
   state[code4].zero_cost_achieved = false;
   state[code4].zero_cost_shares = null;
 
-  await saveState(state, sha, `tg: del ${code4}`, env);
-  return `${code4} 已刪除持倉`;
+  await saveState(state, sha, `tg: del holding ${code4}`, env);
+  return `${code4} 已刪除持倉（仍在監察）`;
+}
+
+async function delAll(code, env) {
+  const code4 = String(code).padStart(4, "0");
+  const { state, sha } = await getState(env);
+  if (!state[code4]) return `${code4} 唔存在`;
+  delete state[code4];
+
+  await saveState(state, sha, `tg: del all ${code4}`, env);
+  return `${code4} 已刪除持倉 + 移除監察`;
 }
 
 async function modifyHolding(code, shares, avgPrice, env) {
