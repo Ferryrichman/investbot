@@ -705,11 +705,11 @@
     "tier_reached": 6,
     "tranches": [
       {
-        "price": 0.143,
-        "hkd": 4719,
-        "shares": 33000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
+        "price": 0.142,
+        "hkd": 9798,
+        "shares": 69000,
+        "date": "2026-05-15 03:42",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
