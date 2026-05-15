@@ -1389,17 +1389,7 @@
   },
   "0368": {
     "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 200,
-        "price": 0.26,
-        "hkd": 1040,
-        "shares": 4000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
+    "tranches": [],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
