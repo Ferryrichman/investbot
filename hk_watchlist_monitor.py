@@ -21,7 +21,7 @@ HK 港股 Watchlist Monitor  v3
 """
 
 import os, sys, json, time, requests, math, sqlite3
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -684,12 +684,13 @@ def check_ccass_concentration(
 # ============================================================
 
 def monitor_report(alert_only: bool = False) -> str:
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
     state = load_state()
     new_state = dict(state)
 
     all_blocks    = []
-    signal_blocks = []
+    buy_blocks    = []   # 建倉信號
+    sell_blocks   = []   # 止賺信號
     no_data       = []
 
     load_lot_cache()  # 預先載入每手快取
@@ -748,8 +749,10 @@ def monitor_report(alert_only: bool = False) -> str:
         block = build_stock_block(code, board, quote, stock_st, new_tiers, tp_signals, ccass_alerts)
         all_blocks.append(block)
 
-        if new_tiers or tp_signals or ccass_alerts:
-            signal_blocks.append(block)
+        if new_tiers:
+            buy_blocks.append(block)
+        if tp_signals or ccass_alerts:
+            sell_blocks.append(block)
 
     save_state(new_state)
 
@@ -819,17 +822,27 @@ def monitor_report(alert_only: bool = False) -> str:
             out.append(f"{i}. {first_line}\n{rest}")
         return f"\n{dash}\n".join(out)
 
+    signal_blocks = sell_blocks + buy_blocks  # for quiet filter below
+
     if alert_only:
-        if not signal_blocks:
+        if not sell_blocks and not buy_blocks:
             return f"{summary}\n\n暫無新訊號"
-        n_sig = len(signal_blocks)
-        return summary + f"\n\n止賺信號 ({n_sig}隻)\n{dash}\n" + _numbered(signal_blocks)
+        msg = summary
+        if sell_blocks:
+            msg += f"\n\n止賺信號 ({len(sell_blocks)}隻)\n{dash}\n" + _numbered(sell_blocks)
+        if buy_blocks:
+            msg += f"\n\n建倉信號 ({len(buy_blocks)}隻)\n{dash}\n" + _numbered(buy_blocks)
+        return msg
 
     # ── Full report: signals first, then others ──
     parts = [summary]
-    if signal_blocks:
-        parts.append(f"\n止賺/買入信號 ({len(signal_blocks)}隻)\n{dash}")
-        parts.append(_numbered(signal_blocks))
+    if sell_blocks:
+        parts.append(f"\n止賺信號 ({len(sell_blocks)}隻)\n{dash}")
+        parts.append(_numbered(sell_blocks))
+    if buy_blocks:
+        parts.append(f"\n建倉信號 ({len(buy_blocks)}隻)\n{dash}")
+        parts.append(_numbered(buy_blocks))
+    if sell_blocks or buy_blocks:
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
     quiet = [b for b in all_blocks if b not in signal_blocks]
