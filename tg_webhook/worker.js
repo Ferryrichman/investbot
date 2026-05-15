@@ -202,15 +202,10 @@ async function recordBuy(code, shares, price, env) {
   const hkd = shares * price;
   state[code4].tranches.push({ price, hkd, shares, date: now, note: "via TG" });
 
-  // 每次 /buy 推進 tier_reached +1，令 monitor 唔再提醒已買層
-  const prev = state[code4].tier_reached || 0;
-  state[code4].tier_reached = prev + 1;
-
   await saveState(state, sha, `tg: buy ${code4} ${shares}股 @${price}`, env);
 
-  const total = state[code4].tranches.reduce((s, t) => s + t.hkd, 0);
-  const tier = state[code4].tier_reached;
-  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()} (tier ${tier})`;
+  const total = state[code4].tranches.filter(t => t.hkd > 0).reduce((s, t) => s + t.hkd, 0);
+  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}`;
 }
 
 async function addToWatchlist(code, board, env) {

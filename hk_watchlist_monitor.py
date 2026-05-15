@@ -533,7 +533,7 @@ def _get_shares(tranches: list[dict], lot_size: int) -> int:
 
 def build_stock_block(
     code: str, board: str, quote: dict,
-    stock_st: dict, new_tiers: list[int],
+    stock_st: dict, shortfall: float,
     tp_signals: list[dict],
     ccass_alerts: list[str] | None = None,
 ) -> str:
@@ -544,6 +544,11 @@ def build_stock_block(
     name      = quote["name"]
     tranches  = stock_st.get("tranches", [])
     zero_done = stock_st.get("zero_cost_achieved", False)
+
+    tiers     = get_tiers(board)
+    tiers_now = current_tier_reached(mcap_m, board)
+    expected  = tiers_now * TRANCHE_SIZE
+    actual    = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
 
     sign = "+" if chg >= 0 else ""
     total_invested = sum(t["hkd"] for t in tranches)
@@ -557,7 +562,7 @@ def build_stock_block(
     # ── 股票名 ──
     lines.append(f"{code4} {name}")
     # ── 價格 + 市值 ──
-    lines.append(f" ${price:.3f}{chg_str} [{fmt_mcap(mcap_m)}]")
+    lines.append(f"  ${price:.3f}{chg_str} [{fmt_mcap(mcap_m)}]")
 
     # ── 持倉 ──
     if zero_done:
@@ -569,18 +574,17 @@ def build_stock_block(
         val = shares * price
         lines.append(f"  持{shares:,}股 值${val:,.0f}")
         gain_str = f" [{gain_pct:+.0f}%]" if gain_pct is not None else ""
-        lines.append(f"成本投入${total_invested:,.0f}{gain_str}")
+        lines.append(f"  投入${actual:,.0f} 應投${expected:,.0f}{gain_str}")
 
-    # ── 買入訊號 ──
-    for nt in new_tiers:
-        est_shares = round_to_lots(TRANCHE_SIZE / price, lot_size, "down")
+    # ── 建倉訊號（差額補倉）──
+    if shortfall > 0:
+        est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else "?"
-        lines.append(
-            f"  >> 買入 {est_lots}手({est_shares:,}股) ${est_shares*price:,.0f}"
-        )
-        lines.append(
-            f"  /buy {code} {est_shares} {price}"
-        )
+        if not tranches:
+            lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+        else:
+            lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+        lines.append(f"  /buy {code} {est_shares} {price}")
 
     # ── 止賺訊號 ──
     for sig in tp_signals:
@@ -715,16 +719,16 @@ def monitor_report(alert_only: bool = False) -> str:
         shell_m  = get_shell_m(board, entry)
         stock_st = get_stock_state(state, code)
 
-        prev_tier_reached = stock_st.get("tier_reached", 0)
-        new_tier_reached  = current_tier_reached(mcap_m, board)
-
-        # 找出新觸發的層（只提醒，唔自動寫 tranche，由用戶 TG /buy 記帳）
-        new_tiers = []
-        if new_tier_reached > prev_tier_reached:
-            newly     = tiers[prev_tier_reached:new_tier_reached]
-            new_tiers = newly
-
         tranches = stock_st.get("tranches", [])
+        zero_done = stock_st.get("zero_cost_achieved", False)
+
+        # ── 建倉差額：應投入 vs 實際投入 ──
+        tiers_now    = current_tier_reached(mcap_m, board)
+        expected_inv = tiers_now * TRANCHE_SIZE
+        actual_inv   = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
+        # 0成本股唔再補倉；未觸發任何層(expected=0)亦唔提示
+        shortfall    = max(0, expected_inv - actual_inv) if (not zero_done and expected_inv > 0) else 0
+
         avg_cost = calc_avg_cost(tranches) if tranches else None
         gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else 0.0
 
@@ -738,18 +742,16 @@ def monitor_report(alert_only: bool = False) -> str:
         ccass_alert = check_ccass_concentration(code)
         ccass_alerts = [ccass_alert] if ccass_alert else []
 
-        # tier_reached 唔再由 monitor 更新，只由 TG /buy 記帳時更新
-        # 咁未買入嘅層會每日重複提醒直到用戶行動
         stock_st["lot_size"]     = lot_size
         stock_st["last_mcap_m"]  = round(mcap_m, 2)
         stock_st["last_price"]   = price
         stock_st["last_check"]   = now
         new_state[code] = stock_st
 
-        block = build_stock_block(code, board, quote, stock_st, new_tiers, tp_signals, ccass_alerts)
+        block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts)
         all_blocks.append(block)
 
-        if new_tiers:
+        if shortfall > 0:
             buy_blocks.append(block)
         if tp_signals or ccass_alerts:
             sell_blocks.append(block)
