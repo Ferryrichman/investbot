@@ -580,7 +580,9 @@ def build_stock_block(
     if shortfall > 0:
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else "?"
-        if not tranches:
+        if zero_done:
+            lines.append(f"  >> 再買入機會 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+        elif not tranches:
             lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
         else:
             lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
@@ -726,8 +728,9 @@ def monitor_report(alert_only: bool = False) -> str:
         tiers_now    = current_tier_reached(mcap_m, board)
         expected_inv = tiers_now * TRANCHE_SIZE
         actual_inv   = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
-        # 0成本股唔再補倉；未觸發任何層(expected=0)亦唔提示
-        shortfall    = max(0, expected_inv - actual_inv) if (not zero_done and expected_inv > 0) else 0
+        # 0成本股：用 zero_cost 前嘅買入金額做 actual，仍然比較差額
+        # 未觸發任何層(expected=0)唔提示
+        shortfall    = max(0, expected_inv - actual_inv) if expected_inv > 0 else 0
 
         avg_cost = calc_avg_cost(tranches) if tranches else None
         gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else 0.0
