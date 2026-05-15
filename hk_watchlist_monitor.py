@@ -576,22 +576,25 @@ def build_stock_block(
         gain_str = f" [{gain_pct:+.0f}%]" if gain_pct is not None else ""
         lines.append(f"  投入${actual:,.0f} 應投${expected:,.0f}{gain_str}")
 
-    # ── 建倉訊號（差額補倉）──
+    # ── 建倉訊號（差額補倉）── 不足1手就 skip
     if shortfall > 0:
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
-        est_lots   = est_shares // lot_size if lot_size > 0 else "?"
-        if zero_done:
-            lines.append(f"  >> 再買入機會 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
-        elif not tranches:
-            lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
-        else:
-            lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
-        lines.append(f"  /buy {code} {est_shares} {price}")
+        est_lots   = est_shares // lot_size if lot_size > 0 else 0
+        if est_shares > 0:
+            if zero_done:
+                lines.append(f"  >> 再買入機會 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+            elif not tranches:
+                lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+            else:
+                lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+            lines.append(f"  /buy {code} {est_shares} {price}")
 
-    # ── 止賺訊號 ──
+    # ── 止賺訊號 ── sell 0股 skip
     for sig in tp_signals:
-        sl = sig.get("sell_lots", 0)
         ss = sig.get("sell_shares", 0)
+        if ss <= 0:
+            continue
+        sl = sig.get("sell_lots", 0)
         rv = sig.get("recv_hkd", 0)
         rm = sig.get("remain", 0)
         label = sig.get("label", "")
@@ -751,12 +754,17 @@ def monitor_report(alert_only: bool = False) -> str:
         stock_st["last_check"]   = now
         new_state[code] = stock_st
 
+        # 計算實際可買股數，用嚟決定係咪出建倉信號
+        buy_shares = round_to_lots(shortfall / price, lot_size, "down") if (shortfall > 0 and price > 0) else 0
+        # 過濾 sell 0股 嘅 tp_signals
+        valid_tp = [s for s in tp_signals if s.get("sell_shares", 0) > 0]
+
         block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts)
         all_blocks.append(block)
 
-        if shortfall > 0:
+        if shortfall > 0 and buy_shares > 0:
             buy_blocks.append(block)
-        if tp_signals or ccass_alerts:
+        if valid_tp or ccass_alerts:
             sell_blocks.append(block)
 
     save_state(new_state)
