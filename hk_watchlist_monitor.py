@@ -849,6 +849,19 @@ def monitor_report(alert_only: bool = False) -> str:
         if valid_tp or ccass_alerts or (dr is not None and dr > 60):
             sell_blocks.append(block)
 
+    # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
+    for code_fix, st_fix in new_state.items():
+        tr_fix = st_fix.get("tranches", [])
+        if not tr_fix:
+            continue
+        sh_fix = sum(t.get("shares", 0) for t in tr_fix)
+        inv_fix = sum(t.get("hkd", 0) for t in tr_fix)
+        if sh_fix > 0 and inv_fix <= 0 and not st_fix.get("zero_cost_achieved"):
+            st_fix["zero_cost_achieved"] = True
+            st_fix["zero_cost_shares"] = sh_fix
+            if not st_fix.get("zero_cost_date"):
+                st_fix["zero_cost_date"] = now[:10]
+
     save_state(new_state)
 
     # ── 持倉總覽 ──
