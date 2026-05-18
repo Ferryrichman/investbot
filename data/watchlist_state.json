@@ -18,13 +18,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "tier_m": 60,
-        "price": 0.044,
-        "hkd": 2200.0,
-        "shares": 50000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.049,
+        "hkd": 2940.0,
+        "shares": 60000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -43,13 +41,11 @@
     "tier_reached": 3,
     "tranches": [
       {
-        "tier_m": 120,
-        "price": 0.117,
-        "hkd": 4212.0,
-        "shares": 36000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.15,
+        "hkd": 8400.0,
+        "shares": 56000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -188,13 +184,11 @@
     "tier_reached": 1,
     "tranches": [
       {
-        "tier_m": 80,
-        "price": 0.154,
-        "hkd": 3080.0,
-        "shares": 20000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.149,
+        "hkd": 5960.0,
+        "shares": 40000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -263,13 +257,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "tier_m": 150,
-        "price": 0.256,
-        "hkd": 3072.0,
-        "shares": 12000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.262,
+        "hkd": 5764.0,
+        "shares": 22000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -303,13 +295,11 @@
     "tier_reached": 5,
     "tranches": [
       {
-        "tier_m": 30,
-        "price": 0.235,
-        "hkd": 1410.0,
-        "shares": 6000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.189,
+        "hkd": 10773.0,
+        "shares": 57000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -634,13 +624,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "tier_m": 150,
-        "price": 0.249,
-        "hkd": 5976.0,
-        "shares": 24000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.272,
+        "hkd": 8704.0,
+        "shares": 32000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -814,13 +802,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "tier_m": 150,
-        "price": 0.127,
-        "hkd": 2540.0,
-        "shares": 20000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.143,
+        "hkd": 5005.0,
+        "shares": 35000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -1027,17 +1013,7 @@
   },
   "2501": {
     "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 200,
-        "price": 0.86,
-        "hkd": 1720.0,
-        "shares": 2000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
+    "tranches": [],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1208,17 +1184,7 @@
   },
   "0368": {
     "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 200,
-        "price": 0.26,
-        "hkd": 1040.0,
-        "shares": 4000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
+    "tranches": [],
     "zero_cost_achieved": false,
     "zero_cost_shares": null,
     "zero_cost_price": null,
@@ -1306,13 +1272,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "tier_m": 150,
-        "price": 0.285,
-        "hkd": 3135.0,
-        "shares": 11000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
+        "price": 0.313,
+        "hkd": 5008.0,
+        "shares": 16000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,
@@ -1400,11 +1364,11 @@
     "tier_reached": 6,
     "tranches": [
       {
-        "price": 0.143,
-        "hkd": 4719.0,
-        "shares": 33000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
+        "price": 0.142,
+        "hkd": 9798.0,
+        "shares": 69000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
       }
     ],
     "zero_cost_achieved": false,

@@ -241,17 +241,18 @@ function render(state) {
 
     if (v.last_check && v.last_check > lastCheck) lastCheck = v.last_check;
 
-    const actualInv = tr.filter(t => (t.hkd||0) > 0).reduce((s,t) => s + t.hkd, 0);
+    // netInv = 淨投入 (買入-賣出收回), grossInv = 總買入 (shortfall 用)
+    const netInv = tr.reduce((s,t) => s + (t.hkd||0), 0);
+    const grossInv = tr.filter(t => (t.hkd||0) > 0).reduce((s,t) => s + t.hkd, 0);
     const shares = tr.reduce((s,t) => s + (t.shares||0), 0);
     const val = shares * price;
-    const position = Math.max(actualInv, val);
+    const position = Math.max(grossInv, val);
     const tiersNow = tiersTriggered(mcap, board);
     const expected = tiersNow * TRANCHE;
-    const shortfall = (!zeroDone && expected > 0) ? Math.max(0, expected - position) :
-                      (zeroDone && expected > 0) ? Math.max(0, expected - position) : 0;
+    const shortfall = expected > 0 ? Math.max(0, expected - position) : 0;
 
-    // Avg cost & gain
-    const avgCost = shares > 0 ? actualInv / shares : 0;
+    // Avg cost & gain — 同 TG Bot 一致，用淨投入
+    const avgCost = shares > 0 ? netInv / shares : 0;
     const gainPct = avgCost > 0 && price > 0 ? ((price - avgCost) / avgCost * 100) : 0;
 
     // Sell signals (simplified: gain >= 100% and mcap >= 400M, or gain >= 200%)
@@ -265,11 +266,11 @@ function render(state) {
 
     totalRealized += (v.realized_pnl || 0);
     if (!cleared && tr.length) {
-      totalInv += actualInv;
+      totalInv += netInv;
       totalVal += val;
     }
 
-    const item = { code, board, mcap, price, shares, actualInv, val, position, expected,
+    const item = { code, board, mcap, price, shares, netInv, grossInv, val, position, expected,
                    shortfall, avgCost, gainPct, zeroDone, cleared, sellSignal,
                    chg: v.last_check ? 0 : 0, name: '', realizedPnl: v.realized_pnl || 0,
                    zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1 };
@@ -340,7 +341,7 @@ function stockCard(s, mode) {
     const gainColor = s.gainPct >= 0 ? '#3fb950' : '#f85149';
     posHtml = `<div class="stock-pos">
       持 <span class="val">${s.shares.toLocaleString()}股</span> ·
-      投 <span class="val">${fmtMoney(s.actualInv)}</span> ·
+      @$${s.avgCost > 0 ? s.avgCost.toFixed(3) : '0.000'} ·
       值 <span class="val">${fmtMoney(s.val)}</span>
       <span style="color:${gainColor}"> ${fmtPct(s.gainPct)}</span>
       ${s.expected > 0 ? `<br>應投 ${fmtMoney(s.expected)} · 倉位 ${fmtMoney(s.position)}` : ''}
