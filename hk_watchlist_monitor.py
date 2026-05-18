@@ -290,11 +290,25 @@ def fetch_debt_ratio(code: str) -> float | None:
         return None
 
 
-def debt_warning(debt_ratio: float | None) -> str:
-    """負債比率警告文字"""
+def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
+    """負債比率警告文字（含連續2季>100%強制平倉追蹤）"""
     if debt_ratio is None:
         return ""
     if debt_ratio > 100:
+        since = stock_st.get("debt_over100_since") if stock_st else None
+        if since:
+            msg = f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 自{since}起持續>100%"
+            # 6 months = 2 quarters
+            try:
+                from datetime import datetime
+                start = datetime.strptime(since, "%Y-%m")
+                now = datetime.now()
+                months = (now.year - start.year) * 12 + (now.month - start.month)
+                if months >= 6:
+                    msg += " ❗逾2季未好轉 → 強制平倉"
+            except Exception:
+                pass
+            return msg
         return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 建議平倉"
     if debt_ratio > 80:
         return f"  🔴 強警告! 負債率{debt_ratio:.0f}% — 建議減持"
@@ -616,7 +630,7 @@ def build_stock_block(
             lines.append(f"  應投${expected:,.0f} 倉位${position:,.0f}{gain_str}")
 
     # ── 負債警告 ──
-    dw = debt_warning(debt_ratio)
+    dw = debt_warning(debt_ratio, stock_st)
     if dw:
         lines.append(dw)
 
@@ -805,6 +819,11 @@ def monitor_report(alert_only: bool = False) -> str:
         stock_st["last_check"]   = now
         if dr is not None:
             stock_st["debt_ratio"] = round(dr, 1)
+            if dr > 100:
+                if not stock_st.get("debt_over100_since"):
+                    stock_st["debt_over100_since"] = datetime.now().strftime("%Y-%m")
+            else:
+                stock_st.pop("debt_over100_since", None)
         new_state[code] = stock_st
 
         # 計算實際可買股數，用嚟決定係咪出建倉信號
