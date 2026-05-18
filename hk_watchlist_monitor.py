@@ -224,8 +224,8 @@ def _get_yf_crumb() -> tuple[requests.Session, str]:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
     })
-    s.get("https://finance.yahoo.com", timeout=15)
-    r = s.get("https://query1.finance.yahoo.com/v1/test/getcrumb", timeout=10)
+    s.get("https://fc.yahoo.com", timeout=15)
+    r = s.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=10)
     crumb = r.text.strip()
     if not crumb or "{" in crumb:
         raise RuntimeError(f"Failed to get Yahoo crumb: {crumb[:80]}")
@@ -264,6 +264,43 @@ def fetch_hk_quote(code: str) -> dict | None:
     except Exception as e:
         print(f"  [quote] {symbol} error: {e}")
         return None
+
+
+def fetch_debt_ratio(code: str) -> float | None:
+    """取負債比率 (debt ratio %)，Yahoo D/E → debt/(debt+equity)"""
+    symbol = f"{int(code):04d}.HK"
+    try:
+        s, crumb = _get_yf_crumb()
+        url = (
+            f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
+            f"?modules=financialData&crumb={crumb}"
+        )
+        r = s.get(url, timeout=10, headers={"Accept": "application/json"})
+        data = r.json().get("quoteSummary", {}).get("result")
+        if not data:
+            return None
+        fd = data[0].get("financialData", {})
+        d2e_raw = fd.get("debtToEquity", {})
+        d2e = d2e_raw.get("raw") if isinstance(d2e_raw, dict) else None
+        if d2e is not None:
+            d2e_dec = d2e / 100
+            return d2e_dec / (1 + d2e_dec) * 100
+        return None
+    except Exception:
+        return None
+
+
+def debt_warning(debt_ratio: float | None) -> str:
+    """負債比率警告文字"""
+    if debt_ratio is None:
+        return ""
+    if debt_ratio > 100:
+        return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 建議平倉"
+    if debt_ratio > 80:
+        return f"  🔴 強警告! 負債率{debt_ratio:.0f}% — 建議減持"
+    if debt_ratio > 60:
+        return f"  ⚠️ 負債警告 負債率{debt_ratio:.0f}%"
+    return ""
 
 
 # ============================================================
@@ -536,6 +573,7 @@ def build_stock_block(
     stock_st: dict, shortfall: float,
     tp_signals: list[dict],
     ccass_alerts: list[str] | None = None,
+    debt_ratio: float | None = None,
 ) -> str:
     mcap_m    = quote["mcap"] / 1e6
     lot_size  = stock_st.get("lot_size", 1)
@@ -576,6 +614,11 @@ def build_stock_block(
         gain_str = f" [{gain_pct:+.0f}%]" if gain_pct is not None else ""
         if expected > 0:
             lines.append(f"  應投${expected:,.0f} 倉位${position:,.0f}{gain_str}")
+
+    # ── 負債警告 ──
+    dw = debt_warning(debt_ratio)
+    if dw:
+        lines.append(dw)
 
     # ── 建倉訊號（差額補倉）── 不足1手就 skip
     if shortfall > 0:
@@ -750,10 +793,18 @@ def monitor_report(alert_only: bool = False) -> str:
         ccass_alert = check_ccass_concentration(code)
         ccass_alerts = [ccass_alert] if ccass_alert else []
 
+        # 負債比率（只 check 有持倉嘅股票，省 API call）
+        dr = None
+        if tranches or zero_done:
+            dr = fetch_debt_ratio(code)
+            time.sleep(0.15)
+
         stock_st["lot_size"]     = lot_size
         stock_st["last_mcap_m"]  = round(mcap_m, 2)
         stock_st["last_price"]   = price
         stock_st["last_check"]   = now
+        if dr is not None:
+            stock_st["debt_ratio"] = round(dr, 1)
         new_state[code] = stock_st
 
         # 計算實際可買股數，用嚟決定係咪出建倉信號
@@ -761,12 +812,12 @@ def monitor_report(alert_only: bool = False) -> str:
         # 過濾 sell 0股 嘅 tp_signals
         valid_tp = [s for s in tp_signals if s.get("sell_shares", 0) > 0]
 
-        block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts)
+        block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts, dr)
         all_blocks.append(block)
 
         if shortfall > 0 and buy_shares > 0:
             buy_blocks.append(block)
-        if valid_tp or ccass_alerts:
+        if valid_tp or ccass_alerts or (dr is not None and dr > 60):
             sell_blocks.append(block)
 
     save_state(new_state)

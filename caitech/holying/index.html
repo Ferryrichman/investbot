@@ -84,6 +84,8 @@ header .back{color:#8b949e;font-size:13px}
 .signal-buy{background:#23863614;border:1px solid #23863633;color:#3fb950}
 .signal-sell{background:#f8514914;border:1px solid #f8514933;color:#f85149}
 .signal-rebuy{background:#d2992214;border:1px solid #d2992233;color:#d29922}
+.signal-debt-warn{background:#d2992214;border:1px solid #d2992244;color:#d29922}
+.signal-debt-danger{background:#f8514914;border:1px solid #f8514944;color:#f85149}
 .signal .cmd{
   display:inline-block;margin-top:4px;padding:2px 8px;
   background:#0d1117;border:1px solid #30363d;border-radius:3px;
@@ -280,8 +282,9 @@ function render(state) {
       totalVal += val;
     }
 
+    const debtRatio = v.debt_ratio || null;
     const item = { code, board, mcap, price, shares, netInv, grossInv, val, position, expected,
-                   shortfall, avgCost, gainPct, zeroDone, cleared, sellSignal,
+                   shortfall, avgCost, gainPct, zeroDone, cleared, sellSignal, debtRatio,
                    chg: v.last_check ? 0 : 0, name: '', realizedPnl: v.realized_pnl || 0,
                    zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1 };
 
@@ -376,6 +379,18 @@ function stockCard(s, mode) {
     </div>`;
   }
 
+  // Debt ratio warning
+  let debtHtml = '';
+  if (s.debtRatio != null) {
+    if (s.debtRatio > 100) {
+      debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 建議平倉</div>`;
+    } else if (s.debtRatio > 80) {
+      debtHtml = `<div class="signal signal-debt-danger">🔴 強警告! 負債率${s.debtRatio.toFixed(0)}% — 建議減持</div>`;
+    } else if (s.debtRatio > 60) {
+      debtHtml = `<div class="signal signal-debt-warn">⚠️ 負債警告 負債率${s.debtRatio.toFixed(0)}%</div>`;
+    }
+  }
+
   return `<div class="stock">
     <div class="stock-hdr">
       <span class="stock-code">${code4}</span>${boardTag}
@@ -383,6 +398,7 @@ function stockCard(s, mode) {
       <span class="stock-mcap">${mcapStr}</span>
     </div>
     ${posHtml}
+    ${debtHtml}
     ${signalHtml}
   </div>`;
 }

@@ -12,7 +12,8 @@
     "last_mcap_m": 265.84,
     "last_price": 0.13,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 3.2
   },
   "8447": {
     "tier_reached": 2,
@@ -35,7 +36,8 @@
     "last_mcap_m": 76.0,
     "last_price": 0.076,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 75.6
   },
   "1156": {
     "tier_reached": 3,
@@ -58,7 +60,8 @@
     "last_mcap_m": 122.08,
     "last_price": 0.207,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 107.0
   },
   "8400": {
     "tier_reached": 1,
@@ -83,7 +86,8 @@
     "last_mcap_m": 99.0,
     "last_price": 0.099,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 6.5
   },
   "1284": {
     "tier_reached": 1,
@@ -108,7 +112,8 @@
     "last_mcap_m": 264.0,
     "last_price": 0.44,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 18.1
   },
   "8532": {
     "tier_reached": 5,
@@ -123,7 +128,8 @@
     "last_mcap_m": 5.77,
     "last_price": 0.068,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 141.0
   },
   "1346": {
     "tier_reached": 1,
@@ -138,7 +144,8 @@
     "last_mcap_m": 869.18,
     "last_price": 1.36,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 4.1
   },
   "8495": {
     "tier_reached": 1,
@@ -153,7 +160,8 @@
     "last_mcap_m": 109.44,
     "last_price": 0.285,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 66.6
   },
   "1407": {
     "tier_reached": 1,
@@ -178,7 +186,8 @@
     "last_mcap_m": 255.2,
     "last_price": 0.58,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 17.6
   },
   "8620": {
     "tier_reached": 1,
@@ -201,7 +210,8 @@
     "last_mcap_m": 76.56,
     "last_price": 0.145,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 54.4
   },
   "1433": {
     "tier_reached": 2,
@@ -226,7 +236,8 @@
     "last_mcap_m": 161.15,
     "last_price": 0.081,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 19.8
   },
   "8241": {
     "tier_reached": 4,
@@ -251,7 +262,8 @@
     "last_mcap_m": 46.29,
     "last_price": 0.128,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 118.0
   },
   "1449": {
     "tier_reached": 2,
@@ -274,7 +286,8 @@
     "last_mcap_m": 180.0,
     "last_price": 0.27,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 60.1
   },
   "1455": {
     "tier_reached": 1,
@@ -289,7 +302,8 @@
     "last_mcap_m": 283.84,
     "last_price": 0.222,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 11.3
   },
   "8103": {
     "tier_reached": 5,
@@ -312,7 +326,8 @@
     "last_mcap_m": 23.82,
     "last_price": 0.184,
     "last_check": "2026-05-15 11:04",
-    "board": "gem"
+    "board": "gem",
+    "debt_ratio": 1398.0
   },
   "1473": {
     "tier_reached": 1,
@@ -335,7 +350,8 @@
     "last_mcap_m": 580.14,
     "last_price": 0.495,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 40.1
   },
   "1489": {
     "tier_reached": 1,
@@ -350,7 +366,8 @@
     "last_mcap_m": 560.0,
     "last_price": 0.56,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 4.9
   },
   "1545": {
     "tier_reached": 1,
@@ -375,7 +392,8 @@
     "last_mcap_m": 266.0,
     "last_price": 0.133,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 17.7
   },
   "1553": {
     "tier_reached": 1,
@@ -390,7 +408,8 @@
     "last_mcap_m": 698.42,
     "last_price": 1.61,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 6.8
   },
   "1582": {
     "tier_reached": 1,
@@ -415,7 +434,8 @@
     "last_mcap_m": 217.5,
     "last_price": 0.435,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 47.9
   },
   "1615": {
     "tier_reached": 1,
@@ -440,7 +460,8 @@
     "last_mcap_m": 219.0,
     "last_price": 0.365,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 6.8
   },
   "1620": {
     "tier_reached": 3,
@@ -465,7 +486,8 @@
     "last_mcap_m": 146.4,
     "last_price": 0.122,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 10.3
   },
   "1643": {
     "tier_reached": 1,
@@ -488,7 +510,8 @@
     "last_mcap_m": 2260.8,
     "last_price": 3.14,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.0
   },
   "1650": {
     "tier_reached": 1,
@@ -513,7 +536,8 @@
     "last_mcap_m": 276.0,
     "last_price": 0.138,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 6.8
   },
   "1767": {
     "tier_reached": 1,
@@ -528,7 +552,8 @@
     "last_mcap_m": 340.0,
     "last_price": 0.34,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 1.7
   },
   "1793": {
     "tier_reached": 1,
@@ -553,7 +578,8 @@
     "last_mcap_m": 218.13,
     "last_price": 0.275,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 3.5
   },
   "1795": {
     "tier_reached": 1,
@@ -568,7 +594,8 @@
     "last_mcap_m": 318.0,
     "last_price": 0.53,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 54.0
   },
   "1832": {
     "tier_reached": 1,
@@ -593,7 +620,8 @@
     "last_mcap_m": 313.2,
     "last_price": 0.87,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 85.3
   },
   "1843": {
     "tier_reached": 2,
@@ -618,7 +646,8 @@
     "last_mcap_m": 168.0,
     "last_price": 0.21,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 30.8
   },
   "1871": {
     "tier_reached": 2,
@@ -641,7 +670,8 @@
     "last_mcap_m": 148.23,
     "last_price": 0.34,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 21.9
   },
   "1891": {
     "tier_reached": 2,
@@ -666,7 +696,8 @@
     "last_mcap_m": 170.0,
     "last_price": 0.17,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 28.7
   },
   "1927": {
     "tier_reached": 3,
@@ -691,7 +722,8 @@
     "last_mcap_m": 156.82,
     "last_price": 0.198,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 42.2
   },
   "1941": {
     "tier_reached": 3,
@@ -716,7 +748,8 @@
     "last_mcap_m": 137.81,
     "last_price": 0.34,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 50.0
   },
   "1947": {
     "tier_reached": 1,
@@ -741,7 +774,8 @@
     "last_mcap_m": 279.07,
     "last_price": 0.465,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 11.2
   },
   "1955": {
     "tier_reached": 1,
@@ -756,7 +790,8 @@
     "last_mcap_m": 310.0,
     "last_price": 0.62,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 38.6
   },
   "1960": {
     "tier_reached": 1,
@@ -771,7 +806,8 @@
     "last_mcap_m": 385.0,
     "last_price": 0.385,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 36.6
   },
   "2108": {
     "tier_reached": 1,
@@ -796,7 +832,8 @@
     "last_mcap_m": 368.0,
     "last_price": 0.46,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 49.2
   },
   "2129": {
     "tier_reached": 2,
@@ -819,7 +856,8 @@
     "last_mcap_m": 200.0,
     "last_price": 0.16,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 21.9
   },
   "2159": {
     "tier_reached": 1,
@@ -834,7 +872,8 @@
     "last_mcap_m": 469.59,
     "last_price": 1.73,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 34.1
   },
   "2230": {
     "tier_reached": 1,
@@ -849,7 +888,8 @@
     "last_mcap_m": 472.1,
     "last_price": 0.237,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.3
   },
   "2263": {
     "tier_reached": 1,
@@ -864,7 +904,8 @@
     "last_mcap_m": 385.0,
     "last_price": 0.385,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.0
   },
   "2347": {
     "tier_reached": 1,
@@ -879,7 +920,8 @@
     "last_mcap_m": 334.02,
     "last_price": 0.69,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 7.1
   },
   "2350": {
     "tier_reached": 1,
@@ -894,7 +936,8 @@
     "last_mcap_m": 506.25,
     "last_price": 0.81,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 4.7
   },
   "2372": {
     "tier_reached": 1,
@@ -919,7 +962,8 @@
     "last_mcap_m": 396.0,
     "last_price": 0.495,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 17.7
   },
   "2381": {
     "tier_reached": 1,
@@ -944,7 +988,8 @@
     "last_mcap_m": 334.0,
     "last_price": 0.167,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 2.8
   },
   "2455": {
     "tier_reached": 1,
@@ -969,7 +1014,8 @@
     "last_mcap_m": 209.05,
     "last_price": 0.71,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 33.0
   },
   "2457": {
     "tier_reached": 1,
@@ -994,7 +1040,8 @@
     "last_mcap_m": 360.0,
     "last_price": 0.36,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 1.5
   },
   "2497": {
     "tier_reached": 1,
@@ -1009,7 +1056,8 @@
     "last_mcap_m": 300.0,
     "last_price": 0.6,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 21.1
   },
   "2501": {
     "tier_reached": 1,
@@ -1024,7 +1072,8 @@
     "last_mcap_m": 545.0,
     "last_price": 1.09,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 40.1
   },
   "2528": {
     "tier_reached": 1,
@@ -1049,7 +1098,8 @@
     "last_mcap_m": 240.0,
     "last_price": 0.6,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 45.4
   },
   "2529": {
     "tier_reached": 1,
@@ -1064,7 +1114,8 @@
     "last_mcap_m": 467.2,
     "last_price": 2.92,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.6
   },
   "2545": {
     "tier_reached": 1,
@@ -1079,7 +1130,8 @@
     "last_mcap_m": 259.2,
     "last_price": 0.405,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 56.7
   },
   "2885": {
     "tier_reached": 1,
@@ -1094,7 +1146,8 @@
     "last_mcap_m": 380.0,
     "last_price": 0.95,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 2.7
   },
   "3348": {
     "tier_reached": 1,
@@ -1109,7 +1162,8 @@
     "last_mcap_m": 645.0,
     "last_price": 1.29,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.2
   },
   "3830": {
     "tier_reached": 2,
@@ -1134,7 +1188,8 @@
     "last_mcap_m": 195.0,
     "last_price": 0.195,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 2.2
   },
   "6939": {
     "tier_reached": 1,
@@ -1157,7 +1212,8 @@
     "last_mcap_m": 985.63,
     "last_price": 1.9,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 7.4
   },
   "9929": {
     "tier_reached": 1,
@@ -1180,7 +1236,8 @@
     "last_mcap_m": 3240.0,
     "last_price": 1.62,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.5
   },
   "0368": {
     "tier_reached": 1,
@@ -1195,7 +1252,8 @@
     "last_mcap_m": 640.0,
     "last_price": 0.8,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 69.2
   },
   "1740": {
     "tier_reached": 3,
@@ -1218,7 +1276,8 @@
     "last_mcap_m": 186.75,
     "last_price": 0.18,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 0.4
   },
   "1408": {
     "tier_reached": 1,
@@ -1243,7 +1302,8 @@
     "last_mcap_m": 210.0,
     "last_price": 0.42,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 7.5
   },
   "1429": {
     "tier_reached": 1,
@@ -1266,7 +1326,8 @@
     "last_mcap_m": 408.0,
     "last_price": 0.255,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 20.0
   },
   "1971": {
     "tier_reached": 2,
@@ -1289,7 +1350,8 @@
     "last_mcap_m": 155.62,
     "last_price": 0.375,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 1.8
   },
   "2205": {
     "tier_reached": 1,
@@ -1312,7 +1374,8 @@
     "last_mcap_m": 700.0,
     "last_price": 1.0,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 1.3
   },
   "2370": {
     "tier_reached": 6,
@@ -1335,7 +1398,8 @@
     "last_mcap_m": 190.0,
     "last_price": 0.95,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 7.0
   },
   "2505": {
     "tier_reached": 1,
@@ -1358,7 +1422,8 @@
     "last_mcap_m": 379.01,
     "last_price": 0.85,
     "last_check": "2026-05-15 11:04",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 73.1
   },
   "1965": {
     "tier_reached": 6,
@@ -1381,7 +1446,8 @@
     "lot_size": 1000,
     "last_mcap_m": 54.15,
     "last_price": 0.14,
-    "last_check": "2026-05-15 11:04"
+    "last_check": "2026-05-15 11:04",
+    "debt_ratio": 103.0
   },
   "1111": {
     "tier_reached": 0,
@@ -1396,7 +1462,8 @@
     "last_mcap_m": 181.87,
     "last_price": 0.236,
     "last_check": "2026-05-18 00:00",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 25.4
   },
   "2215": {
     "tier_reached": 0,
@@ -1411,7 +1478,8 @@
     "last_mcap_m": 209.1,
     "last_price": 0.237,
     "last_check": "2026-05-18 00:00",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 2.3
   },
   "2352": {
     "tier_reached": 0,
@@ -1426,7 +1494,8 @@
     "last_mcap_m": 234.47,
     "last_price": 3.5,
     "last_check": "2026-05-18 00:00",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 9.0
   },
   "6913": {
     "tier_reached": 0,
@@ -1441,6 +1510,7 @@
     "last_mcap_m": 233.45,
     "last_price": 0.175,
     "last_check": "2026-05-18 00:00",
-    "board": "main"
+    "board": "main",
+    "debt_ratio": 25.0
   }
 }
