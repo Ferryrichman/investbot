@@ -19,11 +19,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "price": 0.049,
-        "hkd": 2940.0,
-        "shares": 60000,
+        "price": 0.056,
+        "hkd": 4480.0,
+        "shares": 80000,
         "date": "2026-05-18",
-        "note": "sync from TG Bot"
+        "note": "corrected via Claude"
       }
     ],
     "zero_cost_achieved": false,

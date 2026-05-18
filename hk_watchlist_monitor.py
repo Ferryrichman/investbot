@@ -908,6 +908,19 @@ def monitor_report(alert_only: bool = False) -> str:
     if not cash_ok:
         summary += f"\n⚠ 現金低於{MIN_CASH_PCT*100:.0f}%! 暫停買入"
 
+    # ── Data integrity check ──
+    integrity_warns = []
+    for code3, st3 in new_state.items():
+        tr3 = st3.get("tranches", [])
+        if not tr3:
+            continue
+        s3 = sum(t.get("shares", 0) for t in tr3)
+        lot3 = st3.get("lot_size", 1)
+        if lot3 > 1 and s3 > 0 and s3 % lot3 != 0:
+            integrity_warns.append(f"  {int(code3):04d}: {s3:,}股 唔係{lot3:,}整手")
+    if integrity_warns:
+        summary += "\n\n⚠ 數據異常:\n" + "\n".join(integrity_warns)
+
     dash = "-------------------"
 
     def _numbered(blocks):

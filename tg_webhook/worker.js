@@ -191,9 +191,15 @@ async function saveState(state, sha, message, env) {
 
 async function recordBuy(code, shares, price, env) {
   const code4 = String(code).padStart(4, "0");
+  if (shares <= 0 || price <= 0) return `❌ 股數同價錢必須 > 0`;
   const { state, sha } = await getState(env);
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
+  }
+  // Lot size check
+  const lot = state[code4].lot_size || 0;
+  if (lot > 1 && shares % lot !== 0) {
+    return `⚠️ ${code4} 每手${lot.toLocaleString()}股，${shares.toLocaleString()}股唔係整手！\n確認無誤請用 /modify ${code4} 股數 均價`;
   }
   // 如果之前已清倉，開新倉但保留歷史盈虧
   if (state[code4].cleared) {
@@ -278,23 +284,47 @@ async function delAll(code, env) {
 
 async function modifyHolding(code, shares, avgPrice, env) {
   const code4 = String(code).padStart(4, "0");
+  if (shares <= 0) return `❌ 股數必須 > 0`;
   const { state, sha } = await getState(env);
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
+  // Lot size warning (not blocking — modify is for corrections)
+  const lot = state[code4].lot_size || 0;
+  let warn = "";
+  if (lot > 1 && shares % lot !== 0) {
+    warn = `\n⚠️ 每手${lot.toLocaleString()}股，${shares.toLocaleString()}股唔係整手`;
+  }
+  // Show before vs after
+  const oldTr = state[code4].tranches || [];
+  const oldShares = oldTr.reduce((s, t) => s + (t.shares || 0), 0);
+  const oldInv = oldTr.reduce((s, t) => s + (t.hkd || 0), 0);
+  const oldAvg = oldShares > 0 ? oldInv / oldShares : 0;
+
   const now = new Date().toISOString().slice(0, 16).replace("T", " ");
   const hkd = shares * avgPrice;
   state[code4].tranches = [{ price: avgPrice, hkd, shares, date: now, note: "modified via TG" }];
 
   await saveState(state, sha, `tg: modify ${code4} ${shares}股 @${avgPrice}`, env);
-  return `${code4} 已修正\n${shares.toLocaleString()}股 @$${avgPrice}\n總投入$${hkd.toLocaleString()}`;
+  return `${code4} 已修正${warn}\n舊: ${oldShares.toLocaleString()}股 @$${oldAvg.toFixed(4)} 投$${oldInv.toLocaleString()}\n新: ${shares.toLocaleString()}股 @$${avgPrice} 投$${hkd.toLocaleString()}`;
 }
 
 async function recordSell(code, sharesSold, price, env) {
   const code4 = String(code).padStart(4, "0");
+  if (sharesSold <= 0 || price <= 0) return `❌ 股數同價錢必須 > 0`;
   const { state, sha } = await getState(env);
   if (!state[code4] || !state[code4].tranches.length) {
     return `${code4} 無持倉記錄`;
+  }
+  // Check not selling more than held
+  const held = state[code4].tranches.reduce((s, t) => s + (t.shares || 0), 0);
+  if (sharesSold > held) {
+    return `⚠️ ${code4} 只持${held.toLocaleString()}股，唔可以賣${sharesSold.toLocaleString()}股`;
+  }
+  // Lot size check
+  const lot = state[code4].lot_size || 0;
+  if (lot > 1 && sharesSold % lot !== 0) {
+    return `⚠️ ${code4} 每手${lot.toLocaleString()}股，${sharesSold.toLocaleString()}股唔係整手！`;
   }
   const now = new Date().toISOString().slice(0, 16).replace("T", " ");
   const hkd = sharesSold * price;
