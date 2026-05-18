@@ -2,15 +2,19 @@ name: HK Watchlist Monitor
 
 on:
   schedule:
-    # 早上開市前 check (HKT 09:00 = UTC 01:00)
+    # 早上開市前 full report (HKT 09:00 = UTC 01:00)
     - cron: '0 1 * * 1-5'    # 週一至週五 09:00 HKT
+    # Intraday 即時信號 (每15分鐘, 09:15-16:00 HKT = UTC 01:15-08:00)
+    - cron: '15,30,45 1 * * 1-5'     # 09:15, 09:30, 09:45 HKT
+    - cron: '*/15 2-7 * * 1-5'       # 10:00-15:45 HKT
+    - cron: '0 8 * * 1-5'            # 16:00 HKT (收市)
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Run mode: send / alert / check'
-        default: 'send'
+        description: 'Run mode: send / alert / check / intraday'
+        default: 'alert'
         type: choice
-        options: [send, alert, check]
+        options: [send, alert, check, intraday]
 
 permissions:
   contents: write
@@ -30,18 +34,35 @@ jobs:
       - name: Install dependencies
         run: pip install requests truststore
 
+      - name: Determine run mode
+        id: mode
+        run: |
+          if [ -n "${{ inputs.mode }}" ]; then
+            echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
+          else
+            # Cron: 01:00 UTC = alert (morning), others = intraday
+            HOUR=$(date -u +%H)
+            MIN=$(date -u +%M)
+            if [ "$HOUR" = "01" ] && [ "$MIN" -lt "10" ]; then
+              echo "mode=alert" >> $GITHUB_OUTPUT
+            else
+              echo "mode=intraday" >> $GITHUB_OUTPUT
+            fi
+          fi
+
       - name: Run Watchlist Monitor
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          MODE="${{ inputs.mode }}"
-          python hk_watchlist_monitor.py ${MODE:-alert}
+          echo "Running mode: ${{ steps.mode.outputs.mode }}"
+          python hk_watchlist_monitor.py ${{ steps.mode.outputs.mode }}
 
       - name: Save state
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase || true
           git add data/watchlist_state.json || true
           git diff --staged --quiet || git commit -m "auto: watchlist state $(date -u +%Y-%m-%d_%H%M)"
           git push || true
