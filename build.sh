@@ -9,7 +9,7 @@
 set -e
 
 rm -rf dist
-mkdir -p dist/pe dist/holying
+mkdir -p dist/pe dist/caitech/holying
 
 # Landing page at root
 cp -r landing/* dist/
@@ -30,8 +30,11 @@ if [ -f frontend/data.enc.json ]; then
   cp frontend/data.enc.json dist/pe/
 fi
 
-# 好L型財技 under /holying/
-cp holying/index.html dist/holying/
+# 港股財技 section
+cp caitech/index.html dist/caitech/
+
+# 好L型財技 under /caitech/holying/
+cp holying/index.html dist/caitech/holying/
 
 # Note: frontend/data.json is gitignored at deploy — never publicly served
 echo "Built dist/ structure:"

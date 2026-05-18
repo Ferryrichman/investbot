@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>港股財技 · Ferryrichman</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;
+  background:#0a0d14;color:#e6edf3;font-size:15px;line-height:1.6;
+  overflow-x:hidden;min-height:100vh;
+}
+a{color:#58a6ff;text-decoration:none;transition:color .15s}
+a:hover{color:#79c0ff}
+
+/* BG */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.35;animation:fl 20s ease-in-out infinite}
+.o1{width:500px;height:500px;background:radial-gradient(circle,#f0883e 0%,transparent 70%);top:-120px;left:-80px}
+.o2{width:550px;height:550px;background:radial-gradient(circle,#f85149 0%,transparent 70%);bottom:-100px;right:-120px;animation-delay:-7s}
+@keyframes fl{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.06)}}
+
+.wrap{max-width:800px;margin:0 auto;padding:0 24px}
+
+/* Header */
+header{padding:20px 0;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;color:#fff}
+.logo-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#f0883e,#f85149);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.logo-text{font-weight:700;font-size:16px}
+header nav a{color:#a0a8b8;font-size:14px;font-weight:500;margin-left:24px}
+header nav a:hover{color:#fff}
+
+/* Hero */
+.hero{padding:80px 0 60px;text-align:center}
+.hero h1{font-size:clamp(36px,6vw,56px);line-height:1.1;margin-bottom:16px;font-weight:800}
+.hero h1 span{
+  background:linear-gradient(135deg,#f0883e,#f85149);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{font-size:17px;color:#a0a8b8;max-width:520px;margin:0 auto 48px}
+
+/* Cards */
+.cards{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:80px}
+.card{
+  position:relative;padding:28px 24px;
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;overflow:hidden;transition:transform .2s,border-color .2s;
+}
+.card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.15)}
+.card .glow{
+  position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at top right,rgba(240,136,62,.12),transparent 50%);
+  pointer-events:none;
+}
+.card.live .glow{background:radial-gradient(circle at top right,rgba(63,185,80,.15),transparent 50%)}
+.card-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  padding:3px 10px;background:rgba(255,255,255,.05);border-radius:999px;
+  margin-bottom:16px;color:#8b949e;
+}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot-live{background:#3fb950;box-shadow:0 0 6px #3fb950;animation:pulse 2s infinite}
+.dot-soon{background:#f8c555}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.card.live .card-status{color:#3fb950}
+.card.soon{opacity:.6}
+.card h3{font-size:22px;margin-bottom:4px;position:relative;z-index:1}
+.card .tag{color:#a0a8b8;font-size:13px;margin-bottom:16px;position:relative;z-index:1}
+.card .desc{font-size:13px;color:#c9d1d9;line-height:1.7;margin-bottom:20px;position:relative;z-index:1}
+.card .btn{
+  display:inline-block;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e6edf3;
+  position:relative;z-index:1;transition:all .15s;
+}
+.card .btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.card.live .btn{
+  background:linear-gradient(135deg,rgba(240,136,62,.15),rgba(248,81,73,.15));
+  border-color:rgba(240,136,62,.3);color:#f0883e;
+}
+.card .btn.disabled{color:#8b949e;cursor:not-allowed;pointer-events:none}
+
+/* Footer */
+footer{
+  text-align:center;padding:24px 0;font-size:11px;color:#484f58;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+
+@media(max-width:640px){
+  .hero{padding:50px 0 40px}
+  header nav a{margin-left:16px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="orb o1"></div><div class="orb o2"></div></div>
+
+<div class="wrap">
+
+<header>
+  <a class="logo" href="../">
+    <div class="logo-mark">FR</div>
+    <span class="logo-text">Ferryrichman</span>
+  </a>
+  <nav>
+    <a href="../">Home</a>
+    <a href="../pe/">Monitor</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>港股<span>財技</span></h1>
+  <p>系統化追蹤港股細價股財技動作 — 殼股、供股、配股、莊家活動。量化偵測，TG 即時提醒。</p>
+</section>
+
+<div class="cards">
+
+  <div class="card live">
+    <div class="glow"></div>
+    <div class="card-status"><span class="dot dot-live"></span> LIVE</div>
+    <h3>好L型財技</h3>
+    <div class="tag">細市值分層建倉 · 自動止賺 · 0成本追蹤</div>
+    <div class="desc">
+      66隻細價股 watchlist，市值跌穿觸發位自動提醒建倉 $6,000/層。
+      持倉 vs 應投金額即時對照，補倉差額一目了然。
+      浮盈達標自動提示止賺 → 0成本持倉。
+      TG Bot 記帳，每朝09:00 HKT 自動推送信號。
+    </div>
+    <a href="holying/" class="btn">入去睇 →</a>
+  </div>
+
+  <div class="card soon">
+    <div class="glow"></div>
+    <div class="card-status"><span class="dot dot-soon"></span> COMING SOON</div>
+    <h3>供股配股 GO</h3>
+    <div class="tag">折讓配售 · 強制供股偵測</div>
+    <div class="desc">
+      即時公告 scrape，自動計算折讓 %、包銷商、ex-date。
+      歷史折讓股 backtest，TG 即時 push。
+    </div>
+    <span class="btn disabled">籌備中</span>
+  </div>
+
+  <div class="card soon">
+    <div class="glow"></div>
+    <div class="card-status"><span class="dot dot-soon"></span> COMING SOON</div>
+    <h3>殼股活動追蹤</h3>
+    <div class="tag">CCASS異動 · 大股東變動 · 殼價估算</div>
+    <div class="desc">
+      CCASS 集中度時序追蹤，莊家入貨/出貨偵測。
+      大股東持股變動即時 alert，殼價回升信號。
+    </div>
+    <span class="btn disabled">籌備中</span>
+  </div>
+
+</div>
+
+<footer>
+  港股財技 · Ferryrichman · 只供研究用途，並非投資建議
+</footer>
+
+</div>
+</body>
+</html>
