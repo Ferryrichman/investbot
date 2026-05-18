@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8080", "--directory", "frontend"],
       "port": 8080
+    },
+    {
+      "name": "holying",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8787", "--directory", "holying"],
+      "port": 8787
     }
   ]
 }

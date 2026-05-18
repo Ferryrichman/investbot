@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>好L型財技 · Ferryrichman</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"SF Mono","Menlo","Monaco","Consolas","PingFang TC","Microsoft JhengHei",monospace;
+  background:#0a0d14;color:#c9d1d9;font-size:14px;line-height:1.5;
+  min-height:100vh;
+}
+a{color:#58a6ff;text-decoration:none}
+a:hover{color:#79c0ff}
+
+/* Layout */
+.wrap{max-width:960px;margin:0 auto;padding:12px 16px 60px}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid #21262d;margin-bottom:16px}
+header h1{font-size:18px;font-weight:700;color:#e6edf3}
+header h1 span{color:#f0883e}
+header .meta{font-size:12px;color:#8b949e}
+header .back{color:#8b949e;font-size:13px}
+
+/* Summary card */
+.summary{
+  background:#161b22;border:1px solid #30363d;border-radius:8px;
+  padding:16px;margin-bottom:16px;
+}
+.summary .row{display:flex;flex-wrap:wrap;gap:8px 24px}
+.summary .item{display:flex;flex-direction:column}
+.summary .label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.summary .val{font-size:18px;font-weight:700;color:#e6edf3}
+.summary .val.green{color:#3fb950}
+.summary .val.red{color:#f85149}
+.summary .val.warn{color:#d29922}
+.cash-bar{margin-top:10px;height:6px;background:#21262d;border-radius:3px;overflow:hidden}
+.cash-fill{height:100%;border-radius:3px;transition:width 0.5s}
+
+/* Rules box */
+.rules{
+  background:#161b22;border:1px solid #30363d;border-radius:8px;
+  padding:14px 16px;margin-bottom:16px;font-size:12px;color:#8b949e;
+  line-height:1.7;
+}
+.rules summary{cursor:pointer;color:#e6edf3;font-size:13px;font-weight:600}
+.rules .tier-row{display:flex;gap:4px;margin:4px 0}
+.rules .tier{background:#21262d;padding:2px 8px;border-radius:4px;font-size:11px;color:#c9d1d9}
+
+/* Section headers */
+.section-hdr{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 0 6px;margin-top:8px;
+  border-bottom:1px solid #21262d;
+  font-size:14px;font-weight:700;color:#e6edf3;
+}
+.section-hdr .badge{
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;
+}
+.badge-sell{background:#f8514922;color:#f85149}
+.badge-buy{background:#3fb95022;color:#3fb950}
+.badge-hold{background:#8b949e22;color:#8b949e}
+
+/* Stock card */
+.stock{
+  background:#161b22;border:1px solid #30363d;border-radius:6px;
+  padding:12px 14px;margin:8px 0;
+}
+.stock-hdr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.stock-code{font-weight:700;font-size:15px;color:#e6edf3}
+.stock-name{font-size:12px;color:#8b949e}
+.stock-price{font-size:13px;color:#c9d1d9}
+.stock-chg-up{color:#3fb950}
+.stock-chg-dn{color:#f85149}
+.stock-mcap{font-size:11px;color:#8b949e;background:#21262d;padding:1px 6px;border-radius:3px}
+
+.stock-pos{font-size:12px;color:#8b949e;margin-top:6px}
+.stock-pos .val{color:#c9d1d9}
+
+.signal{
+  margin-top:8px;padding:8px 10px;border-radius:5px;font-size:12px;
+}
+.signal-buy{background:#23863614;border:1px solid #23863633;color:#3fb950}
+.signal-sell{background:#f8514914;border:1px solid #f8514933;color:#f85149}
+.signal-rebuy{background:#d2992214;border:1px solid #d2992233;color:#d29922}
+.signal .cmd{
+  display:inline-block;margin-top:4px;padding:2px 8px;
+  background:#0d1117;border:1px solid #30363d;border-radius:3px;
+  font-family:monospace;font-size:11px;color:#79c0ff;
+  user-select:all;
+}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #21262d}
+.tab{
+  padding:8px 16px;font-size:13px;font-weight:600;color:#8b949e;
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all 0.15s;
+}
+.tab:hover{color:#c9d1d9}
+.tab.active{color:#e6edf3;border-bottom-color:#f0883e}
+.tab .count{font-size:11px;font-weight:400;margin-left:4px;color:#8b949e}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:#8b949e;font-size:13px}
+.loading .spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Footer */
+footer{text-align:center;padding:24px 0;font-size:11px;color:#484f58;border-top:1px solid #21262d;margin-top:24px}
+
+/* Mobile */
+@media(max-width:600px){
+  .summary .val{font-size:15px}
+  .summary .row{gap:6px 16px}
+  .stock{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <a href="../" class="back">← Ferryrichman</a>
+    <h1><span>好L型</span>財技</h1>
+  </div>
+  <div class="meta">
+    <div>最後更新: <span id="lastUpdate">—</span></div>
+  </div>
+</header>
+
+<div class="summary" id="summary">
+  <div class="loading"><span class="spin">⟳</span> 載入中...</div>
+</div>
+
+<details class="rules">
+  <summary>📋 買賣機制</summary>
+  <p style="margin-top:8px"><strong>【買入】</strong>每朝09:00自動檢查市值</p>
+  <p>主板觸發位 (百萬HKD):</p>
+  <div class="tier-row">
+    <span class="tier">2億</span><span class="tier">1.5億</span><span class="tier">1.2億</span>
+    <span class="tier">1億</span><span class="tier">8千萬</span><span class="tier">6千萬</span>
+  </div>
+  <p>創業板 (0.4×):</p>
+  <div class="tier-row">
+    <span class="tier">8千萬</span><span class="tier">6千萬</span><span class="tier">5千萬</span>
+    <span class="tier">4千萬</span><span class="tier">3千萬</span>
+  </div>
+  <p>每跌穿一層 → 買入$6,000 · 對照持倉(投入vs現值取大) → 差額補倉</p>
+  <p style="margin-top:6px"><strong>【止賺/0成本】</strong></p>
+  <p>浮盈≥100% + 市值≥4億 或 浮盈≥200% → 賣出回收成本 → 剩餘 = 0成本持倉</p>
+  <p style="margin-top:6px"><strong>【清倉】</strong>全部賣晒 → 記錄已實現盈虧 · 歷史累計保留</p>
+</details>
+
+<div class="tabs">
+  <div class="tab active" data-tab="sell">止賺 <span class="count" id="cntSell">0</span></div>
+  <div class="tab" data-tab="buy">建倉 <span class="count" id="cntBuy">0</span></div>
+  <div class="tab" data-tab="hold">持倉 <span class="count" id="cntHold">0</span></div>
+  <div class="tab" data-tab="watch">監察 <span class="count" id="cntWatch">0</span></div>
+</div>
+
+<div class="tab-panel active" id="panel-sell"></div>
+<div class="tab-panel" id="panel-buy"></div>
+<div class="tab-panel" id="panel-hold"></div>
+<div class="tab-panel" id="panel-watch"></div>
+
+<footer>
+  好L型財技 · Ferryrichman · 只供研究用途，並非投資建議
+</footer>
+
+</div>
+
+<script>
+const REPO = "Ferryrichman/investbot";
+const STATE_PATH = "data/watchlist_state.json";
+const MAIN_TIERS = [200,150,120,100,80,60];
+const GEM_TIERS  = [80,60,50,40,30];
+const TRANCHE    = 6000;
+const PORTFOLIO  = 411500;
+const MIN_CASH   = 0.35;
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+async function load() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${STATE_PATH}?ref=main`);
+    const data = await res.json();
+    const raw = atob(data.content.replace(/\n/g, ''));
+    const state = JSON.parse(decodeURIComponent(escape(raw)));
+    render(state);
+  } catch(e) {
+    document.getElementById('summary').innerHTML = `<div style="color:#f85149">載入失敗: ${e.message}</div>`;
+  }
+}
+
+function tiersTriggered(mcap, board) {
+  const tiers = board === 'gem' ? GEM_TIERS : MAIN_TIERS;
+  let c = 0;
+  for (const t of tiers) { if (mcap <= t) c++; else break; }
+  return c;
+}
+
+function fmtMcap(m) {
+  if (m >= 100) return (m/100).toFixed(1) + '億';
+  if (m >= 10) return m.toFixed(0) + 'M';
+  return m.toFixed(1) + 'M';
+}
+
+function fmtMoney(n) { return '$' + Math.round(n).toLocaleString(); }
+function fmtPct(n) { return (n >= 0 ? '+' : '') + n.toFixed(0) + '%'; }
+
+function render(state) {
+  const watched = Object.entries(state).filter(([,v]) => v.board);
+  const holdings = [];
+  const sellSignals = [];
+  const buySignals = [];
+  const watchOnly = [];
+
+  let totalInv = 0, totalVal = 0, totalRealized = 0;
+  let lastCheck = '';
+
+  for (const [code, v] of watched) {
+    const board = v.board || 'main';
+    const mcap = v.last_mcap_m || 0;
+    const price = v.last_price || 0;
+    const tr = v.tranches || [];
+    const zeroDone = v.zero_cost_achieved || false;
+    const cleared = v.cleared || false;
+
+    if (v.last_check && v.last_check > lastCheck) lastCheck = v.last_check;
+
+    const actualInv = tr.filter(t => (t.hkd||0) > 0).reduce((s,t) => s + t.hkd, 0);
+    const shares = tr.reduce((s,t) => s + (t.shares||0), 0);
+    const val = shares * price;
+    const position = Math.max(actualInv, val);
+    const tiersNow = tiersTriggered(mcap, board);
+    const expected = tiersNow * TRANCHE;
+    const shortfall = (!zeroDone && expected > 0) ? Math.max(0, expected - position) :
+                      (zeroDone && expected > 0) ? Math.max(0, expected - position) : 0;
+
+    // Avg cost & gain
+    const avgCost = shares > 0 ? actualInv / shares : 0;
+    const gainPct = avgCost > 0 && price > 0 ? ((price - avgCost) / avgCost * 100) : 0;
+
+    // Sell signals (simplified: gain >= 100% and mcap >= 400M, or gain >= 200%)
+    const shellM = board === 'main' ? 150 : 60;
+    let sellSignal = null;
+    if (tr.length && !zeroDone && !cleared && avgCost > 0) {
+      if ((gainPct >= 100 && mcap >= (board === 'main' ? 400 : 150)) || gainPct >= 200) {
+        sellSignal = { type: 'zero_cost', gainPct };
+      }
+    }
+
+    totalRealized += (v.realized_pnl || 0);
+    if (!cleared && tr.length) {
+      totalInv += actualInv;
+      totalVal += val;
+    }
+
+    const item = { code, board, mcap, price, shares, actualInv, val, position, expected,
+                   shortfall, avgCost, gainPct, zeroDone, cleared, sellSignal,
+                   chg: v.last_check ? 0 : 0, name: '', realizedPnl: v.realized_pnl || 0,
+                   zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1 };
+
+    if (sellSignal) sellSignals.push(item);
+    if (shortfall > 0) buySignals.push(item);
+    if (tr.length || cleared) holdings.push(item);
+    else watchOnly.push(item);
+  }
+
+  // Summary
+  const unrealized = totalVal - totalInv;
+  const totalPnl = unrealized + totalRealized;
+  const cashEst = PORTFOLIO - totalInv;
+  const cashPct = cashEst / PORTFOLIO * 100;
+  const cashOk = cashPct >= MIN_CASH * 100;
+
+  document.getElementById('lastUpdate').textContent = lastCheck || '—';
+  document.getElementById('summary').innerHTML = `
+    <div class="row">
+      <div class="item"><span class="label">持倉</span><span class="val">${holdings.length}隻</span></div>
+      <div class="item"><span class="label">已投</span><span class="val">${fmtMoney(totalInv)}</span></div>
+      <div class="item"><span class="label">現值</span><span class="val">${fmtMoney(totalVal)}</span></div>
+      <div class="item"><span class="label">浮盈</span><span class="val ${unrealized>=0?'green':'red'}">${fmtMoney(unrealized)} (${fmtPct(totalInv>0?unrealized/totalInv*100:0)})</span></div>
+      <div class="item"><span class="label">現金</span><span class="val ${cashOk?'green':'warn'}">${cashPct.toFixed(0)}% · ${fmtMoney(cashEst)}</span></div>
+      <div class="item"><span class="label">監察</span><span class="val">${watched.length}隻</span></div>
+    </div>
+    <div class="cash-bar"><div class="cash-fill" style="width:${Math.min(100,cashPct)}%;background:${cashOk?'#3fb950':'#d29922'}"></div></div>
+    ${totalRealized ? `<div style="margin-top:8px;font-size:12px;color:#8b949e">已實現 ${fmtMoney(totalRealized)} · 總盈虧 <span style="color:${totalPnl>=0?'#3fb950':'#f85149'}">${fmtMoney(totalPnl)}</span></div>` : ''}
+  `;
+
+  // Counts
+  document.getElementById('cntSell').textContent = sellSignals.length;
+  document.getElementById('cntBuy').textContent = buySignals.length;
+  document.getElementById('cntHold').textContent = holdings.length;
+  document.getElementById('cntWatch').textContent = watchOnly.length;
+
+  // Render panels
+  document.getElementById('panel-sell').innerHTML = sellSignals.length
+    ? sellSignals.map(s => stockCard(s, 'sell')).join('')
+    : '<div style="padding:24px;text-align:center;color:#8b949e">暫無止賺信號</div>';
+
+  document.getElementById('panel-buy').innerHTML = buySignals.length
+    ? buySignals.map(s => stockCard(s, 'buy')).join('')
+    : '<div style="padding:24px;text-align:center;color:#8b949e">暫無建倉信號</div>';
+
+  document.getElementById('panel-hold').innerHTML = holdings
+    .sort((a,b) => b.val - a.val)
+    .map(s => stockCard(s, 'hold')).join('');
+
+  document.getElementById('panel-watch').innerHTML = watchOnly
+    .sort((a,b) => a.mcap - b.mcap)
+    .map(s => stockCard(s, 'watch')).join('');
+}
+
+function stockCard(s, mode) {
+  const code4 = String(s.code).padStart(4, '0');
+  const mcapStr = s.mcap ? fmtMcap(s.mcap) : '—';
+  const boardTag = s.board === 'gem' ? ' <span style="color:#d29922;font-size:10px">GEM</span>' : '';
+
+  let posHtml = '';
+  if (s.zeroDone) {
+    posHtml = `<div class="stock-pos">0成本 <span class="val">${s.zeroShares.toLocaleString()}股</span> · 值 <span class="val">${fmtMoney(s.zeroShares * s.price)}</span></div>`;
+  } else if (s.cleared) {
+    const sign = s.realizedPnl >= 0 ? '+' : '';
+    posHtml = `<div class="stock-pos">已清倉 · 已實現 <span class="val" style="color:${s.realizedPnl>=0?'#3fb950':'#f85149'}">${sign}${fmtMoney(s.realizedPnl)}</span></div>`;
+  } else if (s.shares > 0) {
+    const gainColor = s.gainPct >= 0 ? '#3fb950' : '#f85149';
+    posHtml = `<div class="stock-pos">
+      持 <span class="val">${s.shares.toLocaleString()}股</span> ·
+      投 <span class="val">${fmtMoney(s.actualInv)}</span> ·
+      值 <span class="val">${fmtMoney(s.val)}</span>
+      <span style="color:${gainColor}"> ${fmtPct(s.gainPct)}</span>
+      ${s.expected > 0 ? `<br>應投 ${fmtMoney(s.expected)} · 倉位 ${fmtMoney(s.position)}` : ''}
+    </div>`;
+  }
+
+  let signalHtml = '';
+  if (mode === 'sell' && s.sellSignal) {
+    signalHtml = `<div class="signal signal-sell">
+      止賺信號 · 浮盈 ${fmtPct(s.gainPct)} · 賣出回收成本 → 0成本持倉
+    </div>`;
+  }
+  if (mode === 'buy' && s.shortfall > 0) {
+    const lotSize = s.lotSize || 1;
+    const estShares = Math.floor(s.shortfall / s.price / lotSize) * lotSize;
+    const estLots = Math.floor(estShares / lotSize);
+    const label = s.zeroDone ? '再買入機會' : (s.shares > 0 ? '補倉' : '建倉');
+    const cls = s.zeroDone ? 'signal-rebuy' : 'signal-buy';
+    signalHtml = `<div class="signal ${cls}">
+      ${label} · 差 ${fmtMoney(s.shortfall)} · ${estLots}手/${estShares.toLocaleString()}股
+      <br><span class="cmd">/buy ${s.code} ${estShares} ${s.price}</span>
+    </div>`;
+  }
+
+  return `<div class="stock">
+    <div class="stock-hdr">
+      <span class="stock-code">${code4}</span>${boardTag}
+      <span class="stock-price">$${s.price.toFixed(3)}</span>
+      <span class="stock-mcap">${mcapStr}</span>
+    </div>
+    ${posHtml}
+    ${signalHtml}
+  </div>`;
+}
+
+load();
+</script>
+</body>
+</html>
