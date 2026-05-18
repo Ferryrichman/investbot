@@ -1319,14 +1319,6 @@
     "board": "main",
     "debt_ratio": 7.4
   },
-  "8036": {
-    "tier_reached": 0,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "post_zero_done": [],
-    "notes": [],
-    "board": "main"
-  },
   "8241": {
     "tier_reached": 4,
     "tranches": [
