@@ -1341,20 +1341,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "tier_m": 60,
-        "price": 0.044,
-        "hkd": 2200,
-        "shares": 50000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      },
-      {
-        "price": 0.076,
-        "hkd": 760,
-        "shares": 10000,
-        "date": "2026-05-18 01:39",
-        "note": "via TG"
+        "price": 0.056,
+        "hkd": 4480,
+        "shares": 80000,
+        "date": "2026-05-18 01:40",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
