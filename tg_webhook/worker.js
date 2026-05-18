@@ -196,17 +196,17 @@ async function recordBuy(code, shares, price, env) {
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
-  // Must be in watchlist (has board) to buy
-  if (!state[code4].board) {
-    return `❌ ${code4} 未加入監察！\n請先 /add ${code4} [main/gem]`;
-  }
   // Lot size check
   const lot = state[code4].lot_size || 0;
-  if (!lot || lot <= 0) {
-    return `⚠️ ${code4} 未有每手股數記錄，等下次 monitor 跑完再試\n或用 /modify ${code4} 股數 均價 直接修正`;
-  }
-  if (shares % lot !== 0) {
+  if (lot > 0 && shares % lot !== 0) {
     return `⚠️ ${code4} 每手${lot.toLocaleString()}股，${shares.toLocaleString()}股唔係整手！\n確認無誤請用 /modify ${code4} 股數 均價`;
+  }
+  // Warn if not in watchlist (no lot size to validate)
+  let extraWarn = "";
+  if (!state[code4].board) {
+    extraWarn = `\n⚠️ ${code4} 未加入監察，冇每手驗證。建議 /add ${code4} [main/gem]`;
+  } else if (lot <= 0) {
+    extraWarn = `\n⚠️ ${code4} 未有每手記錄，未能驗證整手`;
   }
   // 如果之前已清倉，開新倉但保留歷史盈虧
   if (state[code4].cleared) {
@@ -223,7 +223,7 @@ async function recordBuy(code, shares, price, env) {
   await saveState(state, sha, `tg: buy ${code4} ${shares}股 @${price}`, env);
 
   const total = state[code4].tranches.filter(t => t.hkd > 0).reduce((s, t) => s + t.hkd, 0);
-  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}`;
+  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}${extraWarn}`;
 }
 
 async function addToWatchlist(code, board, env) {
