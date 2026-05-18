@@ -61,7 +61,8 @@
     "last_price": 0.207,
     "last_check": "2026-05-15 11:04",
     "board": "main",
-    "debt_ratio": 107.0
+    "debt_ratio": 107.0,
+    "debt_over100_since": "2026-05"
   },
   "8400": {
     "tier_reached": 1,
@@ -129,7 +130,8 @@
     "last_price": 0.068,
     "last_check": "2026-05-15 11:04",
     "board": "gem",
-    "debt_ratio": 141.0
+    "debt_ratio": 141.0,
+    "debt_over100_since": "2026-05"
   },
   "1346": {
     "tier_reached": 1,
@@ -263,7 +265,8 @@
     "last_price": 0.128,
     "last_check": "2026-05-15 11:04",
     "board": "gem",
-    "debt_ratio": 118.0
+    "debt_ratio": 118.0,
+    "debt_over100_since": "2026-05"
   },
   "1449": {
     "tier_reached": 2,
@@ -304,30 +307,6 @@
     "last_check": "2026-05-15 11:04",
     "board": "main",
     "debt_ratio": 11.3
-  },
-  "8103": {
-    "tier_reached": 5,
-    "tranches": [
-      {
-        "price": 0.189,
-        "hkd": 10773.0,
-        "shares": 57000,
-        "date": "2026-05-18",
-        "note": "sync from TG Bot"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1500,
-    "last_mcap_m": 23.82,
-    "last_price": 0.184,
-    "last_check": "2026-05-15 11:04",
-    "board": "gem",
-    "debt_ratio": 1398.0
   },
   "1473": {
     "tier_reached": 1,
@@ -1447,7 +1426,8 @@
     "last_mcap_m": 54.15,
     "last_price": 0.14,
     "last_check": "2026-05-15 11:04",
-    "debt_ratio": 103.0
+    "debt_ratio": 103.0,
+    "debt_over100_since": "2026-05"
   },
   "1111": {
     "tier_reached": 0,

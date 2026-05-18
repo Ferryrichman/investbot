@@ -9,26 +9,10 @@
 set -e
 
 rm -rf dist
-mkdir -p dist/pe dist/caitech/holying
+mkdir -p dist/caitech/holying
 
 # Landing page at root
 cp -r landing/* dist/
-
-# 啤 Monitor under /pe/
-cp frontend/index.html dist/pe/
-cp frontend/style.css dist/pe/
-cp frontend/app.js dist/pe/
-cp frontend/crypto.js dist/pe/
-
-# Public preview (always present)
-if [ -f frontend/data_preview.json ]; then
-  cp frontend/data_preview.json dist/pe/
-fi
-
-# Encrypted blob (gated)
-if [ -f frontend/data.enc.json ]; then
-  cp frontend/data.enc.json dist/pe/
-fi
 
 # 港股財技 section + 好L型財技
 cp caitech/index.html dist/caitech/
