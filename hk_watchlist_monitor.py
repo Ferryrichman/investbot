@@ -15,7 +15,8 @@ HK 港股 Watchlist Monitor  v3
 使用方式:
   python hk_watchlist_monitor.py           # 全部報告 + TG
   python hk_watchlist_monitor.py check     # 只 print，唔發 TG
-  python hk_watchlist_monitor.py alert     # 只推買入 / 止賺訊號
+  python hk_watchlist_monitor.py alert     # 只推買入 / 止賺訊號 (每朝09:00)
+  python hk_watchlist_monitor.py intraday  # 即時信號 (交易時段每15分鐘)
   python hk_watchlist_monitor.py plan      # 打印資金計劃表
   python hk_watchlist_monitor.py lotsize   # 更新每手股數快取
 """
@@ -1089,6 +1090,119 @@ def print_allocation_plan():
 
 
 # ============================================================
+# Intraday Alert（交易時段即時觸發）
+# ============================================================
+
+def intraday_alert() -> str | None:
+    """
+    輕量級即時 check — 只取價格+市值，比對 state 中已知層位。
+    有新觸發（買入/止賺）先出 TG，冇就 silent。
+    唔做 CCASS、負債 check（留俾每朝 full report）。
+    """
+    hkt = timezone(timedelta(hours=8))
+    now = datetime.now(hkt)
+    now_str = now.strftime("%Y-%m-%d %H:%M")
+
+    # 只喺交易時段跑 (09:15-16:15 HKT, Mon-Fri)
+    if now.weekday() >= 5:  # Sat/Sun
+        return None
+    hour_min = now.hour * 100 + now.minute
+    if hour_min < 915 or hour_min > 1615:
+        return None
+
+    state = load_state()
+    new_state = dict(state)
+    load_lot_cache()
+
+    alerts = []  # (code, alert_text)
+    watchlist = {code: st for code, st in state.items() if st.get("board")}
+
+    for code, entry in watchlist.items():
+        board = entry.get("board", "main")
+        lot_size = get_lot_size(code, entry)
+        stock_st = get_stock_state(state, code)
+        tranches = stock_st.get("tranches", [])
+        zero_done = stock_st.get("zero_cost_achieved", False)
+
+        quote = fetch_hk_quote(code)
+        time.sleep(0.12)
+        if not quote or not quote["mcap"] or not quote["price"]:
+            continue
+
+        mcap_m = quote["mcap"] / 1e6
+        price = quote["price"]
+        code4 = f"{int(code):04d}"
+        name = quote.get("name", code4)
+
+        # Update price in state
+        stock_st["last_mcap_m"] = round(mcap_m, 2)
+        stock_st["last_price"] = price
+        stock_st["last_check"] = now_str
+
+        # ── 買入觸發 check ──
+        dr = stock_st.get("debt_ratio")
+        debt_block = dr is not None and dr > 80
+
+        tiers_now = current_tier_reached(mcap_m, board)
+        last_alerted_tier = stock_st.get("last_alert_tier", 0)
+
+        if tiers_now > last_alerted_tier and not debt_block:
+            expected_inv = tiers_now * TRANCHE_SIZE
+            actual_inv = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
+            shares_held = sum(t.get("shares", 0) for t in tranches)
+            current_val = shares_held * price if shares_held > 0 else 0
+            position = max(actual_inv, current_val)
+            shortfall = max(0, expected_inv - position)
+
+            if shortfall > 0:
+                est_shares = round_to_lots(shortfall / price, lot_size, "down") if price > 0 else 0
+                if est_shares > 0:
+                    est_lots = est_shares // lot_size if lot_size > 0 else 0
+                    label = "再買入" if zero_done else ("補倉" if tranches else "建倉")
+                    alerts.append((code4, (
+                        f"🔔 {code4} {name} — {label}\n"
+                        f"  ${price:.3f} 市值{mcap_m:.0f}M (層{tiers_now})\n"
+                        f"  差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)\n"
+                        f"  /buy {code} {est_shares} {price}"
+                    )))
+                    stock_st["last_alert_tier"] = tiers_now
+
+        # ── 止賺觸發 check ──
+        if tranches and not zero_done:
+            avg_cost = calc_avg_cost(tranches)
+            gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else 0.0
+            tp_signals = check_take_profit(
+                price, mcap_m, board, avg_cost, gain_pct,
+                tranches, stock_st, lot_size, entry,
+            )
+            valid_tp = [s for s in tp_signals if s.get("sell_shares", 0) > 0]
+            # 只 alert 如果之前未 alert 過止賺
+            if valid_tp and not stock_st.get("tp_alerted"):
+                sig = valid_tp[0]
+                ss = sig.get("sell_shares", 0)
+                sl = sig.get("sell_lots", 0)
+                rv = sig.get("recv_hkd", 0)
+                alerts.append((code4, (
+                    f"💰 {code4} {name} — 止賺信號\n"
+                    f"  ${price:.3f} 浮盈{gain_pct:+.0f}%\n"
+                    f"  賣{sl}手({ss:,}股) 收${rv:,.0f} → 0成本\n"
+                    f"  /sell {code} {ss} {price}"
+                )))
+                stock_st["tp_alerted"] = now_str
+
+        new_state[code] = stock_st
+
+    save_state(new_state)
+
+    if not alerts:
+        return None
+
+    header = f"⚡ 即時信號 {now_str}\n{'━' * 20}"
+    body = "\n\n".join(a[1] for a in alerts)
+    return f"{header}\n\n{body}"
+
+
+# ============================================================
 # Telegram
 # ============================================================
 
@@ -1124,6 +1238,20 @@ if __name__ == "__main__":
         report = monitor_report(alert_only=True)
         print(report)
         tg_send(report)
+        # Reset intraday flags after morning report
+        st = load_state()
+        for code, v in st.items():
+            v.pop("last_alert_tier", None)
+            v.pop("tp_alerted", None)
+        save_state(st)
+
+    elif mode == "intraday":
+        msg = intraday_alert()
+        if msg:
+            print(msg)
+            tg_send(msg)
+        else:
+            print(f"[{datetime.now(timezone(timedelta(hours=8))).strftime('%H:%M')}] 暫無新觸發")
 
     elif mode == "record" and len(args) == 5:
         # python hk_watchlist_monitor.py record <code> <price> <hkd> <tier_m>
