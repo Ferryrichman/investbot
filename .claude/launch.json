@@ -8,12 +8,6 @@
       "port": 8080
     },
     {
-      "name": "holying",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8787", "--directory", "holying"],
-      "port": 8787
-    },
-    {
       "name": "caitech",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8788", "--directory", "caitech"],

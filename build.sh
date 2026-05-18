@@ -3,9 +3,9 @@
 # Structure:
 #   dist/              ← landing page (root)
 #   dist/pe/           ← 啤 Monitor dashboard
-#   dist/holying/      ← 好L型財技 dashboard
-#   dist/rights/       ← (future) 供股配股 GO
-#   dist/junk/         ← (future) 絕L Monitor
+#   dist/caitech/          ← 港股財技 section landing
+#   dist/caitech/holying/  ← 好L型財技 dashboard
+#   dist/rights/           ← (future) 供股配股 GO
 set -e
 
 rm -rf dist
@@ -30,11 +30,9 @@ if [ -f frontend/data.enc.json ]; then
   cp frontend/data.enc.json dist/pe/
 fi
 
-# 港股財技 section
+# 港股財技 section + 好L型財技
 cp caitech/index.html dist/caitech/
-
-# 好L型財技 under /caitech/holying/
-cp holying/index.html dist/caitech/holying/
+cp caitech/holying/index.html dist/caitech/holying/
 
 # Note: frontend/data.json is gitignored at deploy — never publicly served
 echo "Built dist/ structure:"
