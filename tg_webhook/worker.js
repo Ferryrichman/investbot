@@ -196,9 +196,16 @@ async function recordBuy(code, shares, price, env) {
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
+  // Must be in watchlist (has board) to buy
+  if (!state[code4].board) {
+    return `❌ ${code4} 未加入監察！\n請先 /add ${code4} [main/gem]`;
+  }
   // Lot size check
   const lot = state[code4].lot_size || 0;
-  if (lot > 1 && shares % lot !== 0) {
+  if (!lot || lot <= 0) {
+    return `⚠️ ${code4} 未有每手股數記錄，等下次 monitor 跑完再試\n或用 /modify ${code4} 股數 均價 直接修正`;
+  }
+  if (shares % lot !== 0) {
     return `⚠️ ${code4} 每手${lot.toLocaleString()}股，${shares.toLocaleString()}股唔係整手！\n確認無誤請用 /modify ${code4} 股數 均價`;
   }
   // 如果之前已清倉，開新倉但保留歷史盈虧
@@ -323,7 +330,7 @@ async function recordSell(code, sharesSold, price, env) {
   }
   // Lot size check
   const lot = state[code4].lot_size || 0;
-  if (lot > 1 && sharesSold % lot !== 0) {
+  if (lot > 0 && sharesSold % lot !== 0) {
     return `⚠️ ${code4} 每手${lot.toLocaleString()}股，${sharesSold.toLocaleString()}股唔係整手！`;
   }
   const now = new Date().toISOString().slice(0, 16).replace("T", " ");
