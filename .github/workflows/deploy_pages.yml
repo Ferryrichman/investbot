@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'frontend/**'
       - 'landing/**'
+      - 'caitech/**'
       - 'build.sh'
       - '.github/workflows/deploy_pages.yml'
   workflow_dispatch:
