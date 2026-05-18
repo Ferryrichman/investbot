@@ -1,4 +1,20 @@
 {
+  "1111": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 4000,
+    "last_mcap_m": 182.64,
+    "last_price": 0.237,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 25.4
+  },
   "1147": {
     "tier_reached": 1,
     "tranches": [],
@@ -15,36 +31,12 @@
     "board": "main",
     "debt_ratio": 3.2
   },
-  "8447": {
-    "tier_reached": 2,
-    "tranches": [
-      {
-        "price": 0.056,
-        "hkd": 4480.0,
-        "shares": 80000,
-        "date": "2026-05-18",
-        "note": "corrected via Claude"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 10000,
-    "last_mcap_m": 76.0,
-    "last_price": 0.076,
-    "last_check": "2026-05-18 15:44",
-    "board": "gem",
-    "debt_ratio": 75.6
-  },
   "1156": {
     "tier_reached": 3,
     "tranches": [
       {
         "price": 0.15,
-        "hkd": 8400.0,
+        "hkd": 8400,
         "shares": 56000,
         "date": "2026-05-18",
         "note": "sync from TG Bot"
@@ -61,34 +53,8 @@
     "last_price": 0.205,
     "last_check": "2026-05-18 15:44",
     "board": "main",
-    "debt_ratio": 107.0,
+    "debt_ratio": 107,
     "debt_over100_since": "2026-05"
-  },
-  "8400": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 80,
-        "price": 0.006,
-        "hkd": 540.0,
-        "shares": 90000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 10000,
-    "last_mcap_m": 111.0,
-    "last_price": 0.111,
-    "last_check": "2026-05-18 15:44",
-    "board": "gem",
-    "debt_ratio": 6.5
   },
   "1284": {
     "tier_reached": 1,
@@ -96,7 +62,7 @@
       {
         "tier_m": 200,
         "price": 0.285,
-        "hkd": 2850.0,
+        "hkd": 2850,
         "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -110,28 +76,11 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 252.0,
+    "last_mcap_m": 252,
     "last_price": 0.42,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 18.1
-  },
-  "8532": {
-    "tier_reached": 5,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 16000,
-    "last_mcap_m": 5.6,
-    "last_price": 0.066,
-    "last_check": "2026-05-18 15:44",
-    "board": "gem",
-    "debt_ratio": 141.0,
-    "debt_over100_since": "2026-05"
   },
   "1346": {
     "tier_reached": 1,
@@ -149,29 +98,13 @@
     "board": "main",
     "debt_ratio": 4.1
   },
-  "8495": {
-    "tier_reached": 1,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 4000,
-    "last_mcap_m": 105.6,
-    "last_price": 0.275,
-    "last_check": "2026-05-18 15:44",
-    "board": "gem",
-    "debt_ratio": 66.6
-  },
   "1407": {
     "tier_reached": 1,
     "tranches": [
       {
         "tier_m": 200,
         "price": 0.517,
-        "hkd": 2068.0,
+        "hkd": 2068,
         "shares": 4000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -185,21 +118,23 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 242.0,
+    "last_mcap_m": 242,
     "last_price": 0.55,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 17.6
   },
-  "8620": {
+  "1408": {
     "tier_reached": 1,
     "tranches": [
       {
-        "price": 0.149,
-        "hkd": 5960.0,
-        "shares": 40000,
-        "date": "2026-05-18",
-        "note": "sync from TG Bot"
+        "tier_m": 200,
+        "price": 0.237,
+        "hkd": 2370,
+        "shares": 10000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
       }
     ],
     "zero_cost_achieved": false,
@@ -208,12 +143,36 @@
     "post_zero_done": [],
     "notes": [],
     "zero_cost_date": null,
-    "lot_size": 5000,
-    "last_mcap_m": 79.73,
-    "last_price": 0.151,
+    "lot_size": 2000,
+    "last_mcap_m": 200,
+    "last_price": 0.4,
     "last_check": "2026-05-18 15:44",
-    "board": "gem",
-    "debt_ratio": 54.4
+    "board": "main",
+    "debt_ratio": 7.5
+  },
+  "1429": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "price": 0.001,
+        "hkd": 0,
+        "shares": 8000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
+    "zero_cost_achieved": true,
+    "zero_cost_shares": 8000,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": "2026-05-18",
+    "lot_size": 8000,
+    "last_mcap_m": 408,
+    "last_price": 0.255,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 20
   },
   "1433": {
     "tier_reached": 2,
@@ -221,7 +180,7 @@
       {
         "tier_m": 150,
         "price": 0.098,
-        "hkd": 980.0,
+        "hkd": 980,
         "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -241,39 +200,12 @@
     "board": "main",
     "debt_ratio": 19.8
   },
-  "8241": {
-    "tier_reached": 4,
-    "tranches": [
-      {
-        "tier_m": 40,
-        "price": 0.102,
-        "hkd": 5610.0,
-        "shares": 55000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 5000,
-    "last_mcap_m": 44.84,
-    "last_price": 0.124,
-    "last_check": "2026-05-18 15:44",
-    "board": "gem",
-    "debt_ratio": 118.0,
-    "debt_over100_since": "2026-05"
-  },
   "1449": {
     "tier_reached": 2,
     "tranches": [
       {
         "price": 0.262,
-        "hkd": 5764.0,
+        "hkd": 5764,
         "shares": 22000,
         "date": "2026-05-18",
         "note": "sync from TG Bot"
@@ -286,7 +218,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 180.0,
+    "last_mcap_m": 180,
     "last_price": 0.27,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -313,7 +245,7 @@
     "tranches": [
       {
         "price": 0.425,
-        "hkd": -1700.0,
+        "hkd": -1700,
         "shares": 4000,
         "date": "2025-01-01 00:00",
         "note": "corrected via TG status"
@@ -342,7 +274,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 580.0,
+    "last_mcap_m": 580,
     "last_price": 0.58,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -354,7 +286,7 @@
       {
         "tier_m": 200,
         "price": 0.08,
-        "hkd": 1600.0,
+        "hkd": 1600,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -368,7 +300,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 258.0,
+    "last_mcap_m": 258,
     "last_price": 0.129,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -396,7 +328,7 @@
       {
         "tier_m": 200,
         "price": 0.378,
-        "hkd": 2835.0,
+        "hkd": 2835,
         "shares": 7500,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -410,7 +342,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2500,
-    "last_mcap_m": 200.0,
+    "last_mcap_m": 200,
     "last_price": 0.4,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -422,7 +354,7 @@
       {
         "tier_m": 200,
         "price": 0.229,
-        "hkd": 2290.0,
+        "hkd": 2290,
         "shares": 10000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -436,7 +368,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 240.0,
+    "last_mcap_m": 240,
     "last_price": 0.4,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -448,7 +380,7 @@
       {
         "tier_m": 120,
         "price": 0.075,
-        "hkd": 5250.0,
+        "hkd": 5250,
         "shares": 70000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -473,7 +405,7 @@
     "tranches": [
       {
         "price": 0.001,
-        "hkd": 0.0,
+        "hkd": 0,
         "shares": 3000,
         "date": "2025-01-01 00:00",
         "note": "corrected via TG status"
@@ -490,7 +422,7 @@
     "last_price": 3.16,
     "last_check": "2026-05-18 15:44",
     "board": "main",
-    "debt_ratio": 0.0
+    "debt_ratio": 0
   },
   "1650": {
     "tier_reached": 1,
@@ -498,7 +430,7 @@
       {
         "tier_m": 200,
         "price": 0.089,
-        "hkd": 712.0,
+        "hkd": 712,
         "shares": 8000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -512,11 +444,35 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 270.0,
+    "last_mcap_m": 270,
     "last_price": 0.135,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 6.8
+  },
+  "1740": {
+    "tier_reached": 3,
+    "tranches": [
+      {
+        "price": 0.114,
+        "hkd": 7980,
+        "shares": 70000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 5000,
+    "last_mcap_m": 171.19,
+    "last_price": 0.165,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 0.4
   },
   "1767": {
     "tier_reached": 1,
@@ -528,7 +484,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 330.0,
+    "last_mcap_m": 330,
     "last_price": 0.33,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -540,7 +496,7 @@
       {
         "tier_m": 200,
         "price": 0.216,
-        "hkd": 3456.0,
+        "hkd": 3456,
         "shares": 16000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -570,11 +526,11 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 3000,
-    "last_mcap_m": 318.0,
+    "last_mcap_m": 318,
     "last_price": 0.53,
     "last_check": "2026-05-18 15:44",
     "board": "main",
-    "debt_ratio": 54.0
+    "debt_ratio": 54
   },
   "1832": {
     "tier_reached": 1,
@@ -582,7 +538,7 @@
       {
         "tier_m": 200,
         "price": 0.495,
-        "hkd": 990.0,
+        "hkd": 990,
         "shares": 2000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -608,7 +564,7 @@
       {
         "tier_m": 150,
         "price": 0.13,
-        "hkd": 7280.0,
+        "hkd": 7280,
         "shares": 56000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -633,7 +589,7 @@
     "tranches": [
       {
         "price": 0.272,
-        "hkd": 8704.0,
+        "hkd": 8704,
         "shares": 32000,
         "date": "2026-05-18",
         "note": "sync from TG Bot"
@@ -658,7 +614,7 @@
       {
         "tier_m": 150,
         "price": 0.139,
-        "hkd": 7228.0,
+        "hkd": 7228,
         "shares": 52000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -672,7 +628,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 179.0,
+    "last_mcap_m": 179,
     "last_price": 0.179,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -684,7 +640,7 @@
       {
         "tier_m": 120,
         "price": 0.135,
-        "hkd": 6750.0,
+        "hkd": 6750,
         "shares": 50000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -710,7 +666,7 @@
       {
         "tier_m": 120,
         "price": 0.176,
-        "hkd": 8096.0,
+        "hkd": 8096,
         "shares": 46000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -728,7 +684,7 @@
     "last_price": 0.345,
     "last_check": "2026-05-18 15:44",
     "board": "main",
-    "debt_ratio": 50.0
+    "debt_ratio": 50
   },
   "1947": {
     "tier_reached": 1,
@@ -736,7 +692,7 @@
       {
         "tier_m": 200,
         "price": 0.354,
-        "hkd": 7080.0,
+        "hkd": 7080,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -766,7 +722,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 310.0,
+    "last_mcap_m": 310,
     "last_price": 0.62,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -782,11 +738,60 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 420.0,
+    "last_mcap_m": 420,
     "last_price": 0.42,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 36.6
+  },
+  "1965": {
+    "tier_reached": 6,
+    "tranches": [
+      {
+        "price": 0.142,
+        "hkd": 9798,
+        "shares": 69000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "board": "main",
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 55.31,
+    "last_price": 0.143,
+    "last_check": "2026-05-18 15:44",
+    "debt_ratio": 103,
+    "debt_over100_since": "2026-05"
+  },
+  "1971": {
+    "tier_reached": 2,
+    "tranches": [
+      {
+        "price": 0.313,
+        "hkd": 5008,
+        "shares": 16000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 147.32,
+    "last_price": 0.355,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 1.8
   },
   "2108": {
     "tier_reached": 1,
@@ -794,7 +799,7 @@
       {
         "tier_m": 200,
         "price": 0.119,
-        "hkd": 952.0,
+        "hkd": 952,
         "shares": 8000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -808,7 +813,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 380.0,
+    "last_mcap_m": 380,
     "last_price": 0.475,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -819,7 +824,7 @@
     "tranches": [
       {
         "price": 0.143,
-        "hkd": 5005.0,
+        "hkd": 5005,
         "shares": 35000,
         "date": "2026-05-18",
         "note": "sync from TG Bot"
@@ -854,6 +859,46 @@
     "board": "main",
     "debt_ratio": 34.1
   },
+  "2205": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "price": 0.01,
+        "hkd": -10,
+        "shares": 1000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
+    "zero_cost_achieved": true,
+    "zero_cost_shares": 1000,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": "2026-05-18",
+    "lot_size": 1000,
+    "last_mcap_m": 700,
+    "last_price": 1,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 1.3
+  },
+  "2215": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 209.1,
+    "last_price": 0.237,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 2.3
+  },
   "2230": {
     "tier_reached": 1,
     "tranches": [],
@@ -880,11 +925,11 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 365.0,
+    "last_mcap_m": 365,
     "last_price": 0.365,
     "last_check": "2026-05-18 15:44",
     "board": "main",
-    "debt_ratio": 0.0
+    "debt_ratio": 0
   },
   "2347": {
     "tier_reached": 1,
@@ -918,13 +963,53 @@
     "board": "main",
     "debt_ratio": 4.7
   },
+  "2352": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 200,
+    "last_mcap_m": 314.86,
+    "last_price": 4.7,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 9
+  },
+  "2370": {
+    "tier_reached": 6,
+    "tranches": [
+      {
+        "price": 0.412,
+        "hkd": 6798,
+        "shares": 16500,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 500,
+    "last_mcap_m": 196,
+    "last_price": 0.98,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 7
+  },
   "2372": {
     "tier_reached": 1,
     "tranches": [
       {
         "tier_m": 200,
         "price": 0.2,
-        "hkd": 1600.0,
+        "hkd": 1600,
         "shares": 8000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -938,7 +1023,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 368.0,
+    "last_mcap_m": 368,
     "last_price": 0.46,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -950,7 +1035,7 @@
       {
         "tier_m": 200,
         "price": 0.099,
-        "hkd": 1980.0,
+        "hkd": 1980,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -964,7 +1049,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 358.0,
+    "last_mcap_m": 358,
     "last_price": 0.179,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -976,7 +1061,7 @@
       {
         "tier_m": 200,
         "price": 0.68,
-        "hkd": 2720.0,
+        "hkd": 2720,
         "shares": 4000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -994,7 +1079,7 @@
     "last_price": 0.72,
     "last_check": "2026-05-18 15:44",
     "board": "main",
-    "debt_ratio": 33.0
+    "debt_ratio": 33
   },
   "2457": {
     "tier_reached": 1,
@@ -1002,7 +1087,7 @@
       {
         "tier_m": 200,
         "price": 0.289,
-        "hkd": 4335.0,
+        "hkd": 4335,
         "shares": 15000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -1016,7 +1101,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 355.0,
+    "last_mcap_m": 355,
     "last_price": 0.355,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -1032,7 +1117,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 310.0,
+    "last_mcap_m": 310,
     "last_price": 0.62,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -1048,11 +1133,35 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 525.0,
+    "last_mcap_m": 525,
     "last_price": 1.05,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 40.1
+  },
+  "2505": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "price": 0.075,
+        "hkd": 450,
+        "shares": 6000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 1000,
+    "last_mcap_m": 374.55,
+    "last_price": 0.84,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 73.1
   },
   "2528": {
     "tier_reached": 1,
@@ -1060,7 +1169,7 @@
       {
         "tier_m": 200,
         "price": 0.254,
-        "hkd": 5080.0,
+        "hkd": 5080,
         "shares": 20000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -1074,7 +1183,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 256.0,
+    "last_mcap_m": 256,
     "last_price": 0.64,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -1122,7 +1231,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 364.0,
+    "last_mcap_m": 364,
     "last_price": 0.91,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -1138,7 +1247,7 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 655.0,
+    "last_mcap_m": 655,
     "last_price": 1.31,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -1150,7 +1259,7 @@
       {
         "tier_m": 150,
         "price": 0.064,
-        "hkd": 2560.0,
+        "hkd": 2560,
         "shares": 40000,
         "lots": 0,
         "date": "2025-01-01 00:00",
@@ -1164,18 +1273,34 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 198.0,
+    "last_mcap_m": 198,
     "last_price": 0.198,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 2.2
+  },
+  "6913": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 2000,
+    "last_mcap_m": 232.12,
+    "last_price": 0.174,
+    "last_check": "2026-05-18 15:44",
+    "board": "main",
+    "debt_ratio": 25
   },
   "6939": {
     "tier_reached": 1,
     "tranches": [
       {
         "price": 0.008,
-        "hkd": -32.0,
+        "hkd": -32,
         "shares": 4000,
         "date": "2025-01-01 00:00",
         "note": "corrected via TG status"
@@ -1194,12 +1319,161 @@
     "board": "main",
     "debt_ratio": 7.4
   },
+  "8036": {
+    "tier_reached": 0,
+    "tranches": [
+      {
+        "price": 0.037,
+        "hkd": 2590.037,
+        "shares": 70001,
+        "date": "2026-05-18 08:05",
+        "note": "via TG"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "post_zero_done": [],
+    "notes": []
+  },
+  "8241": {
+    "tier_reached": 4,
+    "tranches": [
+      {
+        "tier_m": 40,
+        "price": 0.102,
+        "hkd": 5610,
+        "shares": 55000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 5000,
+    "last_mcap_m": 44.84,
+    "last_price": 0.124,
+    "last_check": "2026-05-18 15:44",
+    "board": "gem",
+    "debt_ratio": 118,
+    "debt_over100_since": "2026-05"
+  },
+  "8400": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "tier_m": 80,
+        "price": 0.006,
+        "hkd": 540,
+        "shares": 90000,
+        "lots": 0,
+        "date": "2025-01-01 00:00",
+        "note": "imported from Excel"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 10000,
+    "last_mcap_m": 111,
+    "last_price": 0.111,
+    "last_check": "2026-05-18 15:44",
+    "board": "gem",
+    "debt_ratio": 6.5
+  },
+  "8447": {
+    "tier_reached": 2,
+    "tranches": [
+      {
+        "price": 0.056,
+        "hkd": 4480,
+        "shares": 80000,
+        "date": "2026-05-18",
+        "note": "corrected via Claude"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 10000,
+    "last_mcap_m": 76,
+    "last_price": 0.076,
+    "last_check": "2026-05-18 15:44",
+    "board": "gem",
+    "debt_ratio": 75.6
+  },
+  "8495": {
+    "tier_reached": 1,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 4000,
+    "last_mcap_m": 105.6,
+    "last_price": 0.275,
+    "last_check": "2026-05-18 15:44",
+    "board": "gem",
+    "debt_ratio": 66.6
+  },
+  "8532": {
+    "tier_reached": 5,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 16000,
+    "last_mcap_m": 5.6,
+    "last_price": 0.066,
+    "last_check": "2026-05-18 15:44",
+    "board": "gem",
+    "debt_ratio": 141,
+    "debt_over100_since": "2026-05"
+  },
+  "8620": {
+    "tier_reached": 1,
+    "tranches": [
+      {
+        "price": 0.149,
+        "hkd": 5960,
+        "shares": 40000,
+        "date": "2026-05-18",
+        "note": "sync from TG Bot"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 5000,
+    "last_mcap_m": 79.73,
+    "last_price": 0.151,
+    "last_check": "2026-05-18 15:44",
+    "board": "gem",
+    "debt_ratio": 54.4
+  },
   "9929": {
     "tier_reached": 1,
     "tranches": [
       {
         "price": 0.26,
-        "hkd": -2600.0,
+        "hkd": -2600,
         "shares": 10000,
         "date": "2025-01-01 00:00",
         "note": "corrected via TG status"
@@ -1212,7 +1486,7 @@
     "notes": [],
     "zero_cost_date": "2026-05-18",
     "lot_size": 10000,
-    "last_mcap_m": 3620.0,
+    "last_mcap_m": 3620,
     "last_price": 1.81,
     "last_check": "2026-05-18 15:44",
     "board": "main",
@@ -1228,269 +1502,10 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 640.0,
+    "last_mcap_m": 640,
     "last_price": 0.8,
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 69.2
-  },
-  "1740": {
-    "tier_reached": 3,
-    "tranches": [
-      {
-        "price": 0.114,
-        "hkd": 7980.0,
-        "shares": 70000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 5000,
-    "last_mcap_m": 171.19,
-    "last_price": 0.165,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 0.4
-  },
-  "1408": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "tier_m": 200,
-        "price": 0.237,
-        "hkd": 2370.0,
-        "shares": 10000,
-        "lots": 0,
-        "date": "2025-01-01 00:00",
-        "note": "imported from Excel"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 2000,
-    "last_mcap_m": 200.0,
-    "last_price": 0.4,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 7.5
-  },
-  "1429": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "price": 0.001,
-        "hkd": 0.0,
-        "shares": 8000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
-      }
-    ],
-    "zero_cost_achieved": true,
-    "zero_cost_shares": 8000,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": "2026-05-18",
-    "lot_size": 8000,
-    "last_mcap_m": 408.0,
-    "last_price": 0.255,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 20.0
-  },
-  "1971": {
-    "tier_reached": 2,
-    "tranches": [
-      {
-        "price": 0.313,
-        "hkd": 5008.0,
-        "shares": 16000,
-        "date": "2026-05-18",
-        "note": "sync from TG Bot"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 147.32,
-    "last_price": 0.355,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 1.8
-  },
-  "2205": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "price": 0.01,
-        "hkd": -10.0,
-        "shares": 1000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
-      }
-    ],
-    "zero_cost_achieved": true,
-    "zero_cost_shares": 1000,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": "2026-05-18",
-    "lot_size": 1000,
-    "last_mcap_m": 700.0,
-    "last_price": 1.0,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 1.3
-  },
-  "2370": {
-    "tier_reached": 6,
-    "tranches": [
-      {
-        "price": 0.412,
-        "hkd": 6798.0,
-        "shares": 16500,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 500,
-    "last_mcap_m": 196.0,
-    "last_price": 0.98,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 7.0
-  },
-  "2505": {
-    "tier_reached": 1,
-    "tranches": [
-      {
-        "price": 0.075,
-        "hkd": 450.0,
-        "shares": 6000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 374.55,
-    "last_price": 0.84,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 73.1
-  },
-  "1965": {
-    "tier_reached": 6,
-    "tranches": [
-      {
-        "price": 0.142,
-        "hkd": 9798.0,
-        "shares": 69000,
-        "date": "2026-05-18",
-        "note": "sync from TG Bot"
-      }
-    ],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "board": "main",
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 55.31,
-    "last_price": 0.143,
-    "last_check": "2026-05-18 15:44",
-    "debt_ratio": 103.0,
-    "debt_over100_since": "2026-05"
-  },
-  "1111": {
-    "tier_reached": 0,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 4000,
-    "last_mcap_m": 182.64,
-    "last_price": 0.237,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 25.4
-  },
-  "2215": {
-    "tier_reached": 0,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 1000,
-    "last_mcap_m": 209.1,
-    "last_price": 0.237,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 2.3
-  },
-  "2352": {
-    "tier_reached": 0,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 200,
-    "last_mcap_m": 314.86,
-    "last_price": 4.7,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 9.0
-  },
-  "6913": {
-    "tier_reached": 0,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "zero_cost_shares": null,
-    "zero_cost_price": null,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_date": null,
-    "lot_size": 2000,
-    "last_mcap_m": 232.12,
-    "last_price": 0.174,
-    "last_check": "2026-05-18 15:44",
-    "board": "main",
-    "debt_ratio": 25.0
   }
 }
