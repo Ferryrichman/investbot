@@ -786,9 +786,10 @@ def monitor_report(alert_only: bool = False) -> str:
     state = load_state()
     new_state = dict(state)
 
-    all_blocks    = []
-    buy_blocks    = []   # 建倉信號
-    sell_blocks   = []   # 止賺信號
+    all_blocks       = []
+    buy_blocks       = []   # 建倉信號
+    sell_blocks      = []   # 止賺信號 (有 /sell 指令)
+    debt_warn_blocks = []   # 負債警告 (有持倉, dr>60%, 冇 sell 指令)
     no_data       = []
 
     load_lot_cache()  # 預先載入每手快取
@@ -869,8 +870,10 @@ def monitor_report(alert_only: bool = False) -> str:
         block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts, dr)
         all_blocks.append(block)
 
-        # 同 build_stock_block 一致嘅 debt_block 邏輯
+        # ── 分類: sell / debt_warn / buy ──
         has_pos = shares_held > 0
+
+        # debt_block 邏輯
         if dr is not None and dr > 125:
             debt_block = True
         elif dr is not None and dr > 100 and not has_pos:
@@ -879,10 +882,24 @@ def monitor_report(alert_only: bool = False) -> str:
             debt_block = True
         else:
             debt_block = False
+
+        # Fix #4: 新建倉最多2層 ($12,000)，避免一次落重注
+        MAX_NEW_BUY = TRANCHE_SIZE * 2  # $12,000
         if shortfall > 0 and buy_shares > 0 and not debt_block:
+            if not tranches:
+                # 新建倉: cap shortfall
+                capped = min(shortfall, MAX_NEW_BUY)
+                capped_shares = round_to_lots(capped / price, lot_size, "down") if price > 0 else 0
+                if capped_shares > 0 and capped_shares != buy_shares:
+                    block = build_stock_block(code, board, quote, stock_st, capped, tp_signals, ccass_alerts, dr)
             buy_blocks.append(block)
-        if valid_tp or ccass_alerts or (dr is not None and dr > 60):
-            sell_blocks.append(block)
+
+        # Fix #1/#2/#3: 分開 sell signal 同 debt warning
+        if valid_tp or ccass_alerts:
+            sell_blocks.append(block)  # 真正有 sell 指令
+        if dr is not None and dr > 60 and has_pos:
+            # Fix #2: 只有持倉先出 debt warning
+            debt_warn_blocks.append(block)
 
     # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
     for code_fix, st_fix in new_state.items():
@@ -897,7 +914,7 @@ def monitor_report(alert_only: bool = False) -> str:
             if not st_fix.get("zero_cost_date"):
                 st_fix["zero_cost_date"] = now[:10]
 
-    save_state(new_state)
+    # save_state moved to after signal tracking (below)
 
     # ── 持倉總覽 ──
     total_inv = total_val = 0.0
@@ -971,34 +988,60 @@ def monitor_report(alert_only: bool = False) -> str:
 
     dash = "-------------------"
 
-    def _numbered(blocks):
+    # Fix #8: 標記新信號 — 比對上次 alert 嘅信號 list
+    last_sell_codes = set(new_state.get("_meta", {}).get("last_sell_codes", []))
+    last_buy_codes  = set(new_state.get("_meta", {}).get("last_buy_codes", []))
+
+    def _extract_code(block: str) -> str:
+        """從 block 第一行提取股票代碼"""
+        first = block.split("\n", 1)[0].strip()
+        return first.split(" ")[0] if first else ""
+
+    cur_sell_codes = [_extract_code(b) for b in sell_blocks]
+    cur_buy_codes  = [_extract_code(b) for b in buy_blocks]
+
+    def _numbered(blocks, prev_codes=None):
         out = []
         for i, b in enumerate(blocks, 1):
             first_line, rest = b.split("\n", 1)
-            out.append(f"{i}. {first_line}\n{rest}")
+            code_str = first_line.strip().split(" ")[0]
+            new_tag = " 🆕" if prev_codes is not None and code_str not in prev_codes else ""
+            out.append(f"{i}. {first_line}{new_tag}\n{rest}")
         return f"\n{dash}\n".join(out)
 
-    signal_blocks = sell_blocks + buy_blocks  # for quiet filter below
+    # Save current signal codes for next comparison
+    meta = new_state.get("_meta", {})
+    meta["last_sell_codes"] = cur_sell_codes
+    meta["last_buy_codes"]  = cur_buy_codes
+    new_state["_meta"] = meta
+    save_state(new_state)
+
+    signal_blocks = sell_blocks + buy_blocks + debt_warn_blocks
 
     if alert_only:
-        if not sell_blocks and not buy_blocks:
+        if not sell_blocks and not buy_blocks and not debt_warn_blocks:
             return f"{summary}\n\n暫無新訊號"
         msg = summary
         if sell_blocks:
-            msg += f"\n\n止賺信號 ({len(sell_blocks)}隻)\n{dash}\n" + _numbered(sell_blocks)
+            msg += f"\n\n止賺信號 ({len(sell_blocks)}隻)\n{dash}\n" + _numbered(sell_blocks, last_sell_codes)
         if buy_blocks:
-            msg += f"\n\n建倉信號 ({len(buy_blocks)}隻)\n{dash}\n" + _numbered(buy_blocks)
+            msg += f"\n\n建倉信號 ({len(buy_blocks)}隻)\n{dash}\n" + _numbered(buy_blocks, last_buy_codes)
+        if debt_warn_blocks:
+            msg += f"\n\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}\n" + _numbered(debt_warn_blocks)
         return msg
 
     # ── Full report: signals first, then others ──
     parts = [summary]
     if sell_blocks:
         parts.append(f"\n止賺信號 ({len(sell_blocks)}隻)\n{dash}")
-        parts.append(_numbered(sell_blocks))
+        parts.append(_numbered(sell_blocks, last_sell_codes))
     if buy_blocks:
         parts.append(f"\n建倉信號 ({len(buy_blocks)}隻)\n{dash}")
-        parts.append(_numbered(buy_blocks))
-    if sell_blocks or buy_blocks:
+        parts.append(_numbered(buy_blocks, last_buy_codes))
+    if debt_warn_blocks:
+        parts.append(f"\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}")
+        parts.append(_numbered(debt_warn_blocks))
+    if sell_blocks or buy_blocks or debt_warn_blocks:
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
     quiet = [b for b in all_blocks if b not in signal_blocks]
