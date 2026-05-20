@@ -301,7 +301,8 @@ function render(state) {
                    zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1 };
 
     if (sellSignal) sellSignals.push(item);
-    if (shortfall > 0 && !(debtRatio != null && debtRatio > 80)) buySignals.push(item);
+    const debtBlockBuy = debtRatio != null && ((debtRatio > 125) || (debtRatio > 100 && shares <= 0) || (debtRatio > 80));
+    if (shortfall > 0 && !debtBlockBuy) buySignals.push(item);
     if (tr.length || cleared) holdings.push(item);
     else watchOnly.push(item);
   }
@@ -404,20 +405,32 @@ function stockCard(s, mode) {
       months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
       daysStr = `（已${days}日）`;
     }
-    if (s.debtRatio > 100 && months >= 6) {
-      debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 逾半年未回落&lt;70% ❗強制平倉</div>`;
+    const hasPos = s.shares > 0;
+    if (s.debtRatio > 125) {
+      debtHtml = hasPos
+        ? `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 建議平倉</div>`
+        : `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 暫停買入</div>`;
     } else if (s.debtRatio > 100) {
-      const sinceStr = s.debtOver100Since ? ` · 自${s.debtOver100Since}起>100%` : '';
-      debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr}${sinceStr} — 建議平倉</div>`;
+      if (hasPos && days >= 180) {
+        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 逾180日未回落&lt;70% ❗強制平倉</div>`;
+      } else if (hasPos) {
+        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 觀察中(180日)</div>`;
+      } else {
+        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 暫停買入</div>`;
+      }
     } else if (s.debtRatio > 80) {
       debtHtml = `<div class="signal signal-debt-danger">🔴 強警告! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 暫停買入</div>`;
     } else if (s.debtRatio > 60) {
       debtHtml = `<div class="signal signal-debt-warn">⚠️ 負債警告 負債率${s.debtRatio.toFixed(0)}%</div>`;
     }
   }
-  // Suppress buy signal when debt > 80%
-  if (s.debtRatio != null && s.debtRatio > 80) {
-    if (mode === 'buy') signalHtml = `<div class="signal signal-debt-danger">⛔ 負債率${s.debtRatio.toFixed(0)}%&gt;80% — 暫停買入</div>`;
+  // Suppress buy signal: >125% always, >100% no holdings, >80% always
+  {
+    const hasPos2 = s.shares > 0;
+    const blockBuy = (s.debtRatio > 125) || (s.debtRatio > 100 && !hasPos2) || (s.debtRatio > 80);
+    if (s.debtRatio != null && blockBuy && mode === 'buy') {
+      signalHtml = `<div class="signal signal-debt-danger">⛔ 負債率${s.debtRatio.toFixed(0)}%&gt;80% — 暫停買入</div>`;
+    }
   }
 
   return `<div class="stock">

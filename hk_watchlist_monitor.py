@@ -292,27 +292,41 @@ def fetch_debt_ratio(code: str) -> float | None:
 
 
 def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
-    """負債比率警告文字（含追蹤日數，好轉=跌回<70%）"""
+    """負債比率警告文字
+    規則:
+      >125% 有持倉 → 建議平倉; 冇持倉 → 暫停買入
+      >100% 有持倉 → 觀察180日, 逾期→強制平倉; 冇持倉 → 暫停買入
+      >80%  → 暫停買入
+      >60%  → 警告
+    好轉 = 跌回 <70% 才清除追蹤
+    """
     if debt_ratio is None:
         return ""
     since = stock_st.get("debt_over100_since") if stock_st else None
+    has_holdings = False
+    if stock_st:
+        tr = stock_st.get("tranches", [])
+        has_holdings = sum(t.get("shares", 0) for t in tr) > 0
     days_str = ""
-    months = 0
+    days = 0
     if since:
         try:
             start = datetime.strptime(since, "%Y-%m")
             now = datetime.now()
-            months = (now.year - start.year) * 12 + (now.month - start.month)
             days = (now - start.replace(day=1)).days
             days_str = f"（已{days}日）"
         except Exception:
             pass
+    if debt_ratio > 125:
+        if has_holdings:
+            return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 建議平倉"
+        return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 暫停買入"
     if debt_ratio > 100:
-        if since and months >= 6:
-            return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 逾半年未回落<70% ❗強制平倉"
-        if since:
-            return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 自{since}起>100% · 建議平倉"
-        return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 建議平倉"
+        if has_holdings:
+            if since and days >= 180:
+                return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 逾180日未回落<70% ❗強制平倉"
+            return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 觀察中(180日)"
+        return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 暫停買入"
     if debt_ratio > 80:
         if since:
             return f"  🔴 強警告! 負債率{debt_ratio:.0f}%{days_str} — 曾>100%未回<70% · 暫停買入"
@@ -639,8 +653,17 @@ def build_stock_block(
     if dw:
         lines.append(dw)
 
-    # ── 建倉訊號（差額補倉）── 不足1手就 skip; 負債>80%暫停買入
-    debt_block_buy = debt_ratio is not None and debt_ratio > 80
+    # ── 建倉訊號（差額補倉）── 不足1手就 skip
+    # 負債 block: >100%冇持倉/有持倉>125% → block; >80% → block
+    has_pos = bool(tranches) and _get_shares(tranches, lot_size) > 0
+    if debt_ratio is not None and debt_ratio > 125:
+        debt_block_buy = True
+    elif debt_ratio is not None and debt_ratio > 100 and not has_pos:
+        debt_block_buy = True
+    elif debt_ratio is not None and debt_ratio > 80:
+        debt_block_buy = True
+    else:
+        debt_block_buy = False
     if shortfall > 0 and not debt_block_buy:
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
@@ -846,7 +869,16 @@ def monitor_report(alert_only: bool = False) -> str:
         block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts, dr)
         all_blocks.append(block)
 
-        debt_block = dr is not None and dr > 80
+        # 同 build_stock_block 一致嘅 debt_block 邏輯
+        has_pos = shares_held > 0
+        if dr is not None and dr > 125:
+            debt_block = True
+        elif dr is not None and dr > 100 and not has_pos:
+            debt_block = True
+        elif dr is not None and dr > 80:
+            debt_block = True
+        else:
+            debt_block = False
         if shortfall > 0 and buy_shares > 0 and not debt_block:
             buy_blocks.append(block)
         if valid_tp or ccass_alerts or (dr is not None and dr > 60):
