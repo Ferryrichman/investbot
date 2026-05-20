@@ -1508,5 +1508,37 @@
     "last_check": "2026-05-18 15:44",
     "board": "main",
     "debt_ratio": 69.2
+  },
+  "1413": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 7000,
+    "last_mcap_m": null,
+    "last_price": null,
+    "last_check": null,
+    "board": "main",
+    "debt_ratio": null
+  },
+  "2110": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_date": null,
+    "lot_size": 10000,
+    "last_mcap_m": null,
+    "last_price": null,
+    "last_check": null,
+    "board": "main",
+    "debt_ratio": null
   }
 }

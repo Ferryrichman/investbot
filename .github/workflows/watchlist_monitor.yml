@@ -40,13 +40,19 @@ jobs:
           if [ -n "${{ inputs.mode }}" ]; then
             echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
           else
-            # Cron: 01:00 UTC = alert (morning), others = intraday
-            HOUR=$(date -u +%H)
-            MIN=$(date -u +%M)
-            if [ "$HOUR" = "01" ] && [ "$MIN" -lt "10" ]; then
+            # Use HKT time (UTC+8) — GitHub cron can delay hours
+            HKT_HOUR=$(TZ=Asia/Hong_Kong date +%H)
+            HKT_MIN=$(TZ=Asia/Hong_Kong date +%M)
+            echo "HKT time: ${HKT_HOUR}:${HKT_MIN}"
+            if [ "$HKT_HOUR" -ge 8 ] && [ "$HKT_HOUR" -lt 10 ]; then
+              # 08:00-09:59 HKT → morning alert (covers delayed 09:00 cron)
               echo "mode=alert" >> $GITHUB_OUTPUT
-            else
+            elif [ "$HKT_HOUR" -ge 10 ] && [ "$HKT_HOUR" -le 16 ]; then
+              # 10:00-16:59 HKT → intraday
               echo "mode=intraday" >> $GITHUB_OUTPUT
+            else
+              # Outside trading hours → still run alert (catch late crons)
+              echo "mode=alert" >> $GITHUB_OUTPUT
             fi
           fi
 

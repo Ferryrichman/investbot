@@ -1129,11 +1129,11 @@ def intraday_alert() -> str | None:
     now = datetime.now(hkt)
     now_str = now.strftime("%Y-%m-%d %H:%M")
 
-    # 只喺交易時段跑 (09:15-16:15 HKT, Mon-Fri)
+    # 只喺交易時段跑 (Mon-Fri, 寬鬆窗口 08:00-17:00 HKT 因 GitHub cron 延遲)
     if now.weekday() >= 5:  # Sat/Sun
         return None
     hour_min = now.hour * 100 + now.minute
-    if hour_min < 915 or hour_min > 1615:
+    if hour_min < 800 or hour_min > 1700:
         return None
 
     state = load_state()
