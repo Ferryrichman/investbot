@@ -820,6 +820,9 @@ def monitor_report(alert_only: bool = False) -> str:
         if tranches or zero_done:
             dr = fetch_debt_ratio(code)
             time.sleep(0.15)
+        # Fallback: 若 API 失敗，用 state 中上次記錄嘅負債率
+        if dr is None and stock_st.get("debt_ratio") is not None:
+            dr = stock_st["debt_ratio"]
 
         stock_st["lot_size"]     = lot_size
         stock_st["last_mcap_m"]  = round(mcap_m, 2)
