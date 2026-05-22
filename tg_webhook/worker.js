@@ -40,6 +40,23 @@ export default {
       return new Response("OK", { status: 200 });
     }
   },
+
+  // Cloudflare Cron Trigger → 觸發 GitHub Actions workflow
+  async scheduled(event, env, ctx) {
+    try {
+      const mode = "alert";  // 09:00 + 15:30 都係 full alert
+      await triggerGitHubWorkflow(mode, env);
+    } catch (err) {
+      // 通知自己 cron 失敗
+      try {
+        await sendTG(
+          env.TELEGRAM_TOKEN.trim(),
+          (env.CHAT_ID || "").trim(),
+          `⚠️ Cron trigger failed: ${err.message}`
+        );
+      } catch (_) {}
+    }
+  },
 };
 
 async function handleCommand(text, env) {
@@ -457,6 +474,31 @@ async function getStatus(code, env) {
   const price = st.last_price || 0;
   const val = shares * price;
   return `${code4}\n${shares.toLocaleString()}股 @$${price}\n投$${inv.toLocaleString()} 值$${val.toLocaleString(undefined, {maximumFractionDigits: 0})} ${_pnl(inv, val)}`;
+}
+
+// ── GitHub Actions workflow_dispatch ──
+
+async function triggerGitHubWorkflow(mode, env) {
+  const token = (env.GITHUB_TOKEN || "").trim();
+  const repo = (env.GITHUB_REPO || "").trim();
+  const url = `https://api.github.com/repos/${repo}/actions/workflows/watchlist_monitor.yml/dispatches`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github.v3+json",
+      "User-Agent": "investbot-tg-worker",
+    },
+    body: JSON.stringify({
+      ref: BRANCH,
+      inputs: { mode },
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`GitHub dispatch ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return true;
 }
 
 // ── Telegram ──

@@ -2,6 +2,11 @@ name = "investbot-tg-webhook"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# Cron Triggers (UTC) — 每日兩次精準推送
+# 09:00 HKT = 01:00 UTC, 15:30 HKT = 07:30 UTC
+[triggers]
+crons = ["0 1 * * 1-5", "30 7 * * 1-5"]
+
 # Set these in Cloudflare Dashboard → Settings → Variables
 # Or use: wrangler secret put TELEGRAM_TOKEN
 #          wrangler secret put CHAT_ID
