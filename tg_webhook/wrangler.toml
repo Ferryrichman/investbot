@@ -4,8 +4,9 @@ compatibility_date = "2024-01-01"
 
 # Cron Triggers (UTC) — 每日兩次精準推送
 # 09:00 HKT = 01:00 UTC, 15:30 HKT = 07:30 UTC
+# Cloudflare cron: 1=Sun, 2=Mon ... 6=Fri, 7=Sat → 2-6 = Mon-Fri
 [triggers]
-crons = ["0 1 * * 1-5", "30 7 * * 1-5"]
+crons = ["0 1 * * 2-6", "30 7 * * 2-6"]
 
 # Set these in Cloudflare Dashboard → Settings → Variables
 # Or use: wrangler secret put TELEGRAM_TOKEN
