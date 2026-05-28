@@ -805,6 +805,13 @@
         "shares": 18000,
         "date": "2026-05-27 08:21",
         "note": "via TG"
+      },
+      {
+        "price": 0.34,
+        "hkd": 340,
+        "shares": 1000,
+        "date": "2026-05-28 07:33",
+        "note": "via TG"
       }
     ],
     "zero_cost_achieved": false,
