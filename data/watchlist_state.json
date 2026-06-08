@@ -1490,14 +1490,6 @@
     "board": "gem",
     "debt_ratio": 75.6
   },
-  "8477": {
-    "tier_reached": 0,
-    "tranches": [],
-    "zero_cost_achieved": false,
-    "post_zero_done": [],
-    "notes": [],
-    "zero_cost_shares": null
-  },
   "8495": {
     "tier_reached": 1,
     "tranches": [],
