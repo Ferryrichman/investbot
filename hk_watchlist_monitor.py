@@ -819,15 +819,23 @@ def monitor_report(alert_only: bool = False) -> str:
 
         # ── 建倉差額：應投入 vs max(投入, 現值) ──
         tiers_now    = current_tier_reached(mcap_m, board)
-        expected_inv = tiers_now * TRANCHE_SIZE
         actual_inv   = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
         shares_held  = sum(t.get("shares", 0) for t in tranches)
         current_val  = shares_held * price if shares_held > 0 else 0
         if zero_done:
-            # 0成本股：當冇持倉，重新由第一層開始建倉
-            position  = 0
-            shortfall = expected_inv if expected_inv > 0 else 0
+            # 0成本股：用 zero_cost_tier 做 floor (執行0成本嗰刻嘅 tier)
+            # 必須跌穿 zero_cost_tier 先重新建倉, 避免循環sell-buy
+            zero_tier = stock_st.get("zero_cost_tier")
+            if zero_tier is None:
+                # Backfill: 鎖定 floor 喺當前 tier
+                zero_tier = tiers_now
+                stock_st["zero_cost_tier"] = zero_tier
+            effective_tiers = max(0, tiers_now - zero_tier)
+            expected_inv    = effective_tiers * TRANCHE_SIZE
+            position        = 0
+            shortfall       = expected_inv if expected_inv > 0 else 0
         else:
+            expected_inv = tiers_now * TRANCHE_SIZE
             position     = max(actual_inv, current_val)
             shortfall    = max(0, expected_inv - position) if expected_inv > 0 else 0
 
@@ -918,6 +926,11 @@ def monitor_report(alert_only: bool = False) -> str:
             st_fix["zero_cost_shares"] = sh_fix
             if not st_fix.get("zero_cost_date"):
                 st_fix["zero_cost_date"] = now[:10]
+            # 鎖定 zero_cost_tier (建倉 floor)
+            mcap_fix = st_fix.get("last_mcap_m")
+            board_fix = st_fix.get("board")
+            if mcap_fix is not None and board_fix:
+                st_fix["zero_cost_tier"] = current_tier_reached(mcap_fix, board_fix)
 
     # save_state moved to after signal tracking (below)
 
@@ -1111,6 +1124,11 @@ def mark_zero_cost(code: str, remaining_shares: float, sell_price: float):
     stock_st["zero_cost_shares"]   = remaining_shares
     stock_st["zero_cost_price"]    = sell_price
     stock_st["zero_cost_date"]     = datetime.now().strftime("%Y-%m-%d")
+    # 鎖定 zero_cost_tier (建倉 floor)
+    mcap_now = stock_st.get("last_mcap_m")
+    board_now = stock_st.get("board")
+    if mcap_now is not None and board_now:
+        stock_st["zero_cost_tier"] = current_tier_reached(mcap_now, board_now)
     # 0成本觸發條件 = M1 條件，故 M1 視為同時完成
     done = stock_st.get("post_zero_done", [])
     if 0 not in done:
