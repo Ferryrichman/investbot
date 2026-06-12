@@ -669,7 +669,7 @@ def build_stock_block(
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
         if est_shares > 0:
             if zero_done:
-                lines.append(f"  >> 再買入機會 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+                lines.append(f"  >> 重新建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
             elif not tranches:
                 lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
             else:
@@ -823,8 +823,13 @@ def monitor_report(alert_only: bool = False) -> str:
         actual_inv   = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
         shares_held  = sum(t.get("shares", 0) for t in tranches)
         current_val  = shares_held * price if shares_held > 0 else 0
-        position     = max(actual_inv, current_val)  # 升咗就用現值，跌咗就用投入
-        shortfall    = max(0, expected_inv - position) if expected_inv > 0 else 0
+        if zero_done:
+            # 0成本股：當冇持倉，重新由第一層開始建倉
+            position  = 0
+            shortfall = expected_inv if expected_inv > 0 else 0
+        else:
+            position     = max(actual_inv, current_val)
+            shortfall    = max(0, expected_inv - position) if expected_inv > 0 else 0
 
         avg_cost = calc_avg_cost(tranches) if tranches else None
         gain_pct = calc_gain_pct(avg_cost, price) if avg_cost else 0.0
@@ -883,11 +888,11 @@ def monitor_report(alert_only: bool = False) -> str:
         else:
             debt_block = False
 
-        # Fix #4: 新建倉最多2層 ($12,000)，避免一次落重注
+        # Fix #4: 新建倉/0成本重新建倉 最多2層 ($12,000)，避免一次落重注
         MAX_NEW_BUY = TRANCHE_SIZE * 2  # $12,000
         if shortfall > 0 and buy_shares > 0 and not debt_block:
-            if not tranches:
-                # 新建倉: cap shortfall
+            if not tranches or zero_done:
+                # 新建倉 / 0成本重新建倉: cap shortfall
                 capped = min(shortfall, MAX_NEW_BUY)
                 capped_shares = round_to_lots(capped / price, lot_size, "down") if price > 0 else 0
                 if capped_shares > 0 and capped_shares != buy_shares:

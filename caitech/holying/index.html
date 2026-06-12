@@ -269,9 +269,10 @@ function render(state) {
     const grossInv = tr.filter(t => (t.hkd||0) > 0).reduce((s,t) => s + t.hkd, 0);
     const shares = tr.reduce((s,t) => s + (t.shares||0), 0);
     const val = shares * price;
-    const position = Math.max(grossInv, val);
     const tiersNow = tiersTriggered(mcap, board);
     const expected = tiersNow * TRANCHE;
+    // 0成本股：當冇持倉，重新由第一層開始建倉
+    const position = zeroDone ? 0 : Math.max(grossInv, val);
     const shortfall = expected > 0 ? Math.max(0, expected - position) : 0;
 
     // Avg cost & gain — 同 TG Bot 一致，用淨投入
@@ -384,7 +385,7 @@ function stockCard(s, mode) {
     const lotSize = s.lotSize || 1;
     const estShares = Math.floor(s.shortfall / s.price / lotSize) * lotSize;
     const estLots = Math.floor(estShares / lotSize);
-    const label = s.zeroDone ? '再買入機會' : (s.shares > 0 ? '補倉' : '建倉');
+    const label = s.zeroDone ? '重新建倉' : (s.shares > 0 ? '補倉' : '建倉');
     const cls = s.zeroDone ? 'signal-rebuy' : 'signal-buy';
     signalHtml = `<div class="signal ${cls}">
       ${label} · 差 ${fmtMoney(s.shortfall)} · ${estLots}手/${estShares.toLocaleString()}股
