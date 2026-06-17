@@ -1076,6 +1076,13 @@
         "shares": 8000,
         "date": "2026-06-16 08:16",
         "note": "modified via TG"
+      },
+      {
+        "price": 0.84,
+        "hkd": -3360,
+        "shares": -4000,
+        "date": "2026-06-17 02:13",
+        "note": "sell via TG"
       }
     ],
     "zero_cost_achieved": true,
