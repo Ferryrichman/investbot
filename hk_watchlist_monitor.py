@@ -1079,6 +1079,7 @@ def monitor_report(alert_only: bool = False) -> str:
 
         # 董事/大股東交易披露 (最近 30 日)
         insider_alert_str = None
+        insider_sell_recent = False
         if tranches or zero_done:
             insider_txs = fetch_insider_transactions(code, days=30)
             time.sleep(0.15)
@@ -1092,6 +1093,7 @@ def monitor_report(alert_only: bool = False) -> str:
                         f"📋 SDI 減持 ({first['date']}): {first['role']} 賣 "
                         f"{total_sell_shares:,}股"
                     )
+                    insider_sell_recent = True
                 elif buys:
                     total_buy_shares = sum(t["shares"] for t in buys)
                     first = buys[0]
@@ -1101,6 +1103,22 @@ def monitor_report(alert_only: bool = False) -> str:
                     )
                 if insider_alert_str:
                     ccass_alerts.append(insider_alert_str)
+
+        # 🚨 高危派貨複合信號: 高位 + 大成交 + 高gain + (SDI減持 OR vol spike)
+        # 識別「派貨進行中」嘅多重證據
+        if tranches and shares_held > 0:
+            high_risk_flags = []
+            if vol_stats and vol_stats.get("near_high") and vol_stats.get("vol_ratio", 0) >= 2.0:
+                high_risk_flags.append("高位+大成交")
+            if insider_sell_recent:
+                high_risk_flags.append("董事減持")
+            if gain_pct is not None and gain_pct >= 100:
+                high_risk_flags.append(f"+{gain_pct:.0f}%獲利")
+            # 至少 2 個 flag 先觸發 (避免 false alarm)
+            if len(high_risk_flags) >= 2:
+                ccass_alerts.append(
+                    f"🚨 高危派貨警示: {' + '.join(high_risk_flags)}"
+                )
 
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
@@ -1189,7 +1207,7 @@ def monitor_report(alert_only: bool = False) -> str:
         # sell trigger: 減持 / CCASS OUT / Broker SURGE (派貨類)
         # anomaly only: vol spike, 增持, CCASS IN, Broker DROP (中性/利好類)
         def _is_sell_trigger(a: str) -> bool:
-            return any(k in a for k in ["減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶"])
+            return any(k in a for k in ["減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶", "🚨"])
         sell_trigger_alerts = [a for a in ccass_alerts if _is_sell_trigger(a)]
         anomaly_only_alerts = [a for a in ccass_alerts if not _is_sell_trigger(a)]
 
