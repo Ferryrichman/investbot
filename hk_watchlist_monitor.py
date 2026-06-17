@@ -269,6 +269,49 @@ def fetch_hk_quote(code: str) -> dict | None:
         return None
 
 
+def fetch_volume_stats(code: str) -> dict | None:
+    """取最近 30 日歷史，返回今日 vol vs avg vol ratio + 近期高位 check"""
+    symbol = f"{int(code):04d}.HK"
+    try:
+        s, crumb = _get_yf_crumb()
+        url = (
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+            f"?range=1mo&interval=1d&crumb={crumb}"
+        )
+        r = s.get(url, timeout=12, headers={"Accept": "application/json"})
+        chart = r.json().get("chart", {}).get("result")
+        if not chart:
+            return None
+        result = chart[0]
+        quote = result.get("indicators", {}).get("quote", [{}])[0]
+        vols = [v for v in quote.get("volume", []) if v is not None]
+        closes = [c for c in quote.get("close", []) if c is not None]
+        if len(vols) < 5 or not closes:
+            return None
+        today_vol = vols[-1]
+        prev_vols = [v for v in vols[:-1] if v > 0]
+        if not prev_vols:
+            return None
+        avg_vol = sum(prev_vols) / len(prev_vols)
+        if avg_vol <= 0 or today_vol is None:
+            return None
+        vol_ratio = today_vol / avg_vol
+        # 近期高位 check
+        recent_high = max(closes[-30:])
+        current = closes[-1]
+        near_high = current >= recent_high * 0.90  # 距離高位 10% 內
+        return {
+            "vol_ratio": vol_ratio,
+            "today_vol": today_vol,
+            "avg_vol": avg_vol,
+            "near_high": near_high,
+            "recent_high": recent_high,
+            "current": current,
+        }
+    except Exception:
+        return None
+
+
 def fetch_debt_ratio(code: str) -> float | None:
     """取負債比率 (debt ratio %)，Yahoo D/E → debt/(debt+equity)"""
     symbol = f"{int(code):04d}.HK"
@@ -952,6 +995,16 @@ def monitor_report(alert_only: bool = False) -> str:
         # CCASS 集中度自動警示（唔寫入 state，每次動態查詢）
         ccass_alert = check_ccass_concentration(code)
         ccass_alerts = [ccass_alert] if ccass_alert else []
+
+        # 成交量異常偵測 (只查有持倉嘅股票, 省 API call)
+        if tranches or zero_done:
+            vol_stats = fetch_volume_stats(code)
+            time.sleep(0.15)
+            if vol_stats and vol_stats["vol_ratio"] >= 3.0:
+                pos_str = " 高位" if vol_stats["near_high"] else ""
+                ccass_alerts.append(
+                    f"📊 異常成交{pos_str} ({vol_stats['vol_ratio']:.1f}x 30日均)"
+                )
 
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
