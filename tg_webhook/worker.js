@@ -375,6 +375,7 @@ async function recordSell(code, sharesSold, price, env) {
     // 已回收成本 → 自動標記0成本
     state[code4].zero_cost_achieved = true;
     state[code4].zero_cost_shares = remainShares;
+    state[code4].zero_cost_initial_shares = remainShares;
     state[code4].zero_cost_date = now.slice(0, 10);
     msg += `\n剩${remainShares.toLocaleString()}股 🎉 0成本達成！免費持倉`;
   } else {

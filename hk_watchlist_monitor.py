@@ -82,19 +82,20 @@ SHELL_RECOVER_PROFIT_PCT = 80.0   # 殼價回升時門檻可低一點
 # mcap_m + mcap_gain_pct = 市值條件組合；gain_pct = 純浮盈獨立觸發
 POST_ZERO_MAIN = [
     {"mcap_m": 400,  "mcap_gain_pct": 100.0, "gain_pct": 200.0, "sell_frac": None, "label": "M1 (4億+100% / 200%)"},
-    {"mcap_m": 600,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M2 (6億)"},
-    {"mcap_m": 1000, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M3 (10億)"},
-    {"mcap_m": 1500, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M4 (15億)"},
-    {"mcap_m": 2000, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M5 (20億)"},
+    {"mcap_m": 800,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (8億)"},
+    {"mcap_m": 1200, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (12億)"},
+    {"mcap_m": 1600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (16億)"},
+    {"mcap_m": 2000, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M5 (20億)"},
 ]
+# 每個 M 賣 0成本初始股數 × 20%, M2-M5 合共 80%, 餘 20% 自由操作
 
-# 創業板（主板門檻 × 0.4，與殼價比例一致）
+# 創業板（主板門檻 × 0.4）
 POST_ZERO_GEM = [
-    {"mcap_m": 150,  "mcap_gain_pct": 100.0, "gain_pct": 200.0, "sell_frac": None, "label": "M1 (1.5億+100% / 200%)"},
-    {"mcap_m": 250,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M2 (2.5億)"},
-    {"mcap_m": 400,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M3 (4億)"},
-    {"mcap_m": 600,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M4 (6億)"},
-    {"mcap_m": 800,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.25, "label": "M5 (8億)"},
+    {"mcap_m": 150, "mcap_gain_pct": 100.0, "gain_pct": 200.0, "sell_frac": None, "label": "M1 (1.5億+100% / 200%)"},
+    {"mcap_m": 300, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (3億)"},
+    {"mcap_m": 450, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (4.5億)"},
+    {"mcap_m": 600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (6億)"},
+    {"mcap_m": 750, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M5 (7.5億)"},
 ]
 
 # ── 狀態檔案 ─────────────────────────────────────────────
@@ -551,6 +552,10 @@ def check_take_profit(
         done_indices = stock_st.get("post_zero_done", [])
         milestones   = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
 
+        # Backfill: 舊 0成本股冇記初始股數, 用當前 zero_shares 補
+        if stock_st.get("zero_cost_initial_shares") is None and zero_shares > 0:
+            stock_st["zero_cost_initial_shares"] = zero_shares
+
         # 若剩餘只有 1 手 (或更少)，唔再出止賺，留尾倉博升幅
         if zero_shares <= lot_size:
             return signals
@@ -599,9 +604,14 @@ def check_take_profit(
                     "milestone_idx": i,
                 })
             else:
-                raw_sell    = zero_shares * sell_frac
+                # 20% 係 0成本初始股數 × 20% (每個 M 都係固定比例, 5 次共 80%, 餘 20% 自由操作)
+                initial_shares = stock_st.get("zero_cost_initial_shares") or zero_shares
+                raw_sell    = initial_shares * sell_frac
                 shares_sell = round_to_lots(raw_sell, lot_size, "down")
-                lots_sell   = shares_sell // lot_size
+                shares_sell = min(shares_sell, zero_shares)  # cap at remaining
+                lots_sell   = shares_sell // lot_size if lot_size > 0 else 0
+                if shares_sell <= 0:
+                    continue
                 signals.append({
                     "type": f"POST_ZERO_{i}",
                     "label": ms["label"],
@@ -768,17 +778,23 @@ def build_stock_block(
             lines.append(f"  /sell {code} {ss} {price}")
 
     # ── 0成本後市目標 ──
-    # 跳過剛觸發嘅 milestone, 顯示下一個未完成嘅
+    # 跳過已觸發 + 跳過 mcap 已過嘅 milestone, 顯示真正下一個目標
     if zero_done:
         z_shares = stock_st.get("zero_cost_shares", 0) or 0
         milestones = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
         done_idx = set(stock_st.get("post_zero_done", []))
-        # 將今次觸發嘅 idx 一齊當作 done
         triggered_idx = {s.get("milestone_idx") for s in tp_signals
                          if s.get("milestone_idx") is not None}
         skip_idx = done_idx | triggered_idx
-        next_ms = next((ms for i, ms in enumerate(milestones) if i not in skip_idx), None)
-        if next_ms and z_shares > lot_size:  # 仲有貨先顯示下一目標
+        # 第一個冇 done 又 mcap 未過嘅 milestone
+        next_ms = None
+        for i, ms in enumerate(milestones):
+            if i in skip_idx:
+                continue
+            if mcap_m < ms["mcap_m"]:
+                next_ms = ms
+                break
+        if next_ms and z_shares > lot_size:
             lines.append(f"  → 下一目標 {next_ms['label']}")
 
     # ── CCASS + 備注 ──
@@ -1037,6 +1053,7 @@ def monitor_report(alert_only: bool = False) -> str:
         if sh_fix > 0 and inv_fix <= 0 and not st_fix.get("zero_cost_achieved"):
             st_fix["zero_cost_achieved"] = True
             st_fix["zero_cost_shares"] = sh_fix
+            st_fix["zero_cost_initial_shares"] = sh_fix  # 記低 M1 達成時嘅初始免費股數
             if not st_fix.get("zero_cost_date"):
                 st_fix["zero_cost_date"] = now[:10]
             # 鎖定 zero_cost_tier (建倉 floor)，至少 tier 1
@@ -1248,6 +1265,7 @@ def mark_zero_cost(code: str, remaining_shares: float, sell_price: float):
 
     stock_st["zero_cost_achieved"] = True
     stock_st["zero_cost_shares"]   = remaining_shares
+    stock_st["zero_cost_initial_shares"] = remaining_shares
     stock_st["zero_cost_price"]    = sell_price
     stock_st["zero_cost_date"]     = datetime.now().strftime("%Y-%m-%d")
     # 鎖定 zero_cost_tier (建倉 floor)
