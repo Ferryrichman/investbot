@@ -44,6 +44,7 @@ CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
 
 # ── 每注固定金額 (HKD) ────────────────────────────────────
 TRANCHE_SIZE = 6_000    # 每次買入 $6,000
+MIN_BUY_HKD  = 1_000    # 最低買入信號 $1,000，細過唔出
 
 # ── 資金管理 ─────────────────────────────────────────────
 TOTAL_PORTFOLIO = 411_500   # 帳面總值 (定期更新)
@@ -670,7 +671,7 @@ def build_stock_block(
         debt_block_buy = True
     else:
         debt_block_buy = False
-    if shortfall > 0 and not debt_block_buy:
+    if shortfall >= MIN_BUY_HKD and not debt_block_buy:
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
         if est_shares > 0:
@@ -681,7 +682,7 @@ def build_stock_block(
             else:
                 lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
             lines.append(f"  /buy {code} {est_shares} {price}")
-    elif shortfall > 0 and debt_block_buy:
+    elif shortfall >= MIN_BUY_HKD and debt_block_buy:
         lines.append(f"  ⛔ 負債率{debt_ratio:.0f}%>80% — 暫停買入")
 
     # ── 止賺訊號 ── sell 0股 skip
@@ -909,8 +910,9 @@ def monitor_report(alert_only: bool = False) -> str:
             debt_block = False
 
         # Fix #4: 新建倉/0成本重新建倉 最多2層 ($12,000)，避免一次落重注
+        # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
         MAX_NEW_BUY = TRANCHE_SIZE * 2  # $12,000
-        if shortfall > 0 and buy_shares > 0 and not debt_block:
+        if shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block:
             if not tranches or zero_done:
                 # 新建倉 / 0成本重新建倉: cap shortfall
                 capped = min(shortfall, MAX_NEW_BUY)

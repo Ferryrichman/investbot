@@ -203,6 +203,7 @@ const STATE_PATH = "data/watchlist_state.json";
 const MAIN_TIERS = [200,150,120,100,80,60];
 const GEM_TIERS  = [80,60,50,40,30];
 const TRANCHE    = 6000;
+const MIN_BUY    = 1000;  // 最低買入信號 $1,000，細過唔出
 const PORTFOLIO  = 411500;
 const MIN_CASH   = 0.35;
 
@@ -317,7 +318,7 @@ function render(state) {
 
     if (sellSignal) sellSignals.push(item);
     const debtBlockBuy = debtRatio != null && ((debtRatio > 125) || (debtRatio > 100 && shares <= 0) || (debtRatio > 80));
-    if (shortfall > 0 && !debtBlockBuy) buySignals.push(item);
+    if (shortfall >= MIN_BUY && !debtBlockBuy) buySignals.push(item);
     if (tr.length || cleared) holdings.push(item);
     else watchOnly.push(item);
   }
@@ -395,7 +396,7 @@ function stockCard(s, mode) {
       止賺信號 · 浮盈 ${fmtPct(s.gainPct)} · 賣出回收成本 → 0成本持倉
     </div>`;
   }
-  if (mode === 'buy' && s.shortfall > 0) {
+  if (mode === 'buy' && s.shortfall >= MIN_BUY) {
     const lotSize = s.lotSize || 1;
     const estShares = Math.floor(s.shortfall / s.price / lotSize) * lotSize;
     const estLots = Math.floor(estShares / lotSize);
