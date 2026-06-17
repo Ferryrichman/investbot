@@ -505,6 +505,12 @@ def check_take_profit(
 
     # ── 階段二：已達0成本，追蹤後市目標 ──────────────────
     else:
+        # 若用戶已重新投入 (net_inv > 0)，免費股狀態已被稀釋
+        # 唔再觸發 milestone 信號，避免錯誤止賺（gain_pct 被舊低價拉高）
+        net_inv = sum(t.get("hkd", 0) for t in tranches)
+        if net_inv > 0:
+            return signals
+
         zero_shares  = int(stock_st.get("zero_cost_shares") or 0)
         done_indices = stock_st.get("post_zero_done", [])
         milestones   = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
@@ -832,8 +838,14 @@ def monitor_report(alert_only: bool = False) -> str:
                 stock_st["zero_cost_tier"] = zero_tier
             effective_tiers = max(0, tiers_now - zero_tier)
             expected_inv    = effective_tiers * TRANCHE_SIZE
-            position        = 0
-            shortfall       = expected_inv if expected_inv > 0 else 0
+            # 計算0成本之後嘅新買入 (post-zero buys)
+            zero_date = stock_st.get("zero_cost_date", "")
+            post_zero_inv = sum(
+                t.get("hkd", 0) for t in tranches
+                if t.get("hkd", 0) > 0 and zero_date and t.get("date", "")[:10] > zero_date
+            )
+            position  = post_zero_inv
+            shortfall = max(0, expected_inv - position) if expected_inv > 0 else 0
         else:
             expected_inv = tiers_now * TRANCHE_SIZE
             position     = max(actual_inv, current_val)

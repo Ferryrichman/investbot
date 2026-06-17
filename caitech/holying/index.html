@@ -270,14 +270,19 @@ function render(state) {
     const shares = tr.reduce((s,t) => s + (t.shares||0), 0);
     const val = shares * price;
     const tiersNow = tiersTriggered(mcap, board);
+    const zeroDate = v.zero_cost_date || "";
     let expected, position, shortfall;
     if (zeroDone) {
       // 0成本股：用 zero_cost_tier 做 floor (必須跌穿 0成本嗰時嘅 tier 先重新建倉)
       const zeroTier = v.zero_cost_tier != null ? v.zero_cost_tier : tiersNow;
       const effectiveTiers = Math.max(0, tiersNow - zeroTier);
       expected = effectiveTiers * TRANCHE;
-      position = 0;
-      shortfall = expected > 0 ? expected : 0;
+      // 計算0成本之後嘅新買入
+      const postZeroInv = tr
+        .filter(t => (t.hkd||0) > 0 && zeroDate && (t.date||"").slice(0,10) > zeroDate)
+        .reduce((s,t) => s + t.hkd, 0);
+      position = postZeroInv;
+      shortfall = expected > 0 ? Math.max(0, expected - position) : 0;
     } else {
       expected = tiersNow * TRANCHE;
       position = Math.max(grossInv, val);
