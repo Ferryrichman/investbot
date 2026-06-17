@@ -270,7 +270,7 @@ def fetch_hk_quote(code: str) -> dict | None:
 
 
 def fetch_volume_stats(code: str) -> dict | None:
-    """取最近 30 日歷史，返回今日 vol vs avg vol ratio + 近期高位 check"""
+    """取最近 30 日歷史，返回 vol ratio + 近期高位 + 今日 OHLC 派貨形態 check"""
     symbol = f"{int(code):04d}.HK"
     try:
         s, crumb = _get_yf_crumb()
@@ -284,22 +284,55 @@ def fetch_volume_stats(code: str) -> dict | None:
             return None
         result = chart[0]
         quote = result.get("indicators", {}).get("quote", [{}])[0]
-        vols = [v for v in quote.get("volume", []) if v is not None]
-        closes = [c for c in quote.get("close", []) if c is not None]
-        if len(vols) < 5 or not closes:
+        vols   = quote.get("volume", [])
+        closes = quote.get("close", [])
+        opens  = quote.get("open", [])
+        highs  = quote.get("high", [])
+        lows   = quote.get("low", [])
+
+        # 清走 None
+        idx = [i for i in range(len(closes)) if closes[i] is not None]
+        if len(idx) < 5:
             return None
+        vols   = [vols[i] for i in idx]
+        closes = [closes[i] for i in idx]
+        opens  = [opens[i] for i in idx]
+        highs  = [highs[i] for i in idx]
+        lows   = [lows[i] for i in idx]
+
         today_vol = vols[-1]
-        prev_vols = [v for v in vols[:-1] if v > 0]
-        if not prev_vols:
+        prev_vols = [v for v in vols[:-1] if v is not None and v > 0]
+        if not prev_vols or today_vol is None:
             return None
         avg_vol = sum(prev_vols) / len(prev_vols)
-        if avg_vol <= 0 or today_vol is None:
+        if avg_vol <= 0:
             return None
         vol_ratio = today_vol / avg_vol
-        # 近期高位 check
+        # 近期高位
         recent_high = max(closes[-30:])
         current = closes[-1]
-        near_high = current >= recent_high * 0.90  # 距離高位 10% 內
+        near_high = current >= recent_high * 0.90
+
+        # A: 長上影線檢測 (今日)
+        long_upper_shadow = False
+        if all(x is not None for x in [opens[-1], highs[-1], lows[-1], closes[-1]]):
+            o, h, l, c = opens[-1], highs[-1], lows[-1], closes[-1]
+            upper = h - max(o, c)
+            body = abs(c - o) or (h - l) * 0.01  # 避免 div by 0
+            day_range = h - l
+            # 上影線 > 2x body 同 上影線 > 50% 日內 range
+            if day_range > 0 and upper >= body * 2 and upper >= day_range * 0.5:
+                long_upper_shadow = True
+
+        # 連續陰燭近高位 (3+ 日)
+        red_streak = 0
+        for i in range(len(closes) - 1, max(-1, len(closes) - 5), -1):
+            if opens[i] is not None and closes[i] is not None and closes[i] < opens[i]:
+                red_streak += 1
+            else:
+                break
+        consec_red_near_high = red_streak >= 3 and near_high
+
         return {
             "vol_ratio": vol_ratio,
             "today_vol": today_vol,
@@ -307,7 +340,38 @@ def fetch_volume_stats(code: str) -> dict | None:
             "near_high": near_high,
             "recent_high": recent_high,
             "current": current,
+            "long_upper_shadow": long_upper_shadow,
+            "consec_red_near_high": consec_red_near_high,
+            "red_streak": red_streak,
         }
+    except Exception:
+        return None
+
+
+def fetch_ipo_date(code: str) -> datetime | None:
+    """取 IPO 日期 (firstTradeDate from Yahoo). 用 cache 避免重複 fetch."""
+    symbol = f"{int(code):04d}.HK"
+    try:
+        s, crumb = _get_yf_crumb()
+        url = (
+            f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
+            f"?modules=summaryDetail,price&crumb={crumb}"
+        )
+        r = s.get(url, timeout=10, headers={"Accept": "application/json"})
+        data = r.json().get("quoteSummary", {}).get("result")
+        if not data:
+            return None
+        # firstTradeDate 通常喺 price module 入面，但 quoteSummary 唔一定有
+        # 用 quote API 個 firstTradeDateMilliseconds 比較穩定
+        url2 = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbol}&crumb={crumb}"
+        r2 = s.get(url2, timeout=10, headers={"Accept": "application/json"})
+        q = r2.json().get("quoteResponse", {}).get("result")
+        if not q:
+            return None
+        ms = q[0].get("firstTradeDateMilliseconds")
+        if ms is None:
+            return None
+        return datetime.fromtimestamp(ms / 1000, tz=timezone(timedelta(hours=8)))
     except Exception:
         return None
 
@@ -1067,17 +1131,27 @@ def monitor_report(alert_only: bool = False) -> str:
         ccass_alert = check_ccass_concentration(code)
         ccass_alerts = [ccass_alert] if ccass_alert else []
 
-        # 成交量異常偵測 (只查有持倉嘅股票, 省 API call)
+        # 成交量異常偵測 + 派貨形態 (只查有持倉嘅股票, 省 API call)
         vol_alert_str = None
+        vol_stats = None
         if tranches or zero_done:
             vol_stats = fetch_volume_stats(code)
             time.sleep(0.15)
-            if vol_stats and vol_stats["vol_ratio"] >= 3.0:
-                pos_str = " 高位" if vol_stats["near_high"] else ""
-                vol_alert_str = f"📊 異常成交{pos_str} ({vol_stats['vol_ratio']:.1f}x 30日均)"
-                ccass_alerts.append(vol_alert_str)
+            if vol_stats:
+                # 異常成交
+                if vol_stats["vol_ratio"] >= 3.0:
+                    pos_str = " 高位" if vol_stats["near_high"] else ""
+                    vol_alert_str = f"📊 異常成交{pos_str} ({vol_stats['vol_ratio']:.1f}x 30日均)"
+                    ccass_alerts.append(vol_alert_str)
+                # A: 長上影線 + 高位 = 莊家出貨蠟燭
+                if vol_stats.get("long_upper_shadow") and vol_stats["near_high"]:
+                    ccass_alerts.append("🕯️ 長上影線高位 — 莊家出貨蠟燭")
+                # F: 連續陰燭近高位
+                if vol_stats.get("consec_red_near_high"):
+                    rs = vol_stats.get("red_streak", 3)
+                    ccass_alerts.append(f"📉 高位連{rs}日陰燭 — 逐步派發")
 
-        # 董事/大股東交易披露 (最近 30 日)
+        # 董事/大股東交易披露 (最近 30 日 + 連環減持 detect)
         insider_alert_str = None
         insider_sell_recent = False
         if tranches or zero_done:
@@ -1086,7 +1160,24 @@ def monitor_report(alert_only: bool = False) -> str:
             if insider_txs:
                 sells = [t for t in insider_txs if t["action"] == "sell"]
                 buys = [t for t in insider_txs if t["action"] == "buy"]
-                if sells:
+                # C: 連環減持 - 10 日內 ≥3 次 SDI 減持
+                cutoff_10d = datetime.now(timezone(timedelta(hours=8))) - timedelta(days=10)
+                recent_sells = []
+                for t in sells:
+                    try:
+                        sell_dt = datetime.strptime(t["date"], "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=8)))
+                        if sell_dt >= cutoff_10d:
+                            recent_sells.append(t)
+                    except (ValueError, TypeError):
+                        pass
+                if len(recent_sells) >= 3:
+                    total_recent_shares = sum(t["shares"] for t in recent_sells)
+                    ccass_alerts.append(
+                        f"⛔ 連環減持: 10日內{len(recent_sells)}次 SDI 賣出 "
+                        f"共{total_recent_shares:,}股 — 強烈派貨"
+                    )
+                    insider_sell_recent = True
+                elif sells:
                     total_sell_shares = sum(t["shares"] for t in sells)
                     first = sells[0]
                     insider_alert_str = (
@@ -1094,6 +1185,7 @@ def monitor_report(alert_only: bool = False) -> str:
                         f"{total_sell_shares:,}股"
                     )
                     insider_sell_recent = True
+                    ccass_alerts.append(insider_alert_str)
                 elif buys:
                     total_buy_shares = sum(t["shares"] for t in buys)
                     first = buys[0]
@@ -1101,8 +1193,31 @@ def monitor_report(alert_only: bool = False) -> str:
                         f"📋 SDI 增持 ({first['date']}): {first['role']} 買 "
                         f"{total_buy_shares:,}股"
                     )
-                if insider_alert_str:
                     ccass_alerts.append(insider_alert_str)
+
+        # E: IPO 解禁日警示 (6m / 12m / 24m)
+        ipo_dt = stock_st.get("ipo_date")
+        if not ipo_dt:
+            # Fetch only if not cached
+            ipo_obj = fetch_ipo_date(code)
+            if ipo_obj:
+                stock_st["ipo_date"] = ipo_obj.strftime("%Y-%m-%d")
+                ipo_dt = stock_st["ipo_date"]
+                time.sleep(0.15)
+        if ipo_dt:
+            try:
+                ipo_d = datetime.strptime(ipo_dt, "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=8)))
+                now_d = datetime.now(timezone(timedelta(hours=8)))
+                days_since = (now_d - ipo_d).days
+                # 6m = 180, 12m = 365, 24m = 730. Alert window = +/- 30 日
+                for milestone, label in [(180, "6個月"), (365, "12個月"), (730, "24個月")]:
+                    if abs(days_since - milestone) <= 30:
+                        ccass_alerts.append(
+                            f"🔓 IPO {label}解禁期 (上市{days_since}日) — 大股東可大手減持"
+                        )
+                        break
+            except (ValueError, TypeError):
+                pass
 
         # 🚨 高危派貨複合信號: 高位 + 大成交 + 高gain + (SDI減持 OR vol spike)
         # 識別「派貨進行中」嘅多重證據
@@ -1207,21 +1322,28 @@ def monitor_report(alert_only: bool = False) -> str:
         # sell trigger: 減持 / CCASS OUT / Broker SURGE (派貨類)
         # anomaly only: vol spike, 增持, CCASS IN, Broker DROP (中性/利好類)
         def _is_sell_trigger(a: str) -> bool:
-            return any(k in a for k in ["減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶", "🚨"])
+            return any(k in a for k in [
+                "減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶",
+                "🚨", "⛔ 連環減持", "🕯️", "📉 高位連", "🔓 IPO"
+            ])
         sell_trigger_alerts = [a for a in ccass_alerts if _is_sell_trigger(a)]
         anomaly_only_alerts = [a for a in ccass_alerts if not _is_sell_trigger(a)]
 
-        # 真正止賺信號 (有 /sell 或 sell trigger 類 alert)
-        if valid_tp or sell_trigger_alerts:
+        # 真正止賺信號 — 必須有持倉先有意義
+        if has_pos and (valid_tp or sell_trigger_alerts):
             sell_blocks.append(block)
         if dr is not None and dr > 60 and has_pos:
             debt_warn_blocks.append(block)
 
-        # 異常動向: anomaly only alerts + 唔出現喺其他 section
-        in_other_section = bool(valid_tp or sell_trigger_alerts) or \
-                           (shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block) or \
-                           (dr is not None and dr > 60 and has_pos)
-        if anomaly_only_alerts and not in_other_section:
+        # 異常動向: 1) watch-only 嘅 sell trigger alerts (冇 /sell 命令)
+        #          2) anomaly only alerts + 唔出現喺其他 section
+        in_sell_section = has_pos and (valid_tp or sell_trigger_alerts)
+        in_buy_section  = shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block
+        in_debt_section = dr is not None and dr > 60 and has_pos
+        in_other_section = in_sell_section or in_buy_section or in_debt_section
+        # Watch-only stock with sell trigger → 異常動向 (informational)
+        watch_only_with_alert = not has_pos and (sell_trigger_alerts or anomaly_only_alerts)
+        if (anomaly_only_alerts and not in_other_section) or watch_only_with_alert:
             anomaly_blocks.append(block)
 
     # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
