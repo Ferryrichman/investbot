@@ -294,12 +294,28 @@ function render(state) {
     const avgCost = shares > 0 ? netInv / shares : 0;
     const gainPct = avgCost > 0 && price > 0 ? ((price - avgCost) / avgCost * 100) : 0;
 
-    // Sell signals (simplified: gain >= 100% and mcap >= 400M, or gain >= 200%)
+    // Post-zero 新買入嘅 avg cost / gain (用於 rebuy 止賺)
+    let pzAvg = 0, pzGain = 0, pzShares = 0, pzInv = 0;
+    if (zeroDone) {
+      const pzTr = tr.filter(t => (t.hkd||0) > 0 && zeroDate && (t.date||"").slice(0,10) > zeroDate);
+      pzInv = pzTr.reduce((s,t) => s + t.hkd, 0);
+      pzShares = pzTr.reduce((s,t) => s + (t.shares||0), 0);
+      pzAvg = pzShares > 0 ? pzInv / pzShares : 0;
+      pzGain = pzAvg > 0 && price > 0 ? ((price - pzAvg) / pzAvg * 100) : 0;
+    }
+
+    // Sell signals (gain >= 100% and mcap >= 400M, or gain >= 200%)
     const shellM = board === 'main' ? 150 : 60;
     let sellSignal = null;
     if (tr.length && !zeroDone && !cleared && avgCost > 0) {
       if ((gainPct >= 100 && mcap >= (board === 'main' ? 400 : 150)) || gainPct >= 200) {
         sellSignal = { type: 'zero_cost', gainPct };
+      }
+    }
+    // Post-zero rebuy 止賺：新買部分達 100% (大市) 或 200% (純浮盈)
+    if (zeroDone && pzAvg > 0 && netInv > 0) {
+      if ((pzGain >= 100 && mcap >= (board === 'main' ? 400 : 150)) || pzGain >= 200) {
+        sellSignal = { type: 'post_zero_rebuy', gainPct: pzGain };
       }
     }
 

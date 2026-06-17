@@ -506,10 +506,41 @@ def check_take_profit(
 
     # ── 階段二：已達0成本，追蹤後市目標 ──────────────────
     else:
-        # 若用戶已重新投入 (net_inv > 0)，免費股狀態已被稀釋
-        # 唔再觸發 milestone 信號，避免錯誤止賺（gain_pct 被舊低價拉高）
         net_inv = sum(t.get("hkd", 0) for t in tranches)
+
+        # 若用戶 net_inv > 0 (重新買入後)，唔出 milestone 信號（免費股已被稀釋）
+        # 但要 check 新買入嗰部分有冇達到自己嘅0成本條件
         if net_inv > 0:
+            zero_date = stock_st.get("zero_cost_date", "")
+            pz_tr = [t for t in tranches
+                     if t.get("hkd", 0) > 0 and zero_date
+                     and t.get("date", "")[:10] > zero_date]
+            if pz_tr and current_price > 0:
+                pz_inv = sum(t["hkd"] for t in pz_tr)
+                pz_shares_raw = sum(t.get("shares", 0) for t in pz_tr)
+                pz_avg = pz_inv / pz_shares_raw if pz_shares_raw > 0 else 0
+                pz_gain = ((current_price - pz_avg) / pz_avg * 100) if pz_avg > 0 else 0
+
+                m1 = (POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM)[0]
+                m1_mcap_ok = mcap_m >= m1["mcap_m"] and pz_gain >= (m1.get("mcap_gain_pct") or 100.0)
+                m1_gain_ok = m1["gain_pct"] is not None and pz_gain >= m1["gain_pct"]
+
+                if m1_mcap_ok or m1_gain_ok:
+                    # 賣足夠新買股數收回 pz_inv → 新買嗰部分都達0成本
+                    raw_sell = pz_inv / current_price
+                    sell_shares = round_to_lots(raw_sell, lot_size, "up")
+                    sell_shares = min(sell_shares, pz_shares_raw)
+                    if sell_shares > 0:
+                        sell_lots = sell_shares // lot_size if lot_size > 0 else 0
+                        signals.append({
+                            "type": "POST_ZERO_REBUY",
+                            "sell_lots": sell_lots,
+                            "sell_shares": sell_shares,
+                            "recv_hkd": sell_shares * current_price,
+                            "remain": pz_shares_raw - sell_shares,
+                            "pz_inv": pz_inv,
+                            "pz_gain": pz_gain,
+                        })
             return signals
 
         zero_shares  = int(stock_st.get("zero_cost_shares") or 0)
@@ -614,6 +645,7 @@ def build_stock_block(
     tp_signals: list[dict],
     ccass_alerts: list[str] | None = None,
     debt_ratio: float | None = None,
+    debt_stale: bool = False,
 ) -> str:
     mcap_m    = quote["mcap"] / 1e6
     lot_size  = stock_st.get("lot_size", 1)
@@ -646,6 +678,19 @@ def build_stock_block(
         z_shares = stock_st.get("zero_cost_shares", 0) or 0
         z_val = z_shares * price
         lines.append(f"  0成本{z_shares:,}股 值${z_val:,.0f}")
+        # 顯示0成本之後嘅新買入
+        zero_date = stock_st.get("zero_cost_date", "")
+        pz_tr = [t for t in tranches
+                 if t.get("hkd", 0) > 0 and zero_date
+                 and t.get("date", "")[:10] > zero_date]
+        if pz_tr:
+            pz_inv = sum(t["hkd"] for t in pz_tr)
+            pz_shares = sum(t.get("shares", 0) for t in pz_tr)
+            pz_avg = pz_inv / pz_shares if pz_shares > 0 else 0
+            pz_val = pz_shares * price
+            pz_gain = ((price - pz_avg) / pz_avg * 100) if pz_avg > 0 else 0
+            gain_str = f" [{pz_gain:+.0f}%]"
+            lines.append(f"  新買{pz_shares:,}股 @${pz_avg:.3f} 值${pz_val:,.0f}{gain_str}")
     elif tranches:
         shares = _get_shares(tranches, lot_size)
         val = shares * price
@@ -659,11 +704,16 @@ def build_stock_block(
     dw = debt_warning(debt_ratio, stock_st)
     if dw:
         lines.append(dw)
+    if debt_stale and debt_ratio is not None:
+        last_upd = stock_st.get("debt_updated", "?")
+        lines.append(f"  ⚠️ 負債數據過時 (上次更新: {last_upd}) — 建倉暫停")
 
     # ── 建倉訊號（差額補倉）── 不足1手就 skip
-    # 負債 block: >100%冇持倉/有持倉>125% → block; >80% → block
+    # 負債 block: >100%冇持倉/有持倉>125% → block; >80% → block; 過時 + 冇倉 → block
     has_pos = bool(tranches) and _get_shares(tranches, lot_size) > 0
-    if debt_ratio is not None and debt_ratio > 125:
+    if debt_stale and not has_pos:
+        debt_block_buy = True
+    elif debt_ratio is not None and debt_ratio > 125:
         debt_block_buy = True
     elif debt_ratio is not None and debt_ratio > 100 and not has_pos:
         debt_block_buy = True
@@ -696,6 +746,10 @@ def build_stock_block(
         label = sig.get("label", "")
         if sig["type"] == "ZERO_COST":
             lines.append(f"  >> 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股0成本")
+            lines.append(f"  /sell {code} {ss} {price}")
+        elif sig["type"] == "POST_ZERO_REBUY":
+            pz_gain = sig.get("pz_gain", 0)
+            lines.append(f"  >> 新買部分+{pz_gain:.0f}% 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股0成本")
             lines.append(f"  /sell {code} {ss} {price}")
         else:
             lines.append(f"  >> {label} 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股")
@@ -798,6 +852,7 @@ def monitor_report(alert_only: bool = False) -> str:
     sell_blocks      = []   # 止賺信號 (有 /sell 指令)
     debt_warn_blocks = []   # 負債警告 (有持倉, dr>60%, 冇 sell 指令)
     no_data       = []
+    total_buy_recommend = 0.0  # 全部建議買入金額
 
     load_lot_cache()  # 預先載入每手快取
 
@@ -834,8 +889,8 @@ def monitor_report(alert_only: bool = False) -> str:
             # 必須跌穿 zero_cost_tier 先重新建倉, 避免循環sell-buy
             zero_tier = stock_st.get("zero_cost_tier")
             if zero_tier is None:
-                # Backfill: 鎖定 floor 喺當前 tier
-                zero_tier = tiers_now
+                # Backfill: 至少鎖喺 tier 1，避免太寬鬆觸發
+                zero_tier = max(1, tiers_now)
                 stock_st["zero_cost_tier"] = zero_tier
             effective_tiers = max(0, tiers_now - zero_tier)
             expected_inv    = effective_tiers * TRANCHE_SIZE
@@ -867,10 +922,13 @@ def monitor_report(alert_only: bool = False) -> str:
 
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
+        dr_is_fresh = False
         if tranches or zero_done:
             dr = fetch_debt_ratio(code)
             time.sleep(0.15)
-        # Fallback: 若 API 失敗，用 state 中上次記錄嘅負債率
+            if dr is not None:
+                dr_is_fresh = True
+        # Fallback: 若 API 失敗，用 state 中上次記錄嘅負債率（可能過時）
         if dr is None and stock_st.get("debt_ratio") is not None:
             dr = stock_st["debt_ratio"]
 
@@ -880,12 +938,25 @@ def monitor_report(alert_only: bool = False) -> str:
         stock_st["last_check"]   = now
         if dr is not None:
             stock_st["debt_ratio"] = round(dr, 1)
+            if dr_is_fresh:
+                stock_st["debt_updated"] = datetime.now().strftime("%Y-%m-%d")
             if dr > 100:
                 if not stock_st.get("debt_over100_since"):
                     stock_st["debt_over100_since"] = datetime.now().strftime("%Y-%m")
             elif dr < 70:
                 # 好轉 = 跌回70%以下才清除追蹤
                 stock_st.pop("debt_over100_since", None)
+
+        # 檢查 debt 數據新鮮度 - > 60日視為過時
+        dr_stale = False
+        debt_updated = stock_st.get("debt_updated")
+        if dr is not None and not dr_is_fresh and debt_updated:
+            try:
+                last_upd = datetime.strptime(debt_updated, "%Y-%m-%d")
+                if (datetime.now() - last_upd).days > 60:
+                    dr_stale = True
+            except (ValueError, TypeError):
+                pass
         new_state[code] = stock_st
 
         # 計算實際可買股數，用嚟決定係咪出建倉信號
@@ -893,14 +964,18 @@ def monitor_report(alert_only: bool = False) -> str:
         # 過濾 sell 0股 嘅 tp_signals
         valid_tp = [s for s in tp_signals if s.get("sell_shares", 0) > 0]
 
-        block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts, dr)
+        block = build_stock_block(code, board, quote, stock_st, shortfall, tp_signals, ccass_alerts, dr, dr_stale)
         all_blocks.append(block)
 
         # ── 分類: sell / debt_warn / buy ──
         has_pos = shares_held > 0
 
-        # debt_block 邏輯
-        if dr is not None and dr > 125:
+        # debt_block 邏輯（過時數據 → 保守暫停買入）
+        if dr_stale and has_pos:
+            debt_block = False  # 有倉時，過時數據唔阻買，只警告
+        elif dr_stale:
+            debt_block = True   # 新建倉時，過時數據暫停買入
+        elif dr is not None and dr > 125:
             debt_block = True
         elif dr is not None and dr > 100 and not has_pos:
             debt_block = True
@@ -913,13 +988,20 @@ def monitor_report(alert_only: bool = False) -> str:
         # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
         MAX_NEW_BUY = TRANCHE_SIZE * 2  # $12,000
         if shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block:
+            final_buy_hkd = shortfall
             if not tranches or zero_done:
                 # 新建倉 / 0成本重新建倉: cap shortfall
                 capped = min(shortfall, MAX_NEW_BUY)
                 capped_shares = round_to_lots(capped / price, lot_size, "down") if price > 0 else 0
                 if capped_shares > 0 and capped_shares != buy_shares:
-                    block = build_stock_block(code, board, quote, stock_st, capped, tp_signals, ccass_alerts, dr)
+                    block = build_stock_block(code, board, quote, stock_st, capped, tp_signals, ccass_alerts, dr, dr_stale)
+                    final_buy_hkd = capped_shares * price
+                else:
+                    final_buy_hkd = capped
+            else:
+                final_buy_hkd = buy_shares * price
             buy_blocks.append(block)
+            total_buy_recommend += final_buy_hkd
 
         # Fix #1/#2/#3: 分開 sell signal 同 debt warning
         if valid_tp or ccass_alerts:
@@ -940,11 +1022,11 @@ def monitor_report(alert_only: bool = False) -> str:
             st_fix["zero_cost_shares"] = sh_fix
             if not st_fix.get("zero_cost_date"):
                 st_fix["zero_cost_date"] = now[:10]
-            # 鎖定 zero_cost_tier (建倉 floor)
+            # 鎖定 zero_cost_tier (建倉 floor)，至少 tier 1
             mcap_fix = st_fix.get("last_mcap_m")
             board_fix = st_fix.get("board")
             if mcap_fix is not None and board_fix:
-                st_fix["zero_cost_tier"] = current_tier_reached(mcap_fix, board_fix)
+                st_fix["zero_cost_tier"] = max(1, current_tier_reached(mcap_fix, board_fix))
 
     # save_state moved to after signal tracking (below)
 
@@ -1050,6 +1132,16 @@ def monitor_report(alert_only: bool = False) -> str:
 
     signal_blocks = sell_blocks + buy_blocks + debt_warn_blocks
 
+    # 建議買入總額 vs 可用現金
+    budget_summary = ""
+    if total_buy_recommend > 0:
+        budget_icon = "OK" if total_buy_recommend <= cash_est else "⚠️ 超出"
+        budget_summary = (
+            f"\n建議買入總額: ${total_buy_recommend:,.0f} / 可用 ${cash_est:,.0f} [{budget_icon}]"
+        )
+        if total_buy_recommend > cash_est:
+            budget_summary += "\n→ 現金不足，請選擇優先股票"
+
     if alert_only:
         if not sell_blocks and not buy_blocks and not debt_warn_blocks:
             return f"{summary}\n\n暫無新訊號"
@@ -1058,6 +1150,7 @@ def monitor_report(alert_only: bool = False) -> str:
             msg += f"\n\n止賺信號 ({len(sell_blocks)}隻)\n{dash}\n" + _numbered(sell_blocks, last_sell_codes)
         if buy_blocks:
             msg += f"\n\n建倉信號 ({len(buy_blocks)}隻)\n{dash}\n" + _numbered(buy_blocks, last_buy_codes)
+            msg += budget_summary
         if debt_warn_blocks:
             msg += f"\n\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}\n" + _numbered(debt_warn_blocks)
         return msg
@@ -1070,6 +1163,8 @@ def monitor_report(alert_only: bool = False) -> str:
     if buy_blocks:
         parts.append(f"\n建倉信號 ({len(buy_blocks)}隻)\n{dash}")
         parts.append(_numbered(buy_blocks, last_buy_codes))
+        if budget_summary:
+            parts.append(budget_summary.lstrip("\n"))
     if debt_warn_blocks:
         parts.append(f"\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}")
         parts.append(_numbered(debt_warn_blocks))
