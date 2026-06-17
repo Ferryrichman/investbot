@@ -312,6 +312,55 @@ def fetch_volume_stats(code: str) -> dict | None:
         return None
 
 
+def fetch_insider_transactions(code: str, days: int = 30) -> list[dict] | None:
+    """取董事/大股東交易披露 (來自 Yahoo's insiderTransactions module).
+    返回最近 days 日內嘅交易 list, 每個 entry 含:
+      filerName, filerRelation, shares, value, transactionText, startDate, action
+    action: 'buy' / 'sell'
+    """
+    symbol = f"{int(code):04d}.HK"
+    try:
+        s, crumb = _get_yf_crumb()
+        url = (
+            f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
+            f"?modules=insiderTransactions&crumb={crumb}"
+        )
+        r = s.get(url, timeout=10, headers={"Accept": "application/json"})
+        data = r.json().get("quoteSummary", {}).get("result")
+        if not data:
+            return None
+        txs = data[0].get("insiderTransactions", {}).get("transactions", [])
+        if not txs:
+            return []
+
+        cutoff = datetime.now(timezone(timedelta(hours=8))) - timedelta(days=days)
+        cutoff_ts = cutoff.timestamp()
+        results = []
+        for tx in txs:
+            ts = tx.get("startDate", {}).get("raw")
+            if ts is None or ts < cutoff_ts:
+                continue
+            text = (tx.get("transactionText") or "").lower()
+            if "disposition" in text or "disposed" in text or "sale" in text or "sold" in text:
+                action = "sell"
+            elif "acquisition" in text or "acquired" in text or "purchased" in text:
+                action = "buy"
+            else:
+                action = "?"
+            results.append({
+                "filer":   tx.get("filerName", ""),
+                "role":    tx.get("filerRelation", ""),
+                "shares":  tx.get("shares", {}).get("raw", 0),
+                "value":   tx.get("value", {}).get("raw", 0),
+                "text":    tx.get("transactionText", ""),
+                "date":    tx.get("startDate", {}).get("fmt", ""),
+                "action":  action,
+            })
+        return results
+    except Exception:
+        return None
+
+
 def fetch_debt_ratio(code: str) -> float | None:
     """取負債比率 (debt ratio %)，Yahoo D/E → debt/(debt+equity)"""
     symbol = f"{int(code):04d}.HK"
@@ -1028,6 +1077,31 @@ def monitor_report(alert_only: bool = False) -> str:
                 vol_alert_str = f"📊 異常成交{pos_str} ({vol_stats['vol_ratio']:.1f}x 30日均)"
                 ccass_alerts.append(vol_alert_str)
 
+        # 董事/大股東交易披露 (最近 30 日)
+        insider_alert_str = None
+        if tranches or zero_done:
+            insider_txs = fetch_insider_transactions(code, days=30)
+            time.sleep(0.15)
+            if insider_txs:
+                sells = [t for t in insider_txs if t["action"] == "sell"]
+                buys = [t for t in insider_txs if t["action"] == "buy"]
+                if sells:
+                    total_sell_shares = sum(t["shares"] for t in sells)
+                    first = sells[0]
+                    insider_alert_str = (
+                        f"📋 SDI 減持 ({first['date']}): {first['role']} 賣 "
+                        f"{total_sell_shares:,}股"
+                    )
+                elif buys:
+                    total_buy_shares = sum(t["shares"] for t in buys)
+                    first = buys[0]
+                    insider_alert_str = (
+                        f"📋 SDI 增持 ({first['date']}): {first['role']} 買 "
+                        f"{total_buy_shares:,}股"
+                    )
+                if insider_alert_str:
+                    ccass_alerts.append(insider_alert_str)
+
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
         dr_is_fresh = False
@@ -1111,18 +1185,25 @@ def monitor_report(alert_only: bool = False) -> str:
             buy_blocks.append(block)
             total_buy_recommend += final_buy_hkd
 
-        # 分類: 真正止賺信號 (有 /sell 或 CCASS 集中度警示)
-        ccass_only = [a for a in ccass_alerts if a != vol_alert_str]
-        if valid_tp or ccass_only:
+        # 分類 alert: sell trigger vs anomaly only
+        # sell trigger: 減持 / CCASS OUT / Broker SURGE (派貨類)
+        # anomaly only: vol spike, 增持, CCASS IN, Broker DROP (中性/利好類)
+        def _is_sell_trigger(a: str) -> bool:
+            return any(k in a for k in ["減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶"])
+        sell_trigger_alerts = [a for a in ccass_alerts if _is_sell_trigger(a)]
+        anomaly_only_alerts = [a for a in ccass_alerts if not _is_sell_trigger(a)]
+
+        # 真正止賺信號 (有 /sell 或 sell trigger 類 alert)
+        if valid_tp or sell_trigger_alerts:
             sell_blocks.append(block)
         if dr is not None and dr > 60 and has_pos:
             debt_warn_blocks.append(block)
 
-        # 異常動向: vol alert + 唔出現喺其他 section
-        in_other_section = bool(valid_tp or ccass_only) or \
+        # 異常動向: anomaly only alerts + 唔出現喺其他 section
+        in_other_section = bool(valid_tp or sell_trigger_alerts) or \
                            (shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block) or \
                            (dr is not None and dr > 60 and has_pos)
-        if vol_alert_str and not in_other_section:
+        if anomaly_only_alerts and not in_other_section:
             anomaly_blocks.append(block)
 
     # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
