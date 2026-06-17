@@ -859,14 +859,16 @@ def check_ccass_concentration(
     threshold_pct: float = CCASS_CONCENTRATION_THRESHOLD,
 ) -> str | None:
     """
-    查詢 screener.db ccass_history，若 top10_pct 在最近 lookback_rows 條記錄內
-    升幅 >= threshold_pct，返回格式化警示字串；否則返回 None。
-    DB 不存在或表格不找到時靜默跳過。
+    查詢 screener.db ccass_history，偵測雙向異動:
+      - CCASS IN: top10集中度急升 (籌碼集中, 收集信號)
+      - CCASS OUT: top10集中度急跌 (派貨信號)
+      - Broker SURGE: 券商數目急增 (派發到散戶)
+      - Broker DROP: 券商數目急減 (籌碼集中)
+    閾值: lookback 期間變動 >= threshold_pct
     """
     if not SCREENER_DB.exists():
         return None
 
-    # DB code 格式：去掉前導零（e.g. "0001" → "1"）
     db_code = str(int(code))
 
     try:
@@ -884,7 +886,6 @@ def check_ccass_concentration(
                 (db_code, lookback_rows),
             ).fetchall()
         except sqlite3.OperationalError:
-            # Table doesn't exist yet
             return None
         finally:
             conn.close()
@@ -899,18 +900,38 @@ def check_ccass_concentration(
 
     recent_pct = recent["top10_pct"]
     old_pct    = oldest["top10_pct"]
-    if recent_pct is None or old_pct is None:
-        return None
+    recent_brk = recent["broker_count"]
+    old_brk    = oldest["broker_count"]
+    date_range = f"{oldest['snapshot_date']}→{recent['snapshot_date']}"
 
-    delta = recent_pct - old_pct
-    if delta >= threshold_pct:
-        broker_count = recent["broker_count"]
-        return (
-            f"[CCASS IN] top10集中度 +{delta:.1f}% "
-            f"({old_pct:.1f}%→{recent_pct:.1f}%, "
-            f"{oldest['snapshot_date']}→{recent['snapshot_date']}, "
-            f"broker數={broker_count})"
-        )
+    # Top10 集中度雙向 check
+    if recent_pct is not None and old_pct is not None:
+        delta = recent_pct - old_pct
+        if delta >= threshold_pct:
+            return (
+                f"[CCASS IN] top10集中度 +{delta:.1f}% "
+                f"({old_pct:.1f}%→{recent_pct:.1f}%, {date_range}, broker={recent_brk})"
+            )
+        if delta <= -threshold_pct:
+            return (
+                f"[CCASS OUT] top10集中度 {delta:.1f}% "
+                f"({old_pct:.1f}%→{recent_pct:.1f}%, {date_range}, broker={recent_brk}) — 派貨"
+            )
+
+    # Broker 數目異動 (大於 30% 變動)
+    if recent_brk and old_brk and old_brk > 0:
+        brk_delta_pct = (recent_brk - old_brk) / old_brk * 100
+        if brk_delta_pct >= 30:
+            return (
+                f"[Broker SURGE] 券商數+{brk_delta_pct:.0f}% "
+                f"({old_brk}→{recent_brk}, {date_range}) — 派散戶信號"
+            )
+        if brk_delta_pct <= -30:
+            return (
+                f"[Broker DROP] 券商數{brk_delta_pct:.0f}% "
+                f"({old_brk}→{recent_brk}, {date_range}) — 籌碼集中"
+            )
+
     return None
 
 
