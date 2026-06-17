@@ -927,6 +927,7 @@ def monitor_report(alert_only: bool = False) -> str:
     buy_blocks       = []   # 建倉信號
     sell_blocks      = []   # 止賺信號 (有 /sell 指令)
     debt_warn_blocks = []   # 負債警告 (有持倉, dr>60%, 冇 sell 指令)
+    anomaly_blocks   = []   # 異常動向 (vol spike 但冇其他信號)
     no_data       = []
     total_buy_recommend = 0.0  # 全部建議買入金額
 
@@ -997,14 +998,14 @@ def monitor_report(alert_only: bool = False) -> str:
         ccass_alerts = [ccass_alert] if ccass_alert else []
 
         # 成交量異常偵測 (只查有持倉嘅股票, 省 API call)
+        vol_alert_str = None
         if tranches or zero_done:
             vol_stats = fetch_volume_stats(code)
             time.sleep(0.15)
             if vol_stats and vol_stats["vol_ratio"] >= 3.0:
                 pos_str = " 高位" if vol_stats["near_high"] else ""
-                ccass_alerts.append(
-                    f"📊 異常成交{pos_str} ({vol_stats['vol_ratio']:.1f}x 30日均)"
-                )
+                vol_alert_str = f"📊 異常成交{pos_str} ({vol_stats['vol_ratio']:.1f}x 30日均)"
+                ccass_alerts.append(vol_alert_str)
 
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
@@ -1089,12 +1090,19 @@ def monitor_report(alert_only: bool = False) -> str:
             buy_blocks.append(block)
             total_buy_recommend += final_buy_hkd
 
-        # Fix #1/#2/#3: 分開 sell signal 同 debt warning
-        if valid_tp or ccass_alerts:
-            sell_blocks.append(block)  # 真正有 sell 指令
+        # 分類: 真正止賺信號 (有 /sell 或 CCASS 集中度警示)
+        ccass_only = [a for a in ccass_alerts if a != vol_alert_str]
+        if valid_tp or ccass_only:
+            sell_blocks.append(block)
         if dr is not None and dr > 60 and has_pos:
-            # Fix #2: 只有持倉先出 debt warning
             debt_warn_blocks.append(block)
+
+        # 異常動向: vol alert + 唔出現喺其他 section
+        in_other_section = bool(valid_tp or ccass_only) or \
+                           (shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block) or \
+                           (dr is not None and dr > 60 and has_pos)
+        if vol_alert_str and not in_other_section:
+            anomaly_blocks.append(block)
 
     # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
     for code_fix, st_fix in new_state.items():
@@ -1217,7 +1225,7 @@ def monitor_report(alert_only: bool = False) -> str:
     new_state["_meta"] = meta
     save_state(new_state)
 
-    signal_blocks = sell_blocks + buy_blocks + debt_warn_blocks
+    signal_blocks = sell_blocks + buy_blocks + debt_warn_blocks + anomaly_blocks
 
     # 建議買入總額 vs 可用現金
     budget_summary = ""
@@ -1230,7 +1238,7 @@ def monitor_report(alert_only: bool = False) -> str:
             budget_summary += "\n→ 現金不足，請選擇優先股票"
 
     if alert_only:
-        if not sell_blocks and not buy_blocks and not debt_warn_blocks:
+        if not sell_blocks and not buy_blocks and not debt_warn_blocks and not anomaly_blocks:
             return f"{summary}\n\n暫無新訊號"
         msg = summary
         if sell_blocks:
@@ -1240,6 +1248,8 @@ def monitor_report(alert_only: bool = False) -> str:
             msg += budget_summary
         if debt_warn_blocks:
             msg += f"\n\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}\n" + _numbered(debt_warn_blocks)
+        if anomaly_blocks:
+            msg += f"\n\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}\n" + _numbered(anomaly_blocks)
         return msg
 
     # ── Full report: signals first, then others ──
@@ -1255,7 +1265,10 @@ def monitor_report(alert_only: bool = False) -> str:
     if debt_warn_blocks:
         parts.append(f"\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}")
         parts.append(_numbered(debt_warn_blocks))
-    if sell_blocks or buy_blocks or debt_warn_blocks:
+    if anomaly_blocks:
+        parts.append(f"\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}")
+        parts.append(_numbered(anomaly_blocks))
+    if sell_blocks or buy_blocks or debt_warn_blocks or anomaly_blocks:
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
     quiet = [b for b in all_blocks if b not in signal_blocks]
