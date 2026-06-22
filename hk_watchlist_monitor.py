@@ -1808,9 +1808,29 @@ def tg_send(msg: str):
 # Entry point
 # ============================================================
 
+def _git_pull_state():
+    """Best-effort sync local state.json with remote (no-op if not a repo or no remote)."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "pull", "--rebase", "--autostash"],
+            cwd=Path(__file__).parent,
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode != 0 and "up to date" not in result.stdout.lower():
+            print(f"[git pull] {result.stderr.strip() or result.stdout.strip()}")
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
+        print(f"[git pull] skipped: {e}")
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     mode = args[0] if args else "send"
+
+    # Local alert/intraday: 同步 remote state 先 (防 Cloudflare Worker 更新後 stale)
+    # GitHub Actions cron: 啱啱 checkout, 自然係 fresh, _git_pull_state 唔會出錯
+    if mode in ("alert", "send", "intraday", "check"):
+        _git_pull_state()
 
     if mode == "plan":
         print_allocation_plan()

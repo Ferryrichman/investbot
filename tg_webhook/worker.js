@@ -137,6 +137,16 @@ async function handleCommand(text, env) {
     return await getStatus(code, env);
   }
 
+  if (cmd === "/push") {
+    // 即時觸發 GitHub Actions 跑 alert
+    try {
+      await triggerGitHubWorkflow("alert", env);
+      return "🚀 已觸發 alert workflow，~30 秒內收到推送";
+    } catch (err) {
+      return `⚠️ 觸發失敗: ${err.message}`;
+    }
+  }
+
   if (cmd === "/help" || cmd === "/start") {
     return (
       "指令:\n" +
@@ -151,6 +161,7 @@ async function handleCommand(text, env) {
       "/rules — 睇買賣機制\n" +
       "/status CODE — 查看持倉\n" +
       "/status — 查看全部\n" +
+      "/push — 即時觸發 alert push\n" +
       "\n💡 賣出後自動偵測0成本"
     );
   }
