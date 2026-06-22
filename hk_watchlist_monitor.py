@@ -1369,10 +1369,14 @@ def monitor_report(alert_only: bool = False) -> str:
 
     # ── 持倉總覽 ──
     total_inv = total_val = 0.0
+    cleared_realized_pnl = 0.0  # 已清倉股票嘅累計 realized profit
     n_holdings = n_zero = n_can_zero = 0
     for code2, st2 in new_state.items():
         tr = st2.get("tranches", [])
         if not tr:
+            # 已清倉股票: 加埋 realized_pnl 入返 cash
+            if st2.get("cleared") or st2.get("realized_pnl"):
+                cleared_realized_pnl += st2.get("realized_pnl", 0)
             continue
         n_holdings += 1
         inv = sum(t["hkd"] for t in tr)
@@ -1398,7 +1402,8 @@ def monitor_report(alert_only: bool = False) -> str:
     total_gain     = total_val - total_inv
     gain_pct_total = total_gain / total_inv * 100 if total_inv > 0 else 0
     gs             = "+" if total_gain >= 0 else ""
-    cash_est       = TOTAL_PORTFOLIO - total_inv
+    # 可用現金 = 初始現金 - 淨投入活躍倉位 + 已清倉累計 realized 利潤
+    cash_est       = TOTAL_PORTFOLIO - total_inv + cleared_realized_pnl
     cash_pct       = cash_est / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
     cash_ok        = cash_pct >= MIN_CASH_PCT * 100
     cash_icon      = "OK" if cash_ok else "LOW"

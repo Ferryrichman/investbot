@@ -342,7 +342,8 @@ function render(state) {
   // Summary
   const unrealized = totalVal - totalInv;
   const totalPnl = unrealized + totalRealized;
-  const cashEst = PORTFOLIO - totalInv;
+  // 可用現金 = 初始 - 淨投入 + 已清倉 realized profit (清倉錢回到 cash)
+  const cashEst = PORTFOLIO - totalInv + totalRealized;
   const cashPct = cashEst / PORTFOLIO * 100;
   const cashOk = cashPct >= MIN_CASH * 100;
 
