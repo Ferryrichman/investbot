@@ -43,7 +43,7 @@ CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
 # 用 TG Bot /add /remove 管理，唔再 hardcode
 
 # ── 每注固定金額 (HKD) ────────────────────────────────────
-TRANCHE_SIZE = 6_000    # 每次買入 $6,000
+TRANCHE_SIZE = 6_000    # default; 開 alert 時動態 = TOTAL / 100 (cash + market val)
 MIN_BUY_HKD  = 1_000    # 最低買入信號 $1,000，細過唔出
 
 # ── 資金管理 ─────────────────────────────────────────────
@@ -1052,10 +1052,42 @@ def check_ccass_concentration(
 # 主報告
 # ============================================================
 
+def _compute_dynamic_tranche(state: dict) -> int:
+    """TRANCHE_SIZE = (cash + market value) / 100, round to nearest $100.
+    Uses last_price 數據, 即上次 alert 嘅 cached price. 第一次 fresh state 用 default.
+    """
+    total_inv = 0
+    total_val = 0
+    cleared_pnl = 0
+    for code, st in state.items():
+        if code.startswith("_"):
+            continue
+        tr = st.get("tranches", [])
+        if not tr:
+            if st.get("cleared") or st.get("realized_pnl"):
+                cleared_pnl += st.get("realized_pnl", 0)
+            continue
+        total_inv += sum(t.get("hkd", 0) for t in tr)
+        shares = sum(t.get("shares", 0) for t in tr)
+        price = st.get("last_price") or 0
+        total_val += shares * price
+    cash = TOTAL_PORTFOLIO - total_inv + cleared_pnl
+    total_wealth = cash + total_val
+    if total_wealth <= 0:
+        return 6000  # fallback
+    return max(100, round(total_wealth / 10000) * 100)
+
+
 def monitor_report(alert_only: bool = False) -> str:
     now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
     state = load_state()
     new_state = dict(state)
+
+    # Dynamic TRANCHE: 用 state 入面 last_price 算 total wealth, TRANCHE = TOTAL/100
+    global TRANCHE_SIZE
+    new_tranche = _compute_dynamic_tranche(state)
+    if new_tranche != TRANCHE_SIZE:
+        TRANCHE_SIZE = new_tranche
 
     all_blocks       = []
     buy_blocks       = []   # 建倉信號
@@ -1423,6 +1455,7 @@ def monitor_report(alert_only: bool = False) -> str:
         f"浮盈{gs}${total_gain:,.0f} ({gs}{gain_pct_total:.0f}%)\n"
         f"現金{cash_pct:.0f}% [{cash_icon}] "
         f"可用${cash_est:,.0f}/${TOTAL_PORTFOLIO:,.0f}\n"
+        f"每注${TRANCHE_SIZE:,} (TOTAL/100)\n"
         f"━━━━━━━━━━━━━━━━━━━━"
     )
 
@@ -1465,10 +1498,11 @@ def monitor_report(alert_only: bool = False) -> str:
             out.append(f"{i}. {first_line}{new_tag}\n{rest}")
         return f"\n{dash}\n".join(out)
 
-    # Save current signal codes for next comparison
+    # Save current signal codes + dynamic TRANCHE for dashboard
     meta = new_state.get("_meta", {})
     meta["last_sell_codes"] = cur_sell_codes
     meta["last_buy_codes"]  = cur_buy_codes
+    meta["tranche_size"]    = TRANCHE_SIZE
     new_state["_meta"] = meta
     save_state(new_state)
 

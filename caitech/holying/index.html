@@ -202,7 +202,7 @@ const REPO = "Ferryrichman/investbot";
 const STATE_PATH = "data/watchlist_state.json";
 const MAIN_TIERS = [200,150,120,100,80,60];
 const GEM_TIERS  = [80,60,50,40,30];
-const TRANCHE    = 6000;
+let TRANCHE      = 6000;  // 動態 = TOTAL / 100, 由 state._meta.tranche_size override
 const MIN_BUY    = 1000;  // 最低買入信號 $1,000，細過唔出
 const PORTFOLIO  = 303359;  // 初始入金 (cash + invested). 入金/抽資需更新
 const MIN_CASH   = 0.20;
@@ -246,6 +246,10 @@ function fmtMoney(n) { return '$' + Math.round(n).toLocaleString(); }
 function fmtPct(n) { return (n >= 0 ? '+' : '') + n.toFixed(0) + '%'; }
 
 function render(state) {
+  // Override TRANCHE from _meta if present (dynamic from monitor.py)
+  if (state._meta && state._meta.tranche_size) {
+    TRANCHE = state._meta.tranche_size;
+  }
   const watched = Object.entries(state).filter(([,v]) => v.board);
   const holdings = [];
   const sellSignals = [];
