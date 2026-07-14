@@ -1342,10 +1342,10 @@
     "tranches": [
       {
         "price": 0.075,
-        "hkd": 450,
-        "shares": 6000,
-        "date": "2025-01-01 00:00",
-        "note": "corrected via TG status"
+        "hkd": 225,
+        "shares": 3000,
+        "date": "2026-07-14 06:47",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
