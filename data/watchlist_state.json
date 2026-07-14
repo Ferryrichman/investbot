@@ -222,11 +222,11 @@
     "tier_reached": 2,
     "tranches": [
       {
-        "price": 0.262,
-        "hkd": 5764,
+        "price": 0.263,
+        "hkd": 5786,
         "shares": 22000,
-        "date": "2026-05-18",
-        "note": "sync from TG Bot"
+        "date": "2026-07-14 06:47",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
