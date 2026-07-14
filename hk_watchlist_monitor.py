@@ -47,7 +47,7 @@ TRANCHE_SIZE = 6_000    # default; 開 alert 時動態 = TOTAL / 100 (cash + mar
 MIN_BUY_HKD  = 1_000    # 最低買入信號 $1,000，細過唔出
 
 # ── 資金管理 ─────────────────────────────────────────────
-TOTAL_PORTFOLIO = 317_796   # 初始入金 (cash + invested). 入金/抽資需更新
+TOTAL_PORTFOLIO = 332_043   # 初始入金 (cash + invested). 入金/抽資需更新
 MIN_CASH_PCT    = 0.20      # 保持至少20%現金
 
 # ── 主板買入觸發市值 (百萬 HKD) ───────────────────────────
