@@ -507,6 +507,16 @@ def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
     return ""
 
 
+def is_buy_blocked_by_debt(debt_ratio: float | None, debt_stale: bool = False, has_pos: bool = False) -> bool:
+    """負債 block 買入 — 主 loop 同 build_stock_block 共用嘅單一實現
+    - 過時數據 + 冇倉 → block (唔知最新負債唔開新倉)
+    - 負債率 > 80% (含資不抵債 sentinel 999) → block, 有冇倉都一樣
+    """
+    if debt_stale and not has_pos:
+        return True
+    return debt_ratio is not None and debt_ratio > 80
+
+
 # ============================================================
 # 層位計算
 # ============================================================
@@ -608,6 +618,15 @@ def get_stock_state(state: dict, code: str) -> dict:
 # 止賺邏輯
 # ============================================================
 
+def _tranche_shares(tranches: list[dict], lot_size: int = 1) -> int:
+    """實際持股數: 優先用 shares field, 缺失先用 hkd/price 推算 (舊 placeholder 數據)"""
+    return sum(
+        (t["shares"] if t.get("shares") is not None else
+         (round_to_lots(t["hkd"] / t["price"], lot_size, "down") if t.get("price", 0) > 0 else 0))
+        for t in tranches
+    )
+
+
 def calc_zero_cost_sell(
     tranches: list[dict], current_price: float, lot_size: int = 1
 ) -> tuple[int, int, float]:
@@ -618,10 +637,7 @@ def calc_zero_cost_sell(
     注意：向上取整(CEIL)確保回收金額 >= 成本
     """
     total_invested = sum(t["hkd"] for t in tranches)
-    total_shares   = sum(
-        round_to_lots(t["hkd"] / t["price"], lot_size, "down")
-        for t in tranches if t.get("price", 0) > 0
-    )
+    total_shares   = _tranche_shares(tranches, lot_size)
     raw_sell       = total_invested / current_price if current_price > 0 else 0
     shares_to_sell = round_to_lots(raw_sell, lot_size, "up")  # CEIL 確保回收 >= 成本
     remaining      = total_shares - shares_to_sell
@@ -650,10 +666,7 @@ def check_take_profit(
     # ── 階段一：尚未達到0成本 ──────────────────────────────
     if not zero_done:
         sell_shares, remain, total_inv = calc_zero_cost_sell(tranches, current_price, lot_size)
-        total_shares = sum(
-            round_to_lots(t["hkd"] / t["price"], lot_size, "down")
-            for t in tranches if t.get("price", 0) > 0
-        )
+        total_shares = _tranche_shares(tranches, lot_size)
         # 剩餘只有 1 手 → skip (賣埋會清倉, 無 0成本可言)
         if total_shares <= lot_size:
             return signals
@@ -730,15 +743,17 @@ def check_take_profit(
             return signals
 
         # 計算0成本時賣出量（用於M1鏡像建議）
-        original_shares = sum(
-            round_to_lots(t["hkd"] / t["price"], lot_size, "down")
-            for t in tranches if t.get("price", 0) > 0
-        )
+        original_shares = _tranche_shares(tranches, lot_size)
         zero_sold = max(0, original_shares - zero_shares)
 
+        # remaining 累計: 一次 gap 過多個 milestone 時, 每個 signal 嘅
+        # sell/remain 都基於上一個 milestone 賣完之後嘅剩餘, 唔會賣多
+        remaining = zero_shares
         for i, ms in enumerate(milestones):
             if i in done_indices:
                 continue
+            if remaining <= 0:
+                break
 
             # 市值條件：mcap_m + 可選的最低浮盈%
             mcap_gain_req = ms.get("mcap_gain_pct")
@@ -761,7 +776,7 @@ def check_take_profit(
             sell_frac = ms["sell_frac"]
             if sell_frac is None:
                 mirror = round_to_lots(zero_sold, lot_size, "down") or lot_size
-                mirror = min(mirror, zero_shares)
+                mirror = min(mirror, remaining)
                 mirror_lots = mirror // lot_size
                 signals.append({
                     "type": f"POST_ZERO_{i}",
@@ -769,15 +784,16 @@ def check_take_profit(
                     "sell_lots": mirror_lots,
                     "sell_shares": mirror,
                     "recv_hkd": mirror * current_price,
-                    "remain": zero_shares - mirror,
+                    "remain": remaining - mirror,
                     "milestone_idx": i,
                 })
+                remaining -= mirror
             else:
                 # 20% 係 0成本初始股數 × 20% (每個 M 都係固定比例, 5 次共 80%, 餘 20% 自由操作)
                 initial_shares = stock_st.get("zero_cost_initial_shares") or zero_shares
                 raw_sell    = initial_shares * sell_frac
                 shares_sell = round_to_lots(raw_sell, lot_size, "down")
-                shares_sell = min(shares_sell, zero_shares)  # cap at remaining
+                shares_sell = min(shares_sell, remaining)  # cap at 累計剩餘
                 lots_sell   = shares_sell // lot_size if lot_size > 0 else 0
                 if shares_sell <= 0:
                     continue
@@ -787,9 +803,10 @@ def check_take_profit(
                     "sell_lots": lots_sell,
                     "sell_shares": shares_sell,
                     "recv_hkd": shares_sell * current_price,
-                    "remain": zero_shares - shares_sell,
+                    "remain": remaining - shares_sell,
                     "milestone_idx": i,
                 })
+                remaining -= shares_sell
 
     return signals
 
@@ -897,21 +914,12 @@ def build_stock_block(
         lines.append(dw)
     if debt_stale and debt_ratio is not None:
         last_upd = stock_st.get("debt_updated", "?")
-        lines.append(f"  ⚠️ 負債數據過時 (上次更新: {last_upd}) — 建倉暫停")
+        lines.append(f"  ⚠️ 負債數據過時 (上次更新: {last_upd})")
 
     # ── 建倉訊號（差額補倉）── 不足1手就 skip
-    # 負債 block: >100%冇持倉/有持倉>125% → block; >80% → block; 過時 + 冇倉 → block
+    # 負債 block — 同主 loop 共用單一實現 (is_buy_blocked_by_debt)
     has_pos = bool(tranches) and _get_shares(tranches, lot_size) > 0
-    if debt_stale and not has_pos:
-        debt_block_buy = True
-    elif debt_ratio is not None and debt_ratio > 125:
-        debt_block_buy = True
-    elif debt_ratio is not None and debt_ratio > 100 and not has_pos:
-        debt_block_buy = True
-    elif debt_ratio is not None and debt_ratio > 80:
-        debt_block_buy = True
-    else:
-        debt_block_buy = False
+    debt_block_buy = is_buy_blocked_by_debt(debt_ratio, debt_stale, has_pos)
     if shortfall >= MIN_BUY_HKD and not debt_block_buy:
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
@@ -1314,19 +1322,8 @@ def monitor_report(alert_only: bool = False) -> str:
         # ── 分類: sell / debt_warn / buy ──
         has_pos = shares_held > 0
 
-        # debt_block 邏輯（過時數據 → 保守暫停買入）
-        if dr_stale and has_pos:
-            debt_block = False  # 有倉時，過時數據唔阻買，只警告
-        elif dr_stale:
-            debt_block = True   # 新建倉時，過時數據暫停買入
-        elif dr is not None and dr > 125:
-            debt_block = True
-        elif dr is not None and dr > 100 and not has_pos:
-            debt_block = True
-        elif dr is not None and dr > 80:
-            debt_block = True
-        else:
-            debt_block = False
+        # debt_block — 同 build_stock_block 共用單一實現
+        debt_block = is_buy_blocked_by_debt(dr, dr_stale, has_pos)
 
         # Fix #4: 新建倉/0成本重新建倉 最多2層 (2×TRANCHE)，避免一次落重注
         # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
@@ -1406,6 +1403,11 @@ def monitor_report(alert_only: bool = False) -> str:
             if 0 not in done_fix:
                 done_fix.insert(0, 0)
                 st_fix["post_zero_done"] = done_fix
+            # Migration: zero_cost_date 缺失 → post-zero rebuy 追蹤會失效, 用最後賣出日補
+            if not st_fix.get("zero_cost_date"):
+                sell_dates = [t.get("date", "")[:10] for t in tr_fix
+                              if t.get("hkd", 0) < 0 and t.get("date")]
+                st_fix["zero_cost_date"] = max(sell_dates) if sell_dates else now[:10]
 
     # save_state moved to after signal tracking (below)
 
@@ -1428,7 +1430,8 @@ def monitor_report(alert_only: bool = False) -> str:
         shares2 = _get_shares(tr, ls)
         if st2.get("zero_cost_achieved"):
             n_zero += 1
-            val2 = (st2.get("zero_cost_shares") or 0) * p2
+            # 現值 = 實際持股 (免費股 + post-zero rebuy 新股), 唔係淨免費股
+            val2 = shares2 * p2
         else:
             val2 = shares2 * p2
             avg2 = calc_avg_cost(tr)
