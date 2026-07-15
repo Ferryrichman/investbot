@@ -1328,20 +1328,22 @@ def monitor_report(alert_only: bool = False) -> str:
         else:
             debt_block = False
 
-        # Fix #4: 新建倉/0成本重新建倉 最多2層 ($12,000)，避免一次落重注
+        # Fix #4: 新建倉/0成本重新建倉 最多2層 (2×TRANCHE)，避免一次落重注
         # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
-        MAX_NEW_BUY = TRANCHE_SIZE * 2  # $12,000
+        MAX_NEW_BUY = TRANCHE_SIZE * 2
         if shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block:
             final_buy_hkd = shortfall
             if not tranches or zero_done:
                 # 新建倉 / 0成本重新建倉: cap shortfall
                 capped = min(shortfall, MAX_NEW_BUY)
                 capped_shares = round_to_lots(capped / price, lot_size, "down") if price > 0 else 0
-                if capped_shares > 0 and capped_shares != buy_shares:
-                    block = build_stock_block(code, board, quote, stock_st, capped, tp_signals, ccass_alerts, dr, dr_stale)
-                    final_buy_hkd = capped_shares * price
-                else:
-                    final_buy_hkd = capped
+                if capped_shares == 0:
+                    # 一手都貴過 cap → 允許最少一手做入場 (用戶選項 b)
+                    capped_shares = lot_size
+                if capped_shares != buy_shares:
+                    capped_amt = capped_shares * price
+                    block = build_stock_block(code, board, quote, stock_st, capped_amt, tp_signals, ccass_alerts, dr, dr_stale)
+                final_buy_hkd = capped_shares * price
             else:
                 final_buy_hkd = buy_shares * price
             buy_blocks.append(block)
