@@ -433,25 +433,27 @@ function stockCard(s, mode) {
   let debtHtml = '';
   if (s.debtRatio != null) {
     let daysStr = '';
-    let months = 0;
+    let days = 0;  // hoisted — 舊版 const 喺 if block 內, block 外讀取會 ReferenceError
     if (s.debtOver100Since) {
       const parts = s.debtOver100Since.split('-');
-      const start = new Date(+parts[0], +parts[1]-1, 1);
-      const now = new Date();
-      const days = Math.floor((now - start) / 86400000);
-      months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-      daysStr = `（已${days}日）`;
+      // 新格式 YYYY-MM-DD, 舊格式 YYYY-MM (由月頭計)
+      const start = new Date(+parts[0], +parts[1]-1, parts.length >= 3 ? +parts[2] : 1);
+      days = Math.floor((new Date() - start) / 86400000);
+      daysStr = `（已標誌${days}日）`;
     }
     const hasPos = s.shares > 0;
-    if (s.debtRatio > 125) {
+    if (s.debtRatio >= 900) {
+      debtHtml = hasPos
+        ? `<div class="signal signal-debt-danger">🔴 資不抵債(股東權益為負)! — 建議平倉</div>`
+        : `<div class="signal signal-debt-danger">🔴 資不抵債(股東權益為負) — 暫停買入</div>`;
+    } else if (s.debtRatio > 125) {
       debtHtml = hasPos
         ? `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 建議平倉</div>`
         : `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 暫停買入</div>`;
     } else if (s.debtRatio > 100) {
-      if (hasPos && days >= 180) {
-        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 逾180日未回落&lt;70% ❗強制平倉</div>`;
-      } else if (hasPos) {
-        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 觀察中(180日)</div>`;
+      if (hasPos) {
+        const review = (days >= 90 && (days % 90) <= 7) ? '<br>🔍 90日覆核到期 — 請查最新流動負債比率' : '';
+        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr}${review}</div>`;
       } else {
         debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 暫停買入</div>`;
       }

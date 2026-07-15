@@ -442,6 +442,10 @@ def fetch_debt_ratio(code: str) -> float | None:
         d2e_raw = fd.get("debtToEquity", {})
         d2e = d2e_raw.get("raw") if isinstance(d2e_raw, dict) else None
         if d2e is not None:
+            if d2e < 0:
+                # 負 D/E = 股東權益為負 (資不抵債), 用 sentinel 999
+                # 舊公式喺呢度會出負數/荒謬值, 令警告靜默失效
+                return 999.0
             d2e_dec = d2e / 100
             return d2e_dec / (1 + d2e_dec) * 100
         return None
@@ -452,8 +456,9 @@ def fetch_debt_ratio(code: str) -> float | None:
 def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
     """負債比率警告文字
     規則:
+      資不抵債(權益為負, sentinel 999) → 有持倉建議平倉; 冇持倉暫停買入
       >125% 有持倉 → 建議平倉; 冇持倉 → 暫停買入
-      >100% 有持倉 → 觀察180日, 逾期→強制平倉; 冇持倉 → 暫停買入
+      >100% 有持倉 → 標誌負債, 每90日提示覆核流動負債比率; 冇持倉 → 暫停買入
       >80%  → 暫停買入
       >60%  → 警告
     好轉 = 跌回 <70% 才清除追蹤
@@ -468,22 +473,30 @@ def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
     days_str = ""
     days = 0
     if since:
-        try:
-            start = datetime.strptime(since, "%Y-%m")
-            now = datetime.now()
-            days = (now - start.replace(day=1)).days
-            days_str = f"（已{days}日）"
-        except Exception:
-            pass
+        # 新格式 YYYY-MM-DD, 舊格式 YYYY-MM (由月頭計)
+        for fmt in ("%Y-%m-%d", "%Y-%m"):
+            try:
+                start = datetime.strptime(since, fmt)
+                days = (datetime.now() - start).days
+                days_str = f"（已標誌{days}日）"
+                break
+            except ValueError:
+                continue
+    if debt_ratio >= 900:
+        if has_holdings:
+            return "  🔴 資不抵債(股東權益為負)! — 建議平倉"
+        return "  🔴 資不抵債(股東權益為負) — 暫停買入"
     if debt_ratio > 125:
         if has_holdings:
             return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 建議平倉"
         return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 暫停買入"
     if debt_ratio > 100:
         if has_holdings:
-            if since and days >= 180:
-                return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 逾180日未回落<70% ❗強制平倉"
-            return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 觀察中(180日)"
+            msg = f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str}"
+            # 每 90 日提示覆核一次 (到期後 7 日內顯示)
+            if days >= 90 and (days % 90) <= 7:
+                msg += "\n  🔍 90日覆核到期 — 請查最新流動負債比率"
+            return msg
         return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 暫停買入"
     if debt_ratio > 80:
         if since:
@@ -911,7 +924,10 @@ def build_stock_block(
                 lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
             lines.append(f"  /buy {code} {est_shares} {price}")
     elif shortfall >= MIN_BUY_HKD and debt_block_buy:
-        lines.append(f"  ⛔ 負債率{debt_ratio:.0f}%>80% — 暫停買入")
+        if debt_ratio is not None and debt_ratio >= 900:
+            lines.append("  ⛔ 資不抵債 — 暫停買入")
+        else:
+            lines.append(f"  ⛔ 負債率{debt_ratio:.0f}%>80% — 暫停買入")
 
     # ── 止賺訊號 ── sell 0股 skip
     for sig in tp_signals:
@@ -1096,6 +1112,8 @@ def monitor_report(alert_only: bool = False) -> str:
     anomaly_blocks   = []   # 異常動向 (vol spike 但冇其他信號)
     no_data       = []
     total_buy_recommend = 0.0  # 全部建議買入金額
+    # 成交量/蠟燭信號只喺 15:00 HKT 後有意義 (當日 candle 接近完整)
+    vol_signals_on = datetime.now(timezone(timedelta(hours=8))).hour >= 15
 
     load_lot_cache()  # 預先載入每手快取
 
@@ -1164,9 +1182,10 @@ def monitor_report(alert_only: bool = False) -> str:
         ccass_alerts = [ccass_alert] if ccass_alert else []
 
         # 成交量異常偵測 + 派貨形態 (只查有持倉嘅股票, 省 API call)
+        # 只喺 15:00 HKT 後跑 — 10:00 開市半個鐘, 當日 partial candle/volume 冇統計意義
         vol_alert_str = None
         vol_stats = None
-        if tranches or zero_done:
+        if (tranches or zero_done) and vol_signals_on:
             vol_stats = fetch_volume_stats(code)
             time.sleep(0.15)
             if vol_stats:
@@ -1227,29 +1246,7 @@ def monitor_report(alert_only: bool = False) -> str:
                     )
                     ccass_alerts.append(insider_alert_str)
 
-        # E: IPO 解禁日警示 (6m / 12m / 24m)
-        ipo_dt = stock_st.get("ipo_date")
-        if not ipo_dt:
-            # Fetch only if not cached
-            ipo_obj = fetch_ipo_date(code)
-            if ipo_obj:
-                stock_st["ipo_date"] = ipo_obj.strftime("%Y-%m-%d")
-                ipo_dt = stock_st["ipo_date"]
-                time.sleep(0.15)
-        if ipo_dt:
-            try:
-                ipo_d = datetime.strptime(ipo_dt, "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=8)))
-                now_d = datetime.now(timezone(timedelta(hours=8)))
-                days_since = (now_d - ipo_d).days
-                # 6m = 180, 12m = 365, 24m = 730. Alert window = +/- 30 日
-                for milestone, label in [(180, "6個月"), (365, "12個月"), (730, "24個月")]:
-                    if abs(days_since - milestone) <= 30:
-                        ccass_alerts.append(
-                            f"🔓 IPO {label}解禁期 (上市{days_since}日) — 大股東可大手減持"
-                        )
-                        break
-            except (ValueError, TypeError):
-                pass
+        # (IPO 解禁日警示已按用戶要求取消 — 2026-07-15)
 
         # 🚨 高危派貨複合信號: 高位 + 大成交 + 高gain + (SDI減持 OR vol spike)
         # 識別「派貨進行中」嘅多重證據
@@ -1289,7 +1286,7 @@ def monitor_report(alert_only: bool = False) -> str:
                 stock_st["debt_updated"] = datetime.now().strftime("%Y-%m-%d")
             if dr > 100:
                 if not stock_st.get("debt_over100_since"):
-                    stock_st["debt_over100_since"] = datetime.now().strftime("%Y-%m")
+                    stock_st["debt_over100_since"] = datetime.now().strftime("%Y-%m-%d")
             elif dr < 70:
                 # 好轉 = 跌回70%以下才清除追蹤
                 stock_st.pop("debt_over100_since", None)
@@ -1356,7 +1353,7 @@ def monitor_report(alert_only: bool = False) -> str:
         def _is_sell_trigger(a: str) -> bool:
             return any(k in a for k in [
                 "減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶",
-                "🚨", "⛔ 連環減持", "🕯️", "📉 高位連", "🔓 IPO"
+                "🚨", "⛔ 連環減持", "🕯️", "📉 高位連"
             ])
         sell_trigger_alerts = [a for a in ccass_alerts if _is_sell_trigger(a)]
         anomaly_only_alerts = [a for a in ccass_alerts if not _is_sell_trigger(a)]
@@ -1391,11 +1388,22 @@ def monitor_report(alert_only: bool = False) -> str:
             st_fix["zero_cost_initial_shares"] = sh_fix  # 記低 M1 達成時嘅初始免費股數
             if not st_fix.get("zero_cost_date"):
                 st_fix["zero_cost_date"] = now[:10]
+            # M1 於0成本時視為完成
+            done_fix = st_fix.get("post_zero_done", [])
+            if 0 not in done_fix:
+                done_fix.insert(0, 0)
+            st_fix["post_zero_done"] = done_fix
             # 鎖定 zero_cost_tier (建倉 floor)，至少 tier 1
             mcap_fix = st_fix.get("last_mcap_m")
             board_fix = st_fix.get("board")
             if mcap_fix is not None and board_fix:
                 st_fix["zero_cost_tier"] = max(1, current_tier_reached(mcap_fix, board_fix))
+        elif st_fix.get("zero_cost_achieved"):
+            # Migration: 舊0成本股補 M1 done 標記 (0成本 = M1 完成, 避免 M1 鏡像信號無限重複)
+            done_fix = st_fix.get("post_zero_done", [])
+            if 0 not in done_fix:
+                done_fix.insert(0, 0)
+                st_fix["post_zero_done"] = done_fix
 
     # save_state moved to after signal tracking (below)
 
@@ -1460,7 +1468,7 @@ def monitor_report(alert_only: bool = False) -> str:
     )
 
     if not cash_ok:
-        summary += f"\n⚠ 現金低於{MIN_CASH_PCT*100:.0f}%! 暫停買入"
+        summary += f"\n⚠ 現金低於{MIN_CASH_PCT*100:.0f}% — 注意注碼控制"
 
     # ── Data integrity check ──
     integrity_warns = []
@@ -1641,18 +1649,25 @@ def mark_post_zero(code: str, milestone_idx: int):
     """
     state    = load_state()
     stock_st = get_stock_state(state, code)
+    board    = stock_st.get("board", "main")
+    milestones = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
     done     = stock_st.get("post_zero_done", [])
     if milestone_idx not in done:
         done.append(milestone_idx)
     stock_st["post_zero_done"] = done
 
-    # 更新剩餘股數
+    # 更新剩餘股數 (賣出量 = 初始免費股數 × sell_frac)
     zero_shares = stock_st.get("zero_cost_shares", 0) or 0
-    if milestone_idx < len(POST_ZERO_MILESTONES):
-        _, frac, label = POST_ZERO_MILESTONES[milestone_idx]
-        sold = zero_shares * frac
-        stock_st["zero_cost_shares"] = zero_shares - sold
-        print(f"[後市止賺] {int(code):04d}.HK  {label} 執行  賣 {sold:,.0f} 股  剩餘 {stock_st['zero_cost_shares']:,.0f} 股")
+    if 0 <= milestone_idx < len(milestones):
+        ms = milestones[milestone_idx]
+        frac = ms.get("sell_frac")
+        if frac:
+            initial = stock_st.get("zero_cost_initial_shares") or zero_shares
+            sold = min(initial * frac, zero_shares)
+            stock_st["zero_cost_shares"] = zero_shares - sold
+            print(f"[後市止賺] {int(code):04d}.HK  {ms['label']} 執行  賣 {sold:,.0f} 股  剩餘 {stock_st['zero_cost_shares']:,.0f} 股")
+        else:
+            print(f"[後市止賺] {int(code):04d}.HK  {ms['label']} 標記完成")
 
     state[code] = stock_st
     save_state(state)
@@ -1843,16 +1858,30 @@ def tg_send(msg: str):
 # ============================================================
 
 def _git_pull_state():
-    """Best-effort sync local state.json with remote (no-op if not a repo or no remote)."""
+    """Best-effort sync local state.json with remote (no-op if not a repo or no remote).
+    Pull 失敗/衝突時 → abort rebase 並直接取 remote 版 state.json (remote 係 canonical)。
+    """
     import subprocess
+    repo = Path(__file__).parent
+    def _run(*cmd, timeout=15):
+        return subprocess.run(list(cmd), cwd=repo, capture_output=True, text=True, timeout=timeout)
     try:
-        result = subprocess.run(
-            ["git", "pull", "--rebase", "--autostash"],
-            cwd=Path(__file__).parent,
-            capture_output=True, text=True, timeout=15,
-        )
+        result = _run("git", "pull", "--rebase", "--autostash", timeout=20)
         if result.returncode != 0 and "up to date" not in result.stdout.lower():
             print(f"[git pull] {result.stderr.strip() or result.stdout.strip()}")
+        # 衝突/rebase 中斷 → abort + 用 remote 版 state (避免 conflict markers 損壞 JSON)
+        chk = _run("git", "status", "--porcelain", "data/watchlist_state.json")
+        if chk.returncode == 0 and chk.stdout.strip()[:2] in ("UU", "AA", "DD"):
+            _run("git", "rebase", "--abort")
+            _run("git", "checkout", "origin/main", "--", "data/watchlist_state.json")
+            print("[git pull] 衝突已解決: 採用 remote state.json")
+        # 最後防線: state.json 必須係 valid JSON
+        try:
+            json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            _run("git", "rebase", "--abort")
+            _run("git", "checkout", "origin/main", "--", "data/watchlist_state.json")
+            print("[git pull] state.json 損壞 — 已還原 remote 版本")
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
         print(f"[git pull] skipped: {e}")
 

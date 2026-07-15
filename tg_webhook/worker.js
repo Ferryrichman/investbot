@@ -302,6 +302,11 @@ async function delHolding(code, env) {
   state[code4].tranches = [];
   state[code4].zero_cost_achieved = false;
   state[code4].zero_cost_shares = null;
+  state[code4].zero_cost_initial_shares = null;
+  state[code4].zero_cost_price = null;
+  state[code4].zero_cost_date = null;
+  state[code4].zero_cost_tier = null;
+  state[code4].post_zero_done = [];
 
   await saveState(state, sha, `tg: del holding ${code4}`, env);
   return `${code4} 已刪除持倉（仍在監察）`;
@@ -339,6 +344,15 @@ async function modifyHolding(code, shares, avgPrice, env) {
   const now = new Date().toISOString().slice(0, 16).replace("T", " ");
   const hkd = shares * avgPrice;
   state[code4].tranches = [{ price: avgPrice, hkd, shares, date: now, note: "modified via TG" }];
+  // /modify = 重新定義持倉 → 清晒 0成本/清倉 state, 避免矛盾
+  state[code4].zero_cost_achieved = false;
+  state[code4].zero_cost_shares = null;
+  state[code4].zero_cost_initial_shares = null;
+  state[code4].zero_cost_price = null;
+  state[code4].zero_cost_date = null;
+  state[code4].zero_cost_tier = null;
+  state[code4].post_zero_done = [];
+  state[code4].cleared = false;
 
   await saveState(state, sha, `tg: modify ${code4} ${shares}股 @${avgPrice}`, env);
   return `${code4} 已修正${warn}\n舊: ${oldShares.toLocaleString()}股 @$${oldAvg.toFixed(4)} 投$${oldInv.toLocaleString()}\n新: ${shares.toLocaleString()}股 @$${avgPrice} 投$${hkd.toLocaleString()}`;
@@ -388,7 +402,29 @@ async function recordSell(code, sharesSold, price, env) {
     state[code4].zero_cost_shares = remainShares;
     state[code4].zero_cost_initial_shares = remainShares;
     state[code4].zero_cost_date = now.slice(0, 10);
+    // M1 於0成本時視為完成; 鎖定重新建倉 floor
+    if (!state[code4].post_zero_done) state[code4].post_zero_done = [];
+    if (!state[code4].post_zero_done.includes(0)) state[code4].post_zero_done.push(0);
+    const mcapM0 = state[code4].last_mcap_m;
+    if (mcapM0) state[code4].zero_cost_tier = _tierReached(mcapM0, state[code4].board || "main");
     msg += `\n剩${remainShares.toLocaleString()}股 🎉 0成本達成！免費持倉`;
+  } else if (state[code4].zero_cost_achieved) {
+    // 0成本後賣出 (M2-M5 或自行減持): 減免費股數 + 標記已到達嘅 milestone
+    const prevZ = state[code4].zero_cost_shares || 0;
+    state[code4].zero_cost_shares = Math.max(0, prevZ - sharesSold);
+    if (!state[code4].post_zero_done) state[code4].post_zero_done = [];
+    const done = state[code4].post_zero_done;
+    if (!done.includes(0)) done.push(0); // M1 完成於0成本時
+    const MS = (state[code4].board === "gem") ? [150, 300, 450, 600, 750] : [400, 800, 1200, 1600, 2000];
+    const mcapM = state[code4].last_mcap_m || 0;
+    for (let i = 1; i < MS.length; i++) {
+      if (mcapM >= MS[i] && !done.includes(i)) {
+        done.push(i);
+        msg += `\n✅ M${i + 1} 標記完成`;
+        break;
+      }
+    }
+    msg += `\n剩${remainShares.toLocaleString()}股 (0成本剩${state[code4].zero_cost_shares.toLocaleString()}股)`;
   } else {
     msg += `\n剩${remainShares.toLocaleString()}股`;
   }
@@ -424,6 +460,17 @@ function _pnl(inv, val) {
 
 function _shares(tranches) {
   return tranches.reduce((s, t) => s + (t.shares || 0), 0);
+}
+
+// 觸發層數: mcap 跌穿幾多個 tier (至少 1, 用於 zero_cost_tier floor)
+function _tierReached(mcapM, board) {
+  const tiers = board === "gem" ? [80, 60, 50, 40, 30] : [200, 150, 120, 100, 80, 60];
+  let n = 0;
+  for (const t of tiers) {
+    if (mcapM <= t) n++;
+    else break;
+  }
+  return Math.max(1, n);
 }
 
 function _stockLine(c, v) {
