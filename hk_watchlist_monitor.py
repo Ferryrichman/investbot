@@ -21,7 +21,7 @@ HK 港股 Watchlist Monitor  v3
   python hk_watchlist_monitor.py lotsize   # 更新每手股數快取
 """
 
-import os, sys, json, time, requests, math, sqlite3
+import os, re, sys, json, time, requests, math, sqlite3
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -1102,7 +1102,8 @@ def _compute_dynamic_tranche(state: dict) -> int:
     return max(100, round(total_wealth / 10000) * 100)
 
 
-def monitor_report(alert_only: bool = False) -> str:
+def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
+    """readonly=True (check mode): 唔寫 state, 唔影響 🆕 基準 / suppression 記錄"""
     now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
     state = load_state()
     new_state = dict(state)
@@ -1119,9 +1120,30 @@ def monitor_report(alert_only: bool = False) -> str:
     debt_warn_blocks = []   # 負債警告 (有持倉, dr>60%, 冇 sell 指令)
     anomaly_blocks   = []   # 異常動向 (vol spike 但冇其他信號)
     no_data       = []
+    no_data_held  = []  # 報價失敗嘅持倉股 (要顯示警告, 唔可以靜默消失)
+    signals_meta  = {}  # 寫入 _meta.signals 俾 Dashboard 直接 render
     total_buy_recommend = 0.0  # 全部建議買入金額
     # 成交量/蠟燭信號只喺 15:00 HKT 後有意義 (當日 candle 接近完整)
     vol_signals_on = datetime.now(timezone(timedelta(hours=8))).hour >= 15
+
+    # Cross-run alert suppression: 同一信號 3 日內唔重複, 3日後先再提醒
+    alert_seen = dict(state.get("_meta", {}).get("alert_seen", {}))
+    today_str = now[:10]
+
+    def _fresh_alert(code_: str, text_: str, window_days: int = 3) -> bool:
+        # key 用去數字化嘅信號文字 (數值日日變, 類型唔變)
+        key = f"{code_}:" + re.sub(r"[\d,.\s%x×]+", "", text_)[:48]
+        last = alert_seen.get(key)
+        if last:
+            try:
+                gap = (datetime.strptime(today_str, "%Y-%m-%d")
+                       - datetime.strptime(last, "%Y-%m-%d")).days
+                if gap < window_days:
+                    return False
+            except ValueError:
+                pass
+        alert_seen[key] = today_str
+        return True
 
     load_lot_cache()  # 預先載入每手快取
 
@@ -1136,7 +1158,11 @@ def monitor_report(alert_only: bool = False) -> str:
         time.sleep(0.2)
 
         if not quote or not quote["mcap"] or not quote["price"]:
-            no_data.append(code)
+            # 持倉股報價失敗要出警告 — 唔可以靜默由報告消失
+            if get_stock_state(state, code).get("tranches"):
+                no_data_held.append(code)
+            else:
+                no_data.append(code)
             continue
 
         mcap_m   = quote["mcap"] / 1e6
@@ -1264,13 +1290,19 @@ def monitor_report(alert_only: bool = False) -> str:
                 high_risk_flags.append("高位+大成交")
             if insider_sell_recent:
                 high_risk_flags.append("董事減持")
-            if gain_pct is not None and gain_pct >= 100:
+            if zero_done:
+                # 0成本股 avg_cost≤0 令 gain 永遠 0 — 免費倉本身就係「已獲利」flag
+                high_risk_flags.append("0成本倉")
+            elif gain_pct is not None and gain_pct >= 100:
                 high_risk_flags.append(f"+{gain_pct:.0f}%獲利")
             # 至少 2 個 flag 先觸發 (避免 false alarm)
             if len(high_risk_flags) >= 2:
                 ccass_alerts.append(
                     f"🚨 高危派貨警示: {' + '.join(high_risk_flags)}"
                 )
+
+        # Cross-run suppression: 同一類信號 3 日內唔重複轟炸
+        ccass_alerts = [a for a in ccass_alerts if _fresh_alert(code, a)]
 
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
@@ -1328,8 +1360,11 @@ def monitor_report(alert_only: bool = False) -> str:
         # Fix #4: 新建倉/0成本重新建倉 最多2層 (2×TRANCHE)，避免一次落重注
         # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
         MAX_NEW_BUY = TRANCHE_SIZE * 2
-        if shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block:
+        final_buy_shares = 0
+        in_buy_section = shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block
+        if in_buy_section:
             final_buy_hkd = shortfall
+            final_buy_shares = buy_shares
             if not tranches or zero_done:
                 # 新建倉 / 0成本重新建倉: cap shortfall
                 capped = min(shortfall, MAX_NEW_BUY)
@@ -1340,6 +1375,8 @@ def monitor_report(alert_only: bool = False) -> str:
                 if capped_shares != buy_shares:
                     capped_amt = capped_shares * price
                     block = build_stock_block(code, board, quote, stock_st, capped_amt, tp_signals, ccass_alerts, dr, dr_stale)
+                    all_blocks[-1] = block  # 同步替換, 避免 full report 印兩個唔同版本
+                final_buy_shares = capped_shares
                 final_buy_hkd = capped_shares * price
             else:
                 final_buy_hkd = buy_shares * price
@@ -1358,21 +1395,53 @@ def monitor_report(alert_only: bool = False) -> str:
         anomaly_only_alerts = [a for a in ccass_alerts if not _is_sell_trigger(a)]
 
         # 真正止賺信號 — 必須有持倉先有意義
-        if has_pos and (valid_tp or sell_trigger_alerts):
+        in_sell_section = has_pos and bool(valid_tp or sell_trigger_alerts)
+        if in_sell_section:
             sell_blocks.append(block)
-        if dr is not None and dr > 60 and has_pos:
+        # 負債關注: 已入止賺 section 嘅唔重複印 (止賺卡已含負債行)
+        in_debt_section = (dr is not None and dr > 60 and has_pos and not in_sell_section)
+        if in_debt_section:
             debt_warn_blocks.append(block)
 
         # 異常動向: 1) watch-only 嘅 sell trigger alerts (冇 /sell 命令)
         #          2) anomaly only alerts + 唔出現喺其他 section
-        in_sell_section = has_pos and (valid_tp or sell_trigger_alerts)
-        in_buy_section  = shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block
-        in_debt_section = dr is not None and dr > 60 and has_pos
         in_other_section = in_sell_section or in_buy_section or in_debt_section
-        # Watch-only stock with sell trigger → 異常動向 (informational)
-        watch_only_with_alert = not has_pos and (sell_trigger_alerts or anomaly_only_alerts)
-        if (anomaly_only_alerts and not in_other_section) or watch_only_with_alert:
+        watch_only_with_alert = not has_pos and bool(sell_trigger_alerts or anomaly_only_alerts)
+        in_anomaly_section = bool(anomaly_only_alerts and not in_other_section) or watch_only_with_alert
+        if in_anomaly_section:
             anomaly_blocks.append(block)
+
+        # ── _meta.signals: Dashboard 直接 render, 單一邏輯來源 ──
+        sig_sections = []
+        if in_sell_section:    sig_sections.append("sell")
+        if in_buy_section:     sig_sections.append("buy")
+        if in_debt_section:    sig_sections.append("debt")
+        if in_anomaly_section: sig_sections.append("anomaly")
+        dw_text = debt_warning(dr, stock_st)
+        if sig_sections or ccass_alerts or dw_text:
+            sig_entry = {"sections": sig_sections}
+            if in_buy_section and final_buy_shares > 0:
+                sig_entry["buy"] = {
+                    "hkd": round(final_buy_shares * price),
+                    "shares": final_buy_shares,
+                    "lots": final_buy_shares // lot_size if lot_size > 0 else 0,
+                    "cmd": f"/buy {code} {final_buy_shares} {price}",
+                }
+            if valid_tp:
+                sig_entry["sells"] = [{
+                    "label": s.get("label", ""),
+                    "type": s.get("type", ""),
+                    "shares": s.get("sell_shares", 0),
+                    "lots": s.get("sell_lots", 0),
+                    "recv": round(s.get("recv_hkd", 0)),
+                    "remain": s.get("remain", 0),
+                    "cmd": f"/sell {code} {s.get('sell_shares', 0)} {price}",
+                } for s in valid_tp]
+            if dw_text:
+                sig_entry["debt_text"] = dw_text.strip().replace("\n", " · ")
+            if ccass_alerts:
+                sig_entry["alerts"] = ccass_alerts
+            signals_meta[code] = sig_entry
 
     # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
     for code_fix, st_fix in new_state.items():
@@ -1511,13 +1580,35 @@ def monitor_report(alert_only: bool = False) -> str:
             out.append(f"{i}. {first_line}{new_tag}\n{rest}")
         return f"\n{dash}\n".join(out)
 
-    # Save current signal codes + dynamic TRANCHE for dashboard
+    # Save current signal codes + dynamic TRANCHE + signals for dashboard
     meta = new_state.get("_meta", {})
     meta["last_sell_codes"] = cur_sell_codes
     meta["last_buy_codes"]  = cur_buy_codes
     meta["tranche_size"]    = TRANCHE_SIZE
+    # suppression 記錄: prune 30 日前嘅 entries (ISO 日期字串可直接比較)
+    prune_cutoff = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+    meta["alert_seen"] = {k: v for k, v in alert_seen.items() if v >= prune_cutoff}
+    # 完整 signals snapshot — Dashboard 直接 render, 唔使自己計 (單一邏輯來源)
+    meta["signals"] = {
+        "generated_at": now,
+        "tranche_size": TRANCHE_SIZE,
+        "portfolio": {
+            "total_inv": round(total_inv),
+            "total_val": round(total_val),
+            "total_gain": round(total_gain),
+            "gain_pct": round(gain_pct_total, 1),
+            "cash_est": round(cash_est),
+            "cash_pct": round(cash_pct, 1),
+            "total_portfolio": TOTAL_PORTFOLIO,
+            "n_holdings": n_holdings,
+            "n_zero": n_zero,
+            "n_can_zero": n_can_zero,
+        },
+        "stocks": signals_meta,
+    }
     new_state["_meta"] = meta
-    save_state(new_state)
+    if not readonly:
+        save_state(new_state)
 
     signal_blocks = sell_blocks + buy_blocks + debt_warn_blocks + anomaly_blocks
 
@@ -1531,9 +1622,15 @@ def monitor_report(alert_only: bool = False) -> str:
         if total_buy_recommend > cash_est:
             budget_summary += "\n→ 現金不足，請選擇優先股票"
 
+    # 持倉股報價失敗警告 — alert 同 full report 都要顯示
+    nd_warning = ""
+    if no_data_held:
+        nd_codes = ", ".join(f"{int(c):04d}" for c in no_data_held)
+        nd_warning = f"\n\n⚠ 報價失敗(持倉股): {nd_codes} — 今次未有更新, 用上次數據"
+
     if alert_only:
         if not sell_blocks and not buy_blocks and not debt_warn_blocks and not anomaly_blocks:
-            return f"{summary}\n\n暫無新訊號"
+            return f"{summary}\n\n暫無新訊號{nd_warning}"
         msg = summary
         if sell_blocks:
             msg += f"\n\n止賺信號 ({len(sell_blocks)}隻)\n{dash}\n" + _numbered(sell_blocks, last_sell_codes)
@@ -1544,6 +1641,7 @@ def monitor_report(alert_only: bool = False) -> str:
             msg += f"\n\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}\n" + _numbered(debt_warn_blocks)
         if anomaly_blocks:
             msg += f"\n\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}\n" + _numbered(anomaly_blocks)
+        msg += nd_warning
         return msg
 
     # ── Full report: signals first, then others ──
@@ -1570,6 +1668,8 @@ def monitor_report(alert_only: bool = False) -> str:
         parts.append("其餘持倉")
         parts.extend(quiet)
 
+    if nd_warning:
+        parts.append(nd_warning.strip())
     if no_data:
         parts.append(f"\n[無數據] {', '.join(no_data)}")
     return sep.join(parts)
@@ -1752,6 +1852,12 @@ def intraday_alert() -> str | None:
     new_state = dict(state)
     load_lot_cache()
 
+    # 同步 dynamic TRANCHE (最近 full report 寫入 _meta)
+    global TRANCHE_SIZE
+    ts_meta = state.get("_meta", {}).get("tranche_size")
+    if ts_meta:
+        TRANCHE_SIZE = ts_meta
+
     alerts = []  # (code, alert_text)
     watchlist = {code: st for code, st in state.items() if st.get("board")}
 
@@ -1785,18 +1891,32 @@ def intraday_alert() -> str | None:
         last_alerted_tier = stock_st.get("last_alert_tier", 0)
 
         if tiers_now > last_alerted_tier and not debt_block:
-            expected_inv = tiers_now * TRANCHE_SIZE
-            actual_inv = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
-            shares_held = sum(t.get("shares", 0) for t in tranches)
-            current_val = shares_held * price if shares_held > 0 else 0
-            position = max(actual_inv, current_val)
-            shortfall = max(0, expected_inv - position)
+            # 同 full report 一致: 0成本股用 zero_cost_tier floor + post-zero 買入計
+            if zero_done:
+                zero_tier = stock_st.get("zero_cost_tier") or 1
+                effective_tiers = max(0, tiers_now - zero_tier)
+                expected_inv = effective_tiers * TRANCHE_SIZE
+                zero_date = stock_st.get("zero_cost_date", "")
+                position = sum(
+                    t.get("hkd", 0) for t in tranches
+                    if t.get("hkd", 0) > 0 and zero_date and t.get("date", "")[:10] > zero_date
+                )
+            else:
+                expected_inv = tiers_now * TRANCHE_SIZE
+                actual_inv = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
+                shares_held = sum(t.get("shares", 0) for t in tranches)
+                current_val = shares_held * price if shares_held > 0 else 0
+                position = max(actual_inv, current_val)
+            shortfall = max(0, expected_inv - position) if expected_inv > 0 else 0
+            # 新建倉/0成本重新建倉 cap (同 full report)
+            if shortfall > 0 and (not tranches or zero_done):
+                shortfall = min(shortfall, TRANCHE_SIZE * 2)
 
-            if shortfall > 0:
+            if shortfall >= MIN_BUY_HKD:
                 est_shares = round_to_lots(shortfall / price, lot_size, "down") if price > 0 else 0
                 if est_shares > 0:
                     est_lots = est_shares // lot_size if lot_size > 0 else 0
-                    label = "再買入" if zero_done else ("補倉" if tranches else "建倉")
+                    label = "重新建倉" if zero_done else ("補倉" if tranches else "建倉")
                     alerts.append((code4, (
                         f"🔔 {code4} {name} — {label}\n"
                         f"  ${price:.3f} 市值{mcap_m:.0f}M (層{tiers_now})\n"
@@ -1904,7 +2024,8 @@ if __name__ == "__main__":
         print_allocation_plan()
 
     elif mode == "check":
-        print(monitor_report(alert_only=False))
+        # 真正 read-only: 唔寫 state, 唔影響 🆕 基準 / suppression 記錄
+        print(monitor_report(alert_only=False, readonly=True))
 
     elif mode == "alert":
         report = monitor_report(alert_only=True)

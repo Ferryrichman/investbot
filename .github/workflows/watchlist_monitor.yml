@@ -43,7 +43,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase || true
-          git add data/watchlist_state.json || true
-          git diff --staged --quiet || git commit -m "auto: watchlist state $(date -u +%Y-%m-%d_%H%M)"
-          git push || true
+          # 先 commit 再 rebase — 舊版喺 dirty tree 上 pull 必定失敗然後 || true 靜默丟 update
+          git add data/watchlist_state.json
+          git diff --staged --quiet && { echo "no state changes"; exit 0; } || true
+          git commit -m "auto: watchlist state $(date -u +%Y-%m-%d_%H%M)"
+          # 同 TG Worker 並發寫入時 retry; conflict 時 -X theirs 保留本 run 嘅完整 state
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase -X theirs || { git rebase --abort; echo "::warning::state rebase conflict, retry $i"; }
+            sleep 2
+          done
+          echo "::warning::git push failed after 3 attempts — state update lost this run"

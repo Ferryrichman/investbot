@@ -241,8 +241,14 @@ async function recordBuy(code, shares, price, env) {
     state[code4].tranches = [];
     state[code4].cleared = false;
     // realized_pnl 保留！累積歷史盈虧
+    // 其餘 0成本 fields 全 reset — 新一輪 cycle 唔可以繼承舊 milestone 進度
     state[code4].zero_cost_achieved = false;
     state[code4].zero_cost_shares = null;
+    state[code4].zero_cost_initial_shares = null;
+    state[code4].zero_cost_price = null;
+    state[code4].zero_cost_date = null;
+    state[code4].zero_cost_tier = null;
+    state[code4].post_zero_done = [];
   }
   const now = new Date().toISOString().slice(0, 16).replace("T", " ");
   const hkd = shares * price;

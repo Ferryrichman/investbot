@@ -250,6 +250,9 @@ function render(state) {
   if (state._meta && state._meta.tranche_size) {
     TRANCHE = state._meta.tranche_size;
   }
+  // _meta.signals = monitor.py 每次 alert 寫入嘅完整信號 snapshot (單一邏輯來源)
+  // 有佢就直接 render, 冇 (舊 state) 先 fallback 去本地 JS 計算
+  const SIG = (state._meta && state._meta.signals) || null;
   const watched = Object.entries(state).filter(([,v]) => v.board);
   const holdings = [];
   const sellSignals = [];
@@ -334,21 +337,37 @@ function render(state) {
     const item = { code, board, mcap, price, shares, netInv, grossInv, val, position, expected,
                    shortfall, avgCost, gainPct, zeroDone, cleared, sellSignal, debtRatio, debtOver100Since,
                    chg: v.last_check ? 0 : 0, name: '', realizedPnl: v.realized_pnl || 0,
-                   zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1 };
+                   zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1,
+                   sigOn: !!SIG, sig: (SIG && SIG.stocks) ? SIG.stocks[code] : null };
 
-    if (sellSignal) sellSignals.push(item);
-    const debtBlockBuy = debtRatio != null && ((debtRatio > 125) || (debtRatio > 100 && shares <= 0) || (debtRatio > 80));
-    if (shortfall >= MIN_BUY && !debtBlockBuy) buySignals.push(item);
+    if (SIG) {
+      // 信號成員資格直接跟 monitor.py — 冇 parity 落差
+      const secs = (item.sig && item.sig.sections) || [];
+      if (secs.includes('sell')) sellSignals.push(item);
+      if (secs.includes('buy')) buySignals.push(item);
+    } else {
+      // Legacy fallback (state 未有 signals snapshot)
+      if (sellSignal) sellSignals.push(item);
+      const debtBlockBuy = debtRatio != null && ((debtRatio > 125) || (debtRatio > 100 && shares <= 0) || (debtRatio > 80));
+      if (shortfall >= MIN_BUY && !debtBlockBuy) buySignals.push(item);
+    }
     if (tr.length || cleared) holdings.push(item);
     else watchOnly.push(item);
   }
 
-  // Summary
-  const unrealized = totalVal - totalInv;
+  // Summary — 優先用 monitor.py 計好嘅 portfolio 數 (單一邏輯來源)
+  let unrealized = totalVal - totalInv;
+  let cashEst = PORTFOLIO - totalInv + totalRealized;
+  let cashPct = cashEst / PORTFOLIO * 100;
+  if (SIG && SIG.portfolio) {
+    const P = SIG.portfolio;
+    totalInv = P.total_inv;
+    totalVal = P.total_val;
+    unrealized = P.total_gain;
+    cashEst = P.cash_est;
+    cashPct = P.cash_pct;
+  }
   const totalPnl = unrealized + totalRealized;
-  // 可用現金 = 初始 - 淨投入 + 已清倉 realized profit (清倉錢回到 cash)
-  const cashEst = PORTFOLIO - totalInv + totalRealized;
-  const cashPct = cashEst / PORTFOLIO * 100;
   const cashOk = cashPct >= MIN_CASH * 100;
 
   document.getElementById('lastUpdate').textContent = lastCheck || '—';
@@ -396,7 +415,10 @@ function stockCard(s, mode) {
 
   let posHtml = '';
   if (s.zeroDone) {
-    posHtml = `<div class="stock-pos">0成本 <span class="val">${s.zeroShares.toLocaleString()}股</span> · 值 <span class="val">${fmtMoney(s.zeroShares * s.price)}</span></div>`;
+    const rebuyShares = Math.max(0, s.shares - s.zeroShares);
+    posHtml = `<div class="stock-pos">0成本 <span class="val">${s.zeroShares.toLocaleString()}股</span> · 值 <span class="val">${fmtMoney(s.zeroShares * s.price)}</span>${
+      rebuyShares > 0 ? `<br>新買 <span class="val">${rebuyShares.toLocaleString()}股</span> · 值 <span class="val">${fmtMoney(rebuyShares * s.price)}</span>` : ''
+    }</div>`;
   } else if (s.cleared) {
     const sign = s.realizedPnl >= 0 ? '+' : '';
     posHtml = `<div class="stock-pos">已清倉 · 已實現 <span class="val" style="color:${s.realizedPnl>=0?'#3fb950':'#f85149'}">${sign}${fmtMoney(s.realizedPnl)}</span></div>`;
@@ -412,26 +434,57 @@ function stockCard(s, mode) {
   }
 
   let signalHtml = '';
-  if (mode === 'sell' && s.sellSignal) {
-    signalHtml = `<div class="signal signal-sell">
-      止賺信號 · 浮盈 ${fmtPct(s.gainPct)} · 賣出回收成本 → 0成本持倉
-    </div>`;
-  }
-  if (mode === 'buy' && s.shortfall >= MIN_BUY) {
-    const lotSize = s.lotSize || 1;
-    const estShares = Math.floor(s.shortfall / s.price / lotSize) * lotSize;
-    const estLots = Math.floor(estShares / lotSize);
-    const label = s.zeroDone ? '重新建倉' : (s.shares > 0 ? '補倉' : '建倉');
-    const cls = s.zeroDone ? 'signal-rebuy' : 'signal-buy';
-    signalHtml = `<div class="signal ${cls}">
-      ${label} · 差 ${fmtMoney(s.shortfall)} · ${estLots}手/${estShares.toLocaleString()}股
-      <br><span class="cmd">/buy ${s.code} ${estShares} ${s.price}</span>
-    </div>`;
+  if (s.sigOn) {
+    // ── monitor.py signals snapshot 驅動 (單一邏輯來源) ──
+    const g = s.sig || {};
+    if (mode === 'sell' && g.sells && g.sells.length) {
+      signalHtml = g.sells.map(x => `<div class="signal signal-sell">
+        ${x.label ? x.label + ' · ' : ''}賣${x.lots}手(${x.shares.toLocaleString()}股) 收${fmtMoney(x.recv)} 剩${(x.remain || 0).toLocaleString()}股
+        <br><span class="cmd">${x.cmd}</span>
+      </div>`).join('');
+    }
+    if (mode === 'buy' && g.buy) {
+      const label = s.zeroDone ? '重新建倉' : (s.shares > 0 ? '補倉' : '建倉');
+      const cls = s.zeroDone ? 'signal-rebuy' : 'signal-buy';
+      signalHtml = `<div class="signal ${cls}">
+        ${label} · ${fmtMoney(g.buy.hkd)} · ${g.buy.lots}手/${g.buy.shares.toLocaleString()}股
+        <br><span class="cmd">${g.buy.cmd}</span>
+      </div>`;
+    }
+    // 派貨/異動警示 inline (所有 tab 都顯示)
+    if (g.alerts && g.alerts.length) {
+      signalHtml += g.alerts.map(a => `<div class="signal signal-debt-warn">! ${a}</div>`).join('');
+    }
+  } else {
+    // ── Legacy fallback ──
+    if (mode === 'sell' && s.sellSignal) {
+      signalHtml = `<div class="signal signal-sell">
+        止賺信號 · 浮盈 ${fmtPct(s.gainPct)} · 賣出回收成本 → 0成本持倉
+      </div>`;
+    }
+    if (mode === 'buy' && s.shortfall >= MIN_BUY) {
+      const lotSize = s.lotSize || 1;
+      const estShares = Math.floor(s.shortfall / s.price / lotSize) * lotSize;
+      const estLots = Math.floor(estShares / lotSize);
+      const label = s.zeroDone ? '重新建倉' : (s.shares > 0 ? '補倉' : '建倉');
+      const cls = s.zeroDone ? 'signal-rebuy' : 'signal-buy';
+      signalHtml = `<div class="signal ${cls}">
+        ${label} · 差 ${fmtMoney(s.shortfall)} · ${estLots}手/${estShares.toLocaleString()}股
+        <br><span class="cmd">/buy ${s.code} ${estShares} ${s.price}</span>
+      </div>`;
+    }
   }
 
   // Debt ratio warning
   let debtHtml = '';
-  if (s.debtRatio != null) {
+  if (s.sigOn) {
+    // monitor.py debt_warning 文字直接用 (單一邏輯來源)
+    const dt = s.sig && s.sig.debt_text;
+    if (dt) {
+      const cls = dt.includes('🔴') ? 'signal-debt-danger' : 'signal-debt-warn';
+      debtHtml = `<div class="signal ${cls}">${dt}</div>`;
+    }
+  } else if (s.debtRatio != null) {
     let daysStr = '';
     let days = 0;  // hoisted — 舊版 const 喺 if block 內, block 外讀取會 ReferenceError
     if (s.debtOver100Since) {
@@ -463,8 +516,8 @@ function stockCard(s, mode) {
       debtHtml = `<div class="signal signal-debt-warn">⚠️ 負債警告 負債率${s.debtRatio.toFixed(0)}%</div>`;
     }
   }
-  // Suppress buy signal: >125% always, >100% no holdings, >80% always
-  {
+  // Legacy only: suppress buy signal (SIG mode 由 monitor.py 決定咗買唔買, 唔使再壓)
+  if (!s.sigOn) {
     const hasPos2 = s.shares > 0;
     const blockBuy = (s.debtRatio > 125) || (s.debtRatio > 100 && !hasPos2) || (s.debtRatio > 80);
     if (s.debtRatio != null && blockBuy && mode === 'buy') {
