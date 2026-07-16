@@ -1590,6 +1590,27 @@
     "ipo_date": "2021-03-31",
     "debt_updated": "2026-07-16"
   },
+  "8026": {
+    "tier_reached": 0,
+    "tranches": [
+      {
+        "price": 0.038,
+        "hkd": 19760,
+        "shares": 520000,
+        "date": "2026-07-16 07:20",
+        "note": "modified via TG"
+      }
+    ],
+    "zero_cost_achieved": false,
+    "post_zero_done": [],
+    "notes": [],
+    "zero_cost_shares": null,
+    "zero_cost_initial_shares": null,
+    "zero_cost_price": null,
+    "zero_cost_date": null,
+    "zero_cost_tier": null,
+    "cleared": false
+  },
   "8036": {
     "tier_reached": 0,
     "tranches": [
