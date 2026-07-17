@@ -1562,7 +1562,15 @@
   },
   "6939": {
     "tier_reached": 1,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.008,
+        "hkd": -32,
+        "shares": 4000,
+        "date": "2025-01-01 00:00",
+        "note": "corrected via TG status"
+      }
+    ],
     "zero_cost_achieved": true,
     "zero_cost_shares": 4000,
     "zero_cost_price": null,
@@ -1580,9 +1588,7 @@
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 4000,
     "ipo_date": "2021-03-31",
-    "debt_updated": "2026-07-17",
-    "cleared": true,
-    "realized_pnl": 7672
+    "debt_updated": "2026-07-17"
   },
   "8036": {
     "tier_reached": 0,
