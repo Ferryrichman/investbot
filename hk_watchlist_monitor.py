@@ -1541,7 +1541,12 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         f"━━━━━━━━━━━━━━━━━━━━"
     )
 
-    if not cash_ok:
+    if cash_est < 0:
+        summary += (
+            "\n🚨 現金為負 — state 交易記錄可能有錯 (入錯價/股數/code)!"
+            "\n→ 用 /status 逐隻核對, 搵出可疑嘅大額投入"
+        )
+    elif not cash_ok:
         summary += f"\n⚠ 現金低於{MIN_CASH_PCT*100:.0f}% — 注意注碼控制"
 
     # ── Data integrity check ──

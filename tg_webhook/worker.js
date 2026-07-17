@@ -66,13 +66,15 @@ async function handleCommand(text, env) {
   if (cmd === "/buy") {
     if (parts.length < 4) return "用法: /buy CODE 股數 價錢\n例: /buy 1740 70000 0.114";
     const [, code, shares, price] = parts;
-    return await recordBuy(code, parseInt(shares), parseFloat(price), env);
+    const force = (parts[4] || "").toLowerCase() === "force";
+    return await recordBuy(code, parseInt(shares), parseFloat(price), env, force);
   }
 
   if (cmd === "/sell") {
     if (parts.length < 4) return "用法: /sell CODE 股數 價錢\n例: /sell 1740 10000 0.20";
     const [, code, shares, price] = parts;
-    return await recordSell(code, parseInt(shares), parseFloat(price), env);
+    const force = (parts[4] || "").toLowerCase() === "force";
+    return await recordSell(code, parseInt(shares), parseFloat(price), env, force);
   }
 
   if (cmd === "/zerocost") {
@@ -84,7 +86,8 @@ async function handleCommand(text, env) {
   if (cmd === "/modify") {
     if (parts.length < 4) return "用法: /modify CODE 股數 平均價\n例: /modify 1740 70000 0.114";
     const [, code, shares, avgPrice] = parts;
-    return await modifyHolding(code, parseInt(shares), parseFloat(avgPrice), env);
+    const force = (parts[4] || "").toLowerCase() === "force";
+    return await modifyHolding(code, parseInt(shares), parseFloat(avgPrice), env, force);
   }
 
   if (cmd === "/del") {
@@ -162,7 +165,8 @@ async function handleCommand(text, env) {
       "/status CODE — 查看持倉\n" +
       "/status — 查看全部\n" +
       "/push — 即時觸發 alert push\n" +
-      "\n💡 賣出後自動偵測0成本"
+      "\n💡 賣出後自動偵測0成本\n" +
+      "💡 價錢同市價差3倍會被擋 (防打錯位), 確認無誤加 force 落命令尾"
     );
   }
 
@@ -217,12 +221,16 @@ async function saveState(state, sha, message, env) {
   return true;
 }
 
-async function recordBuy(code, shares, price, env) {
+async function recordBuy(code, shares, price, env, force = false) {
   const code4 = String(code).padStart(4, "0");
   if (shares <= 0 || price <= 0) return `❌ 股數同價錢必須 > 0`;
   const { state, sha } = await getState(env);
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
+  }
+  if (!force) {
+    const warn = _priceSanity(state[code4], price, `/buy ${code4} ${shares} ${price}`);
+    if (warn) return warn;
   }
   // Lot size check
   const lot = state[code4].lot_size || 0;
@@ -328,12 +336,25 @@ async function delAll(code, env) {
   return `${code4} 已刪除持倉 + 移除監察`;
 }
 
-async function modifyHolding(code, shares, avgPrice, env) {
+async function modifyHolding(code, shares, avgPrice, env, force = false) {
   const code4 = String(code).padStart(4, "0");
   if (shares <= 0) return `❌ 股數必須 > 0`;
   const { state, sha } = await getState(env);
-  if (!state[code4]) {
+  // 防呆: /modify 一個從未存在嘅 code (唔喺監察 + 冇持倉) 多數係 code typo
+  // (2026-07-16 事故: /modify 8026 其實想打 8036, 產生幽靈持倉)
+  const existing = state[code4];
+  if (!existing || (!existing.board && !(existing.tranches || []).length)) {
+    if (!force) {
+      return (
+        `⚠️ ${code4} 唔喺監察名單, 亦冇持倉記錄 — 懷疑 code 打錯?\n` +
+        `想真係新增: /add ${code4} [main/gem] 先, 或者命令尾加 force`
+      );
+    }
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
+  }
+  if (!force) {
+    const warn = _priceSanity(state[code4], avgPrice, `/modify ${code4} ${shares} ${avgPrice}`);
+    if (warn) return warn;
   }
   // Lot size warning (not blocking — modify is for corrections)
   const lot = state[code4].lot_size || 0;
@@ -364,12 +385,16 @@ async function modifyHolding(code, shares, avgPrice, env) {
   return `${code4} 已修正${warn}\n舊: ${oldShares.toLocaleString()}股 @$${oldAvg.toFixed(4)} 投$${oldInv.toLocaleString()}\n新: ${shares.toLocaleString()}股 @$${avgPrice} 投$${hkd.toLocaleString()}`;
 }
 
-async function recordSell(code, sharesSold, price, env) {
+async function recordSell(code, sharesSold, price, env, force = false) {
   const code4 = String(code).padStart(4, "0");
   if (sharesSold <= 0 || price <= 0) return `❌ 股數同價錢必須 > 0`;
   const { state, sha } = await getState(env);
   if (!state[code4] || !state[code4].tranches.length) {
     return `${code4} 無持倉記錄`;
+  }
+  if (!force) {
+    const warn = _priceSanity(state[code4], price, `/sell ${code4} ${sharesSold} ${price}`);
+    if (warn) return warn;
   }
   // Check not selling more than held
   const held = state[code4].tranches.reduce((s, t) => s + (t.shares || 0), 0);
@@ -466,6 +491,21 @@ function _pnl(inv, val) {
 
 function _shares(tranches) {
   return tranches.reduce((s, t) => s + (t.shares || 0), 0);
+}
+
+// 價錢防呆: 同 last_price 差 3 倍以上多數係 typo (e.g. 0.38 vs 0.038)
+// 真係大幅跳價可以加 "force" 落命令尾 bypass
+function _priceSanity(st, price, cmdHint) {
+  const ref = st && st.last_price;
+  if (!ref || ref <= 0 || !price || price <= 0) return null;
+  const ratio = price / ref;
+  if (ratio >= 3 || ratio <= 1 / 3) {
+    return (
+      `⚠️ 價錢可疑: 輸入 $${price} vs 最近價 $${ref} (${ratio >= 3 ? ratio.toFixed(1) + "×" : "1/" + (1 / ratio).toFixed(1)})\n` +
+      `懷疑打錯位。確認無誤請喺命令尾加 force:\n${cmdHint} force`
+    );
+  }
+  return null;
 }
 
 // 觸發層數: mcap 跌穿幾多個 tier (至少 1, 用於 zero_cost_tier floor)
