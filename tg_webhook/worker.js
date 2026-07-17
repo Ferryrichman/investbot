@@ -150,6 +150,11 @@ async function handleCommand(text, env) {
     }
   }
 
+  if (cmd === "/undo") {
+    const force = (parts[1] || "").toLowerCase() === "force";
+    return await undoLast(env, force);
+  }
+
   if (cmd === "/help" || cmd === "/start") {
     return (
       "指令:\n" +
@@ -165,6 +170,7 @@ async function handleCommand(text, env) {
       "/status CODE — 查看持倉\n" +
       "/status — 查看全部\n" +
       "/push — 即時觸發 alert push\n" +
+      "/undo — 退回上一個 TG 命令 (再 /undo = redo)\n" +
       "\n💡 賣出後自動偵測0成本\n" +
       "💡 價錢同市價差3倍會被擋 (防打錯位), 確認無誤加 force 落命令尾"
     );
@@ -219,6 +225,85 @@ async function saveState(state, sha, message, env) {
     throw new Error(`GitHub save ${res.status}: ${body.slice(0, 200)}`);
   }
   return true;
+}
+
+// 退回上一個 TG 命令: 搵最近一個 "tg: " commit, 將 state 還原到佢 parent 版本
+// undo 本身都係 "tg: " commit → 再打 /undo 會 undo 呢次 undo = redo
+async function undoLast(env, force = false) {
+  const token = (env.GITHUB_TOKEN || "").trim();
+  const repo = (env.GITHUB_REPO || "").trim();
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "investbot-tg-worker",
+  };
+
+  // a. 攞最近 15 個 state 檔案 commit
+  const listUrl = `https://api.github.com/repos/${repo}/commits?path=${STATE_PATH}&sha=${BRANCH}&per_page=15`;
+  const listRes = await fetch(listUrl, { headers });
+  if (!listRes.ok) {
+    throw new Error(`GitHub API ${listRes.status}: ${await listRes.text()}`);
+  }
+  const commits = await listRes.json();
+
+  // b. 搵最近(最新)一個 TG 命令 commit
+  const idx = commits.findIndex(
+    (c) => c.commit && c.commit.message && c.commit.message.startsWith("tg: ")
+  );
+  if (idx === -1) {
+    return `❌ 最近 15 個 state commit 冇 TG 命令, 冇嘢可以退回`;
+  }
+  const tgCommit = commits[idx];
+  const originalCommitMessage = tgCommit.commit.message;
+  const undoneCmd = originalCommitMessage.replace(/^tg:\s+/, "");
+
+  // c. 24 小時防呆: 太舊嘅命令, 中間可能夾雜 auto-run 更新會一併還原
+  const commitDate = new Date(tgCommit.commit.committer.date);
+  const ageMs = Date.now() - commitDate.getTime();
+  if (ageMs > 24 * 60 * 60 * 1000 && !force) {
+    const dateStr = commitDate.toISOString().slice(0, 16).replace("T", " ");
+    return (
+      `⚠️ 最近嘅 TG 命令超過 24 小時:\n` +
+      `${originalCommitMessage} (${dateStr})\n` +
+      `中間可能有 auto-run 更新, 一併還原會覆蓋咗。\n` +
+      `確認要退回請打: /undo force`
+    );
+  }
+
+  // d. 攞該 commit 嘅 parent (命令之前嘅版本)
+  const parentSha = tgCommit.parents && tgCommit.parents[0] && tgCommit.parents[0].sha;
+  if (!parentSha) {
+    return `❌ 呢個 commit 冇 parent, 無法還原`;
+  }
+
+  // e. 攞 parent 版本嘅 state 內容, decode base64 + 驗證 JSON parse
+  const parentUrl = `https://api.github.com/repos/${repo}/contents/${STATE_PATH}?ref=${parentSha}`;
+  const parentRes = await fetch(parentUrl, { headers });
+  if (!parentRes.ok) {
+    throw new Error(`GitHub API ${parentRes.status}: ${await parentRes.text()}`);
+  }
+  const parentData = await parentRes.json();
+  const raw = atob(parentData.content.replace(/\n/g, ""));
+  const oldContent = decodeURIComponent(escape(raw));
+  let parsedOldState;
+  try {
+    parsedOldState = JSON.parse(oldContent);
+  } catch (_) {
+    return `❌ 還原失敗: 舊版 state 唔係 valid JSON`;
+  }
+
+  // f. 攞當前 state 嘅 sha (PUT 需要 fresh sha)
+  const { sha: currentSha } = await getState(env);
+
+  // g. 將 parent 內容寫返做當前 state
+  await saveState(parsedOldState, currentSha, `tg: undo — ${originalCommitMessage}`, env);
+
+  // h. 成功訊息
+  return (
+    `↩️ 已退回: ${undoneCmd}\n` +
+    `state 已還原到該命令之前\n` +
+    `再打 /undo 可以取消呢次退回 (redo)`
+  );
 }
 
 async function recordBuy(code, shares, price, env, force = false) {
