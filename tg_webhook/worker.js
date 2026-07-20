@@ -42,20 +42,29 @@ export default {
   },
 
   // Cloudflare Cron Trigger → 觸發 GitHub Actions workflow
+  // GitHub dispatch 偶爾回 5xx (transient) — retry 3 次先至認輸
   async scheduled(event, env, ctx) {
-    try {
-      const mode = "alert";  // 09:00 + 15:30 都係 full alert
-      await triggerGitHubWorkflow(mode, env);
-    } catch (err) {
-      // 通知自己 cron 失敗
+    const mode = "alert";  // 10:00 + 15:45 都係 full alert
+    let lastErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        await sendTG(
-          env.TELEGRAM_TOKEN.trim(),
-          (env.CHAT_ID || "").trim(),
-          `⚠️ Cron trigger failed: ${err.message}`
-        );
-      } catch (_) {}
+        await triggerGitHubWorkflow(mode, env);
+        return;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, attempt * 10000)); // 10s, 20s
+        }
+      }
     }
+    // 3 次都失敗先通知
+    try {
+      await sendTG(
+        env.TELEGRAM_TOKEN.trim(),
+        (env.CHAT_ID || "").trim(),
+        `⚠️ Cron trigger failed (3 attempts): ${lastErr.message}\n可以手動打 /push 補返`
+      );
+    } catch (_) {}
   },
 };
 
