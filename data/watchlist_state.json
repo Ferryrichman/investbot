@@ -2070,5 +2070,29 @@
         }
       }
     }
+  },
+  "8507": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "board": "gem",
+    "last_mcap_m": 632.0,
+    "last_price": 0.79
+  },
+  "8622": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "zero_cost_shares": null,
+    "zero_cost_price": null,
+    "post_zero_done": [],
+    "notes": [],
+    "board": "gem",
+    "last_mcap_m": 91.8,
+    "last_price": 0.178
   }
 }
