@@ -76,10 +76,12 @@ async function handleCommand(text, env) {
   const cmd = parts[0].toLowerCase();
 
   if (cmd === "/buy") {
-    if (parts.length < 4) return "用法: /buy CODE 股數 價錢\n例: /buy 1740 70000 0.114";
+    if (parts.length < 4) return "用法: /buy CODE 股數 價錢 [mj] [force]\n例: /buy 1740 70000 0.114";
     const [, code, shares, price] = parts;
-    const force = (parts[4] || "").toLowerCase() === "force";
-    return await recordBuy(code, parseInt(shares), parseFloat(price), env, force);
+    const extras = parts.slice(4).map((t) => t.toLowerCase());
+    const force = extras.includes("force");
+    const mjTag = extras.includes("mj");
+    return await recordBuy(code, parseInt(shares), parseFloat(price), env, force, mjTag);
   }
 
   if (cmd === "/sell") {
@@ -341,12 +343,19 @@ async function undoLast(env, force = false) {
   );
 }
 
-async function recordBuy(code, shares, price, env, force = false) {
+async function recordBuy(code, shares, price, env, force = false, mjTag = false) {
   const code4 = String(code).padStart(4, "0");
   if (shares <= 0 || price <= 0) return `❌ 股數同價錢必須 > 0`;
   const { state, sha } = await getState(env);
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
+  }
+  // /buy ... mj → 買入同時加監察 + 標記 MJ倉 (一條命令搞掂)
+  let mjNote = "";
+  if (mjTag) {
+    if (!state[code4].board) state[code4].board = code4.startsWith("8") ? "gem" : "main";
+    state[code4].strategy = "mj";
+    mjNote = `\n📘 已標記 MJ倉 [${state[code4].board}] (止賺: 市值${state[code4].board === "gem" ? "2億" : "5億"}+100%)`;
   }
   if (!force) {
     const warn = _priceSanity(state[code4], price, `/buy ${code4} ${shares} ${price}`);
@@ -385,7 +394,7 @@ async function recordBuy(code, shares, price, env, force = false) {
   await saveState(state, sha, `tg: buy ${code4} ${shares}股 @${price}`, env);
 
   const total = state[code4].tranches.filter(t => t.hkd > 0).reduce((s, t) => s + t.hkd, 0);
-  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}${extraWarn}`;
+  return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}${mjNote}${extraWarn}`;
 }
 
 async function addToWatchlist(code, board, env, strategy = null) {
