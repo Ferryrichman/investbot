@@ -112,9 +112,25 @@ async function handleCommand(text, env) {
   }
 
   if (cmd === "/add") {
-    if (parts.length < 2) return "用法: /add CODE [main/gem]\n例: /add 1234\n例: /add 8888 gem";
-    const board = (parts[2] || "").toLowerCase() === "gem" ? "gem" : "main";
-    return await addToWatchlist(parts[1], board, env);
+    if (parts.length < 2) {
+      return (
+        "用法: /add CODE [main/gem] [mj]\n" +
+        "例: /add 1234\n例: /add 8888 gem\n" +
+        "例: /add 8657 mj — 標記 MJ倉策略 (板塊自動判斷)\n" +
+        "例: /add 2625 main mj"
+      );
+    }
+    const t2 = (parts[2] || "").toLowerCase();
+    const t3 = (parts[3] || "").toLowerCase();
+    const strategy = (t2 === "mj" || t3 === "mj") ? "mj" : null;
+    let board;
+    if (t2 === "gem") board = "gem";
+    else if (t2 === "main") board = "main";
+    else if (strategy === "mj") {
+      // 冇明確指定板塊: 8 字頭 = 創業板
+      board = String(parts[1]).padStart(4, "0").startsWith("8") ? "gem" : "main";
+    } else board = "main";
+    return await addToWatchlist(parts[1], board, env, strategy);
   }
 
   if (cmd === "/remove") {
@@ -143,7 +159,8 @@ async function handleCommand(text, env) {
       "【清倉】\n" +
       "全部賣晒 → 記錄已實現盈虧\n" +
       "日後重新買入 → 歷史盈虧保留累計\n\n" +
-      "💡 所有交易由你手動 /buy /sell 記帳"
+      "💡 所有交易由你手動 /buy /sell 記帳" +
+      "\n\n【📘 MJ倉 (輔助)】\n用 /add CODE mj 標記\n注碼 = L型一半 · 可向下撈但唔低過放棄位\n止賺: 主板5億/GEM2億 + 回報100% → 賣回本留免費股\n0成本後跟 MJ 位置2/3 警報自由操作"
     );
   }
 
@@ -179,7 +196,7 @@ async function handleCommand(text, env) {
       "/modify CODE 股數 平均價 — 修正持倉\n" +
       "/del CODE — 刪除持倉（保留監察）\n" +
       "/del CODE watchlist — 刪除持倉+移除監察\n" +
-      "/add CODE [main/gem] — 加入監察\n" +
+      "/add CODE [main/gem] [mj] — 加入監察 (mj=MJ倉策略)\n" +
       "/remove CODE — 移除監察\n" +
       "/watchlist — 睇監察清單\n" +
       "/rules — 睇買賣機制\n" +
@@ -371,19 +388,29 @@ async function recordBuy(code, shares, price, env, force = false) {
   return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}${extraWarn}`;
 }
 
-async function addToWatchlist(code, board, env) {
+async function addToWatchlist(code, board, env, strategy = null) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
+  const mjTag = "📘 MJ倉策略 (止賺: 市值達標+100%)";
   if (state[code4] && state[code4].board) {
-    return `${code4} 已經喺監察清單 (${state[code4].board})`;
+    // 已監察: 唯一可以做嘅係補標 MJ倉
+    if (strategy === "mj" && state[code4].strategy !== "mj") {
+      state[code4].strategy = "mj";
+      await saveState(state, sha, `tg: mark ${code4} mj`, env);
+      return `${code4} 已喺監察清單 (${state[code4].board}) — 現已標記\n${mjTag}`;
+    }
+    return `${code4} 已經喺監察清單 (${state[code4].board})${state[code4].strategy === "mj" ? " 📘MJ倉" : ""}`;
   }
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
   state[code4].board = board;
+  if (strategy) state[code4].strategy = strategy;
 
-  await saveState(state, sha, `tg: add ${code4} (${board})`, env);
-  return `${code4} 已加入監察 (${board === "gem" ? "創業板" : "主板"})\n每朝09:00自動檢查`;
+  await saveState(state, sha, `tg: add ${code4} (${board}${strategy ? " " + strategy : ""})`, env);
+  let msg = `${code4} 已加入監察 (${board === "gem" ? "創業板" : "主板"})`;
+  if (strategy === "mj") msg += `\n${mjTag}`;
+  return msg + "\n每朝09:00自動檢查";
 }
 
 async function removeFromWatchlist(code, env) {
@@ -399,8 +426,10 @@ async function removeFromWatchlist(code, env) {
 async function getWatchlist(env) {
   const { state } = await getState(env);
   const watched = Object.entries(state).filter(([, v]) => v.board);
-  const mainList = watched.filter(([, v]) => v.board === "main").map(([c]) => c).sort();
-  const gemList = watched.filter(([, v]) => v.board === "gem").map(([c]) => c).sort();
+  // 📘 = MJ倉策略 (止賺跟市值達標+100%, 唔跟 L型層級建倉)
+  const codeMark = ([c, v]) => c + (v.strategy === "mj" ? "📘" : "");
+  const mainList = watched.filter(([, v]) => v.board === "main").map(codeMark).sort();
+  const gemList = watched.filter(([, v]) => v.board === "gem").map(codeMark).sort();
   const hasHolding = (v) => v.tranches && v.tranches.length > 0;
   const mainHeld = watched.filter(([, v]) => v.board === "main" && hasHolding(v)).length;
   const gemHeld = watched.filter(([, v]) => v.board === "gem" && hasHolding(v)).length;
@@ -764,6 +793,9 @@ async function getMj(code, env) {
       `IPO ${s.ipo || "?"}`
     );
     if (s.info && s.info.length) lines.push(`Tags: ${s.info.join(" ")}`);
+    if (st && st.strategy === "mj") {
+      lines.push("📘 已標記 MJ倉 (止賺: 5億/2億 + 100%)");
+    }
     if (h.held > 0 && st && st.tranches) {
       const inv = st.tranches.reduce((a, t) => a + t.hkd, 0);
       const val = h.held * (st.last_price || p);

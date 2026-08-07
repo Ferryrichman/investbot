@@ -107,6 +107,8 @@ SCREENER_DB  = Path(__file__).parent / "data" / "screener.db"
 # 由 mj_import.py 匯入每日功課 PDF。系統動能係課程專有指標，冇得自己計。
 MJ_STATE_FILE = Path(__file__).parent / "data" / "mj_state.json"
 MJ_MOM_FLOOR  = 55      # 動能下限，低過就係「要放棄」
+MJ_BUDGET_CAP = 25_000  # MJ 倉總投入上限 (L型優先, MJ 用剩餘資金)
+MJ_CASH_GATE  = 25      # 現金 % 低過呢個數 → 提示暫停 MJ 新倉
 
 # ── CCASS 集中度警戒設定 ──────────────────────────────────
 # top10_pct 在最近 N 個交易日內升幅達此門檻 → 觸發 CCASS IN 警示
@@ -668,6 +670,27 @@ def check_take_profit(
 
     zero_done = stock_st.get("zero_cost_achieved", False)
 
+    if stock_st.get("strategy") == "mj":
+        # 📘 MJ倉: 止賺 = 市值達標 + 回報100% (冇純浮盈路徑); 0成本後唔再出信號
+        if zero_done:
+            return signals
+        mj_mcap_target = 500 if board == "main" else 200
+        if mcap_m >= mj_mcap_target and gain_pct >= 100:
+            sell_shares, remain, total_inv = calc_zero_cost_sell(tranches, current_price, lot_size)
+            total_shares = _tranche_shares(tranches, lot_size)
+            if total_shares <= lot_size:
+                return signals
+            if sell_shares > 0:
+                signals.append({
+                    "type": "ZERO_COST",
+                    "sell_lots": sell_shares // lot_size if lot_size > 0 else 0,
+                    "sell_shares": sell_shares,
+                    "recv_hkd": sell_shares * current_price,
+                    "remain": remain,
+                    "auto_m1_done": True,
+                })
+        return signals
+
     # ── 階段一：尚未達到0成本 ──────────────────────────────
     if not zero_done:
         sell_shares, remain, total_inv = calc_zero_cost_sell(tranches, current_price, lot_size)
@@ -866,6 +889,9 @@ def build_stock_block(
 
     tiers_now = current_tier_reached(mcap_m, board)
     expected  = tiers_now * TRANCHE_SIZE
+    is_mj     = stock_st.get("strategy") == "mj"
+    if is_mj:
+        expected = 0  # 📘 MJ倉唔跟 L型層級 — 唔顯示應投/倉位
     actual_inv = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
 
     sign = "+" if chg >= 0 else ""
@@ -892,6 +918,8 @@ def build_stock_block(
             lines.append(f"  🆓 {z_shares:,}股 值${z_val:,.0f} (已套現+${abs(net_inv):,.0f})")
         else:
             lines.append(f"  🆓 {z_shares:,}股 值${z_val:,.0f} (本金已回收)")
+        if is_mj:
+            lines.append("  📘 MJ倉 已0成本 — 跟 MJ 位置2/3 警報自由操作")
         # 顯示0成本之後嘅新買入
         zero_date = stock_st.get("zero_cost_date", "")
         pz_tr = [t for t in tranches
@@ -909,6 +937,10 @@ def build_stock_block(
         val = shares * price
         position = max(actual_inv, val)
         lines.append(f"  持{shares:,}股 投${actual_inv:,.0f} 值${val:,.0f}")
+        if is_mj:
+            # 回報% 對 MJ 倉好重要 (止賺條件 = 市值 + 回報100%)
+            g_str = f" 回報{gain_pct:+.0f}%" if gain_pct is not None else ""
+            lines.append(f"  📘 MJ倉 (止賺: {'5億' if board == 'main' else '2億'}+100%){g_str}")
         gain_str = f" [{gain_pct:+.0f}%]" if gain_pct is not None else ""
         if expected > 0:
             lines.append(f"  應投${expected:,.0f} 倉位${position:,.0f}{gain_str}")
@@ -964,7 +996,8 @@ def build_stock_block(
 
     # ── 0成本後市目標 ──
     # 跳過已觸發 + 跳過 mcap 已過嘅 milestone, 顯示真正下一個目標
-    if zero_done:
+    # 📘 MJ倉: 0成本後唔跟 M1-M5, 跟 MJ 層危險位置警報 — 唔顯示 L型下一目標
+    if zero_done and not is_mj:
         z_shares = stock_st.get("zero_cost_shares", 0) or 0
         milestones = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
         done_idx = set(stock_st.get("post_zero_done", []))
@@ -1337,7 +1370,34 @@ def build_mj_section(
     if entry_rows:
         entry_rows.sort(key=lambda x: x[0])  # 最貼留意位排最前
         rows = [r for _, r in entry_rows]
-        body.append(f"💰 入場區 ±30% ({len(rows)}隻) — 貼近留意位, 可細注試倉\n" + _cap(rows, 15))
+        half = max(100, round(TRANCHE_SIZE / 2 / 100) * 100)
+
+        # ── 資金紀律 (L型優先): MJ 預算上限 + 現金 gate ──
+        mj_inv = 0.0
+        total_inv_all = 0.0
+        cleared_pnl = 0.0
+        for c_, s_ in (watchlist_state or {}).items():
+            if c_.startswith("_"):
+                continue
+            tr_ = s_.get("tranches") or []
+            if not tr_:
+                if s_.get("cleared") or s_.get("realized_pnl"):
+                    cleared_pnl += s_.get("realized_pnl", 0)
+                continue
+            inv_ = sum(t.get("hkd", 0) for t in tr_)
+            total_inv_all += inv_
+            if s_.get("strategy") == "mj":
+                mj_inv += max(0, inv_)
+        cash_now = TOTAL_PORTFOLIO - total_inv_all + cleared_pnl
+        cash_pct_now = cash_now / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
+
+        hdr = f"💰 入場區 ±30% ({len(rows)}隻) — 建議注碼 ${half:,}/注 (L型一半), 可向下撈但唔低過放棄位"
+        if mj_inv > 0:
+            icon = "⚠️ 爆Cap" if mj_inv >= MJ_BUDGET_CAP else "OK"
+            hdr += f"\n  📊 MJ倉已投 ${mj_inv:,.0f} / 上限 ${MJ_BUDGET_CAP:,} [{icon}]"
+        if cash_pct_now < MJ_CASH_GATE:
+            hdr += f"\n  ⛔ 現金{cash_pct_now:.0f}% < {MJ_CASH_GATE}% — 建議暫停 MJ 新倉, 留錢俾 L型主軸"
+        body.append(hdr + "\n" + _cap(rows, 15))
     if note_rows:
         body.append("📝 James Notes\n" + _cap(note_rows))
 
@@ -1481,7 +1541,12 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         actual_inv   = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
         shares_held  = sum(t.get("shares", 0) for t in tranches)
         current_val  = shares_held * price if shares_held > 0 else 0
-        if zero_done:
+        if stock_st.get("strategy") == "mj":
+            # 📘 MJ倉: 唔跟 L型層級建倉 — 永遠冇建倉/補倉/重新建倉信號
+            expected_inv = 0
+            position     = 0
+            shortfall    = 0
+        elif zero_done:
             # 0成本股：用 zero_cost_tier 做 floor (執行0成本嗰刻嘅 tier)
             # 必須跌穿 zero_cost_tier 先重新建倉, 避免循環sell-buy
             zero_tier = stock_st.get("zero_cost_tier")
@@ -1821,10 +1886,16 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
             g2 = calc_gain_pct(avg2, p2) if avg2 and p2 else 0
             mcap2 = st2.get("last_mcap_m", 0)
             board2 = new_state.get(code2, {}).get("board", "main")
-            m1 = (POST_ZERO_MAIN if board2 == "main" else POST_ZERO_GEM)[0]
-            if (g2 >= (m1.get("gain_pct") or 999)) or \
-               (mcap2 >= m1["mcap_m"] and g2 >= (m1.get("mcap_gain_pct") or 100)):
-                n_can_zero += 1
+            if st2.get("strategy") == "mj":
+                # 📘 MJ倉: 市值達標 (主板5億/GEM2億) + 回報100%, 冇純浮盈路徑
+                mj_target = 500 if board2 == "main" else 200
+                if (st2.get("last_mcap_m") or 0) >= mj_target and g2 >= 100:
+                    n_can_zero += 1
+            else:
+                m1 = (POST_ZERO_MAIN if board2 == "main" else POST_ZERO_GEM)[0]
+                if (g2 >= (m1.get("gain_pct") or 999)) or \
+                   (mcap2 >= m1["mcap_m"] and g2 >= (m1.get("mcap_gain_pct") or 100)):
+                    n_can_zero += 1
         total_val += val2
 
     total_gain     = total_val - total_inv
@@ -2222,7 +2293,10 @@ def intraday_alert() -> str | None:
         tiers_now = current_tier_reached(mcap_m, board)
         last_alerted_tier = stock_st.get("last_alert_tier", 0)
 
-        if tiers_now > last_alerted_tier and not debt_block:
+        # 📘 MJ倉唔跟 L型層級建倉 — 同 full report 一致, 永遠唔出買入信號
+        mj_pos = stock_st.get("strategy") == "mj"
+
+        if tiers_now > last_alerted_tier and not debt_block and not mj_pos:
             # 同 full report 一致: 0成本股用 zero_cost_tier floor + post-zero 買入計
             if zero_done:
                 zero_tier = stock_st.get("zero_cost_tier") or 1
