@@ -1348,8 +1348,15 @@ def build_mj_section(
         # 課程規則: 唔好低過留意位 30%, 亦唔好高過 30% — 呢個 band 先係
         # 合理 R:R 嘅入場區。排除已叫放棄嘅 (低動能/到放棄位)。每日照 show, 唔 suppress。
         if wc and price and not reasons and -30 <= status_pct <= 30:
-            entry_rows.append((abs(status_pct),
-                f"  {code} {name} {status_pct:+.0f}% 留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"))
+            # 即時市值: 用 PDF 市值按價格變動 re-scale (股數不變)
+            pdf_p = rec.get("pdf_price") or 0
+            mcap_now = (rec.get("mcap_y") or 0) * (price / pdf_p if pdf_p else 1)
+            # 市值紀律: 合 L型入場區 (主板 ≤2億 / GEM ≤0.8億, 8xxx 當 GEM) 先係首選
+            is_gem = code.startswith("8")
+            mcap_ok = mcap_now <= (0.8 if is_gem else 2.0)
+            entry_rows.append((not mcap_ok, abs(status_pct),
+                f"  {code} {name} [{mcap_now:.2f}億] {status_pct:+.0f}% "
+                f"留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"))
 
     # ── 組裝 (每組最多 8 條, 唔好搞爆 TG message) ──
     def _cap(rows: list, limit: int = 8) -> str:
@@ -1368,8 +1375,11 @@ def build_mj_section(
         if rows:
             body.append(f"{label} ({len(rows)}隻)\n" + _cap(rows))
     if entry_rows:
-        entry_rows.sort(key=lambda x: x[0])  # 最貼留意位排最前
-        rows = [r for _, r in entry_rows]
+        # 排序: 市值合 L型區排先, 組內按貼近留意位
+        entry_rows.sort(key=lambda x: (x[0], x[1]))
+        star_rows  = ["  ⭐" + r[2:] for hi, _, r in entry_rows if not hi]
+        other_rows = [r for hi, _, r in entry_rows if hi]
+        rows = star_rows + other_rows
         half = max(100, round(TRANCHE_SIZE / 2 / 100) * 100)
 
         # ── 資金紀律 (L型優先): MJ 預算上限 + 現金 gate ──
@@ -1391,7 +1401,9 @@ def build_mj_section(
         cash_now = TOTAL_PORTFOLIO - total_inv_all + cleared_pnl
         cash_pct_now = cash_now / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
 
-        hdr = f"💰 入場區 ±30% ({len(rows)}隻) — 建議注碼 ${half:,}/注 (L型一半), 可向下撈但唔低過放棄位"
+        hdr = (f"💰 入場區 ±30% ({len(rows)}隻, ⭐{len(star_rows)}隻市值合L型區) — "
+               f"建議注碼 ${half:,}/注, 可向下撈但唔低過放棄位"
+               f"\n  ⭐ = 主板≤2億 / GEM≤0.8億 (市值紀律首選)")
         if mj_inv > 0:
             icon = "⚠️ 爆Cap" if mj_inv >= MJ_BUDGET_CAP else "OK"
             hdr += f"\n  📊 MJ倉已投 ${mj_inv:,.0f} / 上限 ${MJ_BUDGET_CAP:,} [{icon}]"
