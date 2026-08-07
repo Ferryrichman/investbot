@@ -1807,6 +1807,14 @@
     "lot_size": 4000,
     "last_check": "2026-08-07 15:46"
   },
+  "8549": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "post_zero_done": [],
+    "notes": [],
+    "board": "main"
+  },
   "8620": {
     "tier_reached": 1,
     "tranches": [
