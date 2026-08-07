@@ -114,6 +114,13 @@
         "shares": 2000,
         "date": "2026-08-07 06:49",
         "note": "via TG"
+      },
+      {
+        "price": 0.133,
+        "hkd": 266,
+        "shares": 2000,
+        "date": "2026-08-07 06:50",
+        "note": "via TG"
       }
     ],
     "zero_cost_achieved": false,
