@@ -1809,7 +1809,15 @@
   },
   "8549": {
     "tier_reached": 0,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.199,
+        "hkd": 2985,
+        "shares": 15000,
+        "date": "2026-08-07 08:01",
+        "note": "via TG"
+      }
+    ],
     "zero_cost_achieved": false,
     "post_zero_done": [],
     "notes": [],
