@@ -780,6 +780,7 @@ async function getMj(code, env) {
   // ── /mj — 摘要 ──
   const codes = Object.keys(stocks).sort();
   const drop = [];
+  const entry = [];  // 💰 入場區: 現價貼近留意位 ±30%
   let nLowMom = 0, nDanger = 0, nHeldDrop = 0;
   for (const c of codes) {
     const s = stocks[c];
@@ -799,6 +800,17 @@ async function getMj(code, env) {
       drop.push(
         `${h.held > 0 ? "⚠️ " : ""}${c} ${s.name || ""} ${h.tag}\n   ${rs.join(" ")}`
       );
+    } else {
+      // 入場區: 建議買入位 = 留意日收市價, 差距 ±30% 內 (排除已叫放棄)
+      const wc = s.watch_close || 0;
+      if (wc && p) {
+        const st_pct = (p - wc) / wc * 100;
+        if (st_pct >= -30 && st_pct <= 30) {
+          const h = _mjHold(state, c);
+          entry.push({ d: Math.abs(st_pct),
+            row: `${c} ${s.name || ""} ${st_pct >= 0 ? "+" : ""}${st_pct.toFixed(0)}% 留意$${wc.toFixed(3)} 現$${p.toFixed(3)} 動能${(s.mom || 0).toFixed(0)} ${h.tag}` });
+        }
+      }
     }
   }
 
@@ -814,6 +826,13 @@ async function getMj(code, env) {
     if (drop.length > 15) out.push(`…及其他${drop.length - 15}隻`);
   } else {
     out.push("🛑 要放棄: 冇");
+  }
+  if (entry.length) {
+    entry.sort((a, b) => a.d - b.d);  // 最貼留意位排最前
+    out.push("-------------------");
+    out.push(`💰 入場區 ±30% (${entry.length}隻) — 貼近留意位, 可細注試倉`);
+    out.push(entry.slice(0, 20).map(e => e.row).join("\n"));
+    if (entry.length > 20) out.push(`…及其他${entry.length - 20}隻`);
   }
   out.push("-------------------");
   out.push(`⚡ 到危險位置: ${nDanger}隻`);

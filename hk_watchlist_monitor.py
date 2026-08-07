@@ -1212,6 +1212,7 @@ def build_mj_section(
 
     conflict_rows, abandon_rows, new_rows = [], [], []
     mom_rows, danger_rows, note_rows      = [], [], []
+    entry_rows = []  # 💰 入場區: 現價貼近留意位 ±30% (建議買入位 = 留意日收市價)
     conflict_codes, abandon_codes         = [], []
     n_lowmom = n_atabandon = 0
 
@@ -1310,6 +1311,13 @@ def build_mj_section(
                 f"  {code} {name} {pos_label} ${price:.3f} ≥ ${pos_val:.3f} {hold_tag}"
             )
 
+        # ── 💰 入場區: 現價同建議買入位 (留意日收市價) 差距 ±30% 內 ──
+        # 課程規則: 唔好低過留意位 30%, 亦唔好高過 30% — 呢個 band 先係
+        # 合理 R:R 嘅入場區。排除已叫放棄嘅 (低動能/到放棄位)。每日照 show, 唔 suppress。
+        if wc and price and not reasons and -30 <= status_pct <= 30:
+            entry_rows.append((abs(status_pct),
+                f"  {code} {name} {status_pct:+.0f}% 留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"))
+
     # ── 組裝 (每組最多 8 條, 唔好搞爆 TG message) ──
     def _cap(rows: list, limit: int = 8) -> str:
         if len(rows) > limit:
@@ -1326,6 +1334,10 @@ def build_mj_section(
     ):
         if rows:
             body.append(f"{label} ({len(rows)}隻)\n" + _cap(rows))
+    if entry_rows:
+        entry_rows.sort(key=lambda x: x[0])  # 最貼留意位排最前
+        rows = [r for _, r in entry_rows]
+        body.append(f"💰 入場區 ±30% ({len(rows)}隻) — 貼近留意位, 可細注試倉\n" + _cap(rows, 15))
     if note_rows:
         body.append("📝 James Notes\n" + _cap(note_rows))
 
@@ -1338,6 +1350,7 @@ def build_mj_section(
         "n_new":          len(new_rows),
         "n_mom_up":       len(mom_rows),
         "n_danger":       len(danger_rows),
+        "n_entry_zone":   len(entry_rows),
         "n_notes":        len(note_rows),
         "n_lowmom":       n_lowmom,
         "n_at_abandon":   n_atabandon,
@@ -1351,12 +1364,35 @@ def build_mj_section(
         mj["_meta"] = meta
         save_mj_state(mj)
 
+    # 功課年齡 (用戶逢星期五先匯入一次, 數據最多舊一星期屬正常)
+    # 價格類檢查 (放棄位/位置0-3) 每日用新價重算; 動能/CCASS/Notes 跟功課日期
+    age_days = None
+    try:
+        pdf_dt = datetime.strptime(pdf_date, "%d-%m-%Y")
+        age_days = (datetime.strptime(today_str, "%Y-%m-%d") - pdf_dt).days
+    except (ValueError, TypeError):
+        pass
+
+    age_str = f"，{age_days}日前" if age_days and age_days >= 2 else ""
+    reminder = ""
+    now_hkt = datetime.now(timezone(timedelta(hours=8)))
+    if age_days is not None:
+        if now_hkt.weekday() == 4 and age_days >= 1:
+            # 星期五 = 你嘅匯入日
+            reminder = "\n📥 今日星期五 — 記得匯入最新功課 PDF (python mj_import.py)"
+        elif age_days >= 10:
+            # 錯過咗上星期五
+            reminder = f"\n⚠️ 功課已 {age_days} 日未更新 — 動能/CCASS 數據過時, 請匯入新 PDF"
+
     if not body:
+        # 冇信號都要出星期五提醒
+        if reminder:
+            return f"📘 MJ 半新股 (功課 {pdf_date}{age_str}){reminder}", summary
         return "", summary
 
     text = (
-        f"📘 MJ 半新股 (功課 {pdf_date})\n"
-        "-------------------\n" + "\n".join(body)
+        f"📘 MJ 半新股 (功課 {pdf_date}{age_str})\n"
+        "-------------------\n" + "\n".join(body) + reminder
     )
     return text, summary
 
