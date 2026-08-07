@@ -11,6 +11,9 @@
  */
 
 const STATE_PATH = "data/watchlist_state.json";
+// MJ 半新股系統 — 獨立第二層 state (由 mj_import.py 匯入每日功課 PDF)
+const MJ_STATE_PATH = "data/mj_state.json";
+const MJ_MOM_FLOOR = 55;   // 動能下限
 const BRANCH = "main";
 
 export default {
@@ -149,6 +152,10 @@ async function handleCommand(text, env) {
     return await getStatus(code, env);
   }
 
+  if (cmd === "/mj") {
+    return await getMj(parts[1], env);
+  }
+
   if (cmd === "/push") {
     // 即時觸發 GitHub Actions 跑 alert
     try {
@@ -178,6 +185,8 @@ async function handleCommand(text, env) {
       "/rules — 睇買賣機制\n" +
       "/status CODE — 查看持倉\n" +
       "/status — 查看全部\n" +
+      "/mj — MJ 半新股功課摘要 (要放棄/危險位置)\n" +
+      "/mj CODE — 睇該股 MJ 全部數據\n" +
       "/push — 即時觸發 alert push\n" +
       "/undo — 退回上一個 TG 命令 (再 /undo = redo)\n" +
       "\n💡 賣出後自動偵測0成本\n" +
@@ -673,6 +682,145 @@ async function getStatus(code, env) {
   const price = st.last_price || 0;
   const val = shares * price;
   return `${code4}\n${shares.toLocaleString()}股 @$${price}\n投$${inv.toLocaleString()} 值$${val.toLocaleString(undefined, {maximumFractionDigits: 0})} ${_pnl(inv, val)}`;
+}
+
+// ── MJ 半新股系統 (獨立層, 只做警告 — 唔會出買賣命令) ──
+
+async function getMjState(env) {
+  const token = (env.GITHUB_TOKEN || "").trim();
+  const repo = (env.GITHUB_REPO || "").trim();
+  const url = `https://api.github.com/repos/${repo}/contents/${MJ_STATE_PATH}?ref=${BRANCH}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github.v3+json",
+      "User-Agent": "investbot-tg-worker",
+    },
+  });
+  if (res.status === 404) return null;   // 未匯入過功課
+  if (!res.ok) {
+    throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
+  }
+  const data = await res.json();
+  const raw = atob(data.content.replace(/\n/g, ""));
+  return JSON.parse(decodeURIComponent(escape(raw)));
+}
+
+// MJ 現價: monitor 寫落嘅 last_price 優先, 否則用 PDF snapshot
+function _mjPrice(s) {
+  return s.last_price || s.pdf_price || 0;
+}
+
+// 主 state cross-reference: 返回 {held, tag}
+function _mjHold(state, code) {
+  const st = state[code];
+  const held = (st && st.tranches && st.tranches.length) ? _shares(st.tranches) : 0;
+  if (held > 0) return { held, tag: `持${held.toLocaleString()}股` };
+  if (st && st.board) return { held: 0, tag: "監察" };
+  return { held: 0, tag: "未監察" };
+}
+
+function _mjPos(s) {
+  const p = _mjPrice(s);
+  if (s.p3 && p >= s.p3) return "位置3";
+  if (s.p2 && p >= s.p2) return "位置2";
+  if (s.p0 && p >= s.p0) return "位置0";
+  return null;
+}
+
+async function getMj(code, env) {
+  const mj = await getMjState(env);
+  if (!mj || !mj.stocks || !Object.keys(mj.stocks).length) {
+    return (
+      "📘 MJ 半新股: 未有功課數據\n" +
+      "先跑 python mj_import.py 匯入每日功課 PDF, push 上 GitHub 之後再試"
+    );
+  }
+  const meta = mj._meta || {};
+  const stocks = mj.stocks;
+  const { state } = await getState(env);
+
+  // ── /mj CODE — 單隻全部數據 ──
+  if (code) {
+    const c4 = String(code).padStart(4, "0");
+    const s = stocks[c4];
+    if (!s) return `${c4} 唔喺 MJ 名單 (功課 ${meta.pdf_date || "?"})`;
+    const p = _mjPrice(s);
+    const h = _mjHold(state, c4);
+    const st = state[c4];
+    const lines = [
+      `📘 ${c4} ${s.name || ""} (功課 ${meta.pdf_date || "?"})`,
+      `動能 ${(s.mom || 0).toFixed(2)} (變化${(s.mom_chg || 0) >= 0 ? "+" : ""}${(s.mom_chg || 0).toFixed(2)})`,
+      `現價 $${p.toFixed(3)}${s.last_check ? "" : " (PDF價)"} | 狀態 ${(s.status_pct || 0) >= 0 ? "+" : ""}${(s.status_pct || 0).toFixed(1)}%`,
+      `留意日 ${s.watch_date || "?"} 收$${(s.watch_close || 0).toFixed(3)}`,
+      `🛑 放棄位 $${(s.abandon || 0).toFixed(3)}${s.abandon && p <= s.abandon ? "  ← 已到!" : ""}`,
+      `位置0 $${(s.p0 || 0).toFixed(3)} | 位置2 $${(s.p2 || 0).toFixed(3)} | 位置3 $${(s.p3 || 0).toFixed(3)}`,
+    ];
+    const pos = _mjPos(s);
+    if (pos) lines.push(`⚡ 已到 ${pos}`);
+    lines.push(
+      `每手$${(s.lot_hkd || 0).toLocaleString()} | 市值${(s.mcap_y || 0).toFixed(2)}億`,
+      `CCASS Top5 ${(s.ccass5 || 0).toFixed(1)}% | 券商${s.brokers || 0}間`,
+      `IPO ${s.ipo || "?"}`
+    );
+    if (s.info && s.info.length) lines.push(`Tags: ${s.info.join(" ")}`);
+    if (h.held > 0 && st && st.tranches) {
+      const inv = st.tranches.reduce((a, t) => a + t.hkd, 0);
+      const val = h.held * (st.last_price || p);
+      lines.push(`\n你嘅持倉: ${h.held.toLocaleString()}股 ${_pnl(inv, val)}`);
+      if (s.mom < MJ_MOM_FLOOR || (s.abandon && p <= s.abandon)) {
+        lines.push("⚠️ MJ 叫放棄, 但你有持倉 — 自己決定");
+      }
+    } else {
+      lines.push(`\n你嘅持倉: 冇 (${h.tag})`);
+    }
+    return lines.join("\n");
+  }
+
+  // ── /mj — 摘要 ──
+  const codes = Object.keys(stocks).sort();
+  const drop = [];
+  let nLowMom = 0, nDanger = 0, nHeldDrop = 0;
+  for (const c of codes) {
+    const s = stocks[c];
+    const p = _mjPrice(s);
+    const rs = [];
+    if ((s.mom || 0) < MJ_MOM_FLOOR) {
+      rs.push(`低動能${(s.mom || 0).toFixed(1)}`);
+      nLowMom++;
+    }
+    if (s.abandon && p && p <= s.abandon) {
+      rs.push(`到放棄位$${s.abandon.toFixed(3)}`);
+    }
+    if (_mjPos(s)) nDanger++;
+    if (rs.length) {
+      const h = _mjHold(state, c);
+      if (h.held > 0) nHeldDrop++;
+      drop.push(
+        `${h.held > 0 ? "⚠️ " : ""}${c} ${s.name || ""} ${h.tag}\n   ${rs.join(" ")}`
+      );
+    }
+  }
+
+  const out = [
+    `📘 MJ 半新股系統`,
+    `功課日期 ${meta.pdf_date || "?"} | 共 ${codes.length} 隻`,
+    `匯入 ${meta.imported_at || "?"}`,
+    "-------------------",
+  ];
+  if (drop.length) {
+    out.push(`🛑 要放棄 ${drop.length}隻${nHeldDrop ? ` (其中 ${nHeldDrop} 隻你有持倉!)` : ""}`);
+    out.push(drop.slice(0, 15).join("\n"));
+    if (drop.length > 15) out.push(`…及其他${drop.length - 15}隻`);
+  } else {
+    out.push("🛑 要放棄: 冇");
+  }
+  out.push("-------------------");
+  out.push(`⚡ 到危險位置: ${nDanger}隻`);
+  out.push(`📉 低動能(<${MJ_MOM_FLOOR}): ${nLowMom}隻`);
+  out.push("\n💡 MJ 信號只係警告, 買賣自己決定");
+  out.push("💡 /mj CODE 睇單隻詳情");
+  return out.join("\n");
 }
 
 // ── GitHub Actions workflow_dispatch ──

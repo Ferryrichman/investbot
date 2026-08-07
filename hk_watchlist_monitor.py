@@ -103,6 +103,11 @@ STATE_FILE   = Path(__file__).parent / "data" / "watchlist_state.json"
 LOT_CACHE    = Path(__file__).parent / "data" / "hkex_lot_sizes.json"
 SCREENER_DB  = Path(__file__).parent / "data" / "screener.db"
 
+# ── MJ 半新股系統（獨立第二層，唔混入 watchlist_state）────────
+# 由 mj_import.py 匯入每日功課 PDF。系統動能係課程專有指標，冇得自己計。
+MJ_STATE_FILE = Path(__file__).parent / "data" / "mj_state.json"
+MJ_MOM_FLOOR  = 55      # 動能下限，低過就係「要放棄」
+
 # ── CCASS 集中度警戒設定 ──────────────────────────────────
 # top10_pct 在最近 N 個交易日內升幅達此門檻 → 觸發 CCASS IN 警示
 CCASS_LOOKBACK_ROWS   = 30    # 比較最近多少條歷史記錄
@@ -1102,6 +1107,260 @@ def _compute_dynamic_tranche(state: dict) -> int:
     return max(100, round(total_wealth / 10000) * 100)
 
 
+# ============================================================
+# MJ 半新股系統 — 獨立追蹤層（只出警告，永遠唔會出 /buy /sell）
+# ============================================================
+# 每日功課 PDF 由 mj_import.py 匯入 data/mj_state.json。
+# 呢邊只做課程指定嘅每日 5 步檢查:
+#   ① 要放棄  ② New  ③ 動能提升  ④ 每日Notes  ⑤ 到達危險位置
+# 買賣決定全部由用戶自己做 — 系統唔會幫你落命令。
+
+# info 入面嘅「標準 tag」(唔算 James 每日Notes)
+MJ_STD_PLAIN = {"cut", "loss", "%", "cut loss", "繼續keep", "keep"}
+# 動能值 token: 高 / 中 / 低 / 高->中 / 中->高 …
+MJ_MOMVAL_RE = re.compile(r"^[高中低]\s*(?:->|→|>)?\s*[高中低]?[,，]?$")
+
+
+def load_mj_state() -> dict:
+    if MJ_STATE_FILE.exists():
+        try:
+            return json.loads(MJ_STATE_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"  [mj] mj_state.json 讀唔到: {e}")
+    return {}
+
+
+def save_mj_state(mj: dict):
+    MJ_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    MJ_STATE_FILE.write_text(
+        json.dumps(mj, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def _mj_split_info(info: list) -> tuple[str, list[str]]:
+    """
+    把 PDF 嘅 info tokens 拆成 (動能文字, James 每日Notes)。
+    標準 tag (位置x / 動能x / New / Cut Loss / % / 繼續Keep) 唔算 Notes；
+    但「乾身,殘價,繼續Keep」呢類導師評語就算 Notes。
+    """
+    mom_txt, notes = "", []
+    i, n = 0, len(info)
+    while i < n:
+        t = str(info[i]).strip()
+        if "動能" in t:
+            chunk = [t]
+            i += 1
+            while i < n and MJ_MOMVAL_RE.match(str(info[i]).strip()):
+                chunk.append(str(info[i]).strip())
+                i += 1
+            mom_txt = " ".join(chunk)
+            continue
+        i += 1
+        if not t:
+            continue
+        if "位置" in t or t.lower().lstrip().startswith("new"):
+            continue
+        if t.strip(" ,，.。!！:：").lower() in MJ_STD_PLAIN:
+            continue
+        notes.append(t)
+    return mom_txt, notes
+
+
+def build_mj_section(
+    watchlist_state: dict,
+    readonly: bool = False,
+    quotes: dict | None = None,
+) -> tuple[str, dict]:
+    """
+    MJ 半新股每日功課檢查 → (TG section 文字, summary dict)。
+
+    watchlist_state : 好L型 state，用嚟 cross-reference 有冇持倉
+    readonly        : True = 唔寫 mj_state.json (check mode)
+    quotes          : 主 loop 已經抓過嘅報價 {4位code: quote|None}，避免重複 API call
+
+    冇 data/mj_state.json 就靜靜返 ("", {}) — 原本 alert 完全唔受影響。
+    """
+    if not MJ_STATE_FILE.exists():
+        return "", {}
+    mj = load_mj_state()
+    stocks = mj.get("stocks") or {}
+    if not stocks:
+        return "", {}
+
+    now       = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
+    today_str = now[:10]
+    quotes    = quotes if quotes is not None else {}
+    meta      = mj.get("_meta") or {}
+    pdf_date  = meta.get("pdf_date", "")
+    prev_codes = set(meta.get("prev_codes") or [])
+    alert_seen = dict(meta.get("alert_seen") or {})
+
+    def _fresh(code_: str, text_: str, window_days: int = 3) -> bool:
+        """同一信號 3 日內唔重複轟炸 (key 去數字化 — 數值日日變, 類型唔變)"""
+        key = f"{code_}:" + re.sub(r"[\d,.\s%$x×+-]+", "", text_)[:48]
+        last = alert_seen.get(key)
+        if last:
+            try:
+                gap = (datetime.strptime(today_str, "%Y-%m-%d")
+                       - datetime.strptime(last, "%Y-%m-%d")).days
+                if gap < window_days:
+                    return False
+            except ValueError:
+                pass
+        alert_seen[key] = today_str
+        return True
+
+    conflict_rows, abandon_rows, new_rows = [], [], []
+    mom_rows, danger_rows, note_rows      = [], [], []
+    conflict_codes, abandon_codes         = [], []
+    n_lowmom = n_atabandon = 0
+
+    for code in sorted(stocks):
+        rec = stocks[code]
+
+        # ── 報價: 主 loop 拎過就唔再 call 一次 ──
+        if code in quotes:
+            q = quotes[code]
+        else:
+            q = fetch_hk_quote(code)
+            time.sleep(0.15)
+            quotes[code] = q
+        if q and q.get("price"):
+            price = q["price"]
+            rec["last_price"] = price
+            rec["last_check"] = now
+        else:
+            price = rec.get("last_price") or rec.get("pdf_price") or 0
+
+        # ── 用新鮮價重算現時狀態% ──
+        wc = rec.get("watch_close") or 0
+        if wc:
+            rec["status_pct"] = round((price - wc) / wc * 100, 1)
+        status_pct = rec.get("status_pct") or 0
+
+        mom     = rec.get("mom") or 0
+        mom_chg = rec.get("mom_chg") or 0
+        ab      = rec.get("abandon") or 0
+        p0      = rec.get("p0") or 0
+        p2      = rec.get("p2") or 0
+        p3      = rec.get("p3") or 0
+        name    = rec.get("name") or ""
+        info    = rec.get("info") or []
+        mom_txt, note_txts = _mj_split_info(info)
+
+        # ── 持倉 cross-reference (最重要嘅 output) ──
+        wst  = (watchlist_state or {}).get(code) or {}
+        held = sum(t.get("shares", 0) for t in (wst.get("tranches") or []))
+        if held > 0:
+            hold_tag = f"持{held:,.0f}股"
+        elif wst.get("board"):
+            hold_tag = "監察"
+        else:
+            hold_tag = "未監察"
+        head = f"{code} {name} {hold_tag}"
+
+        # ── ① 要放棄: 低動能 或 到放棄位 ──
+        reasons = []
+        if mom < MJ_MOM_FLOOR:
+            reasons.append(f"低動能{mom:.1f} (變化{mom_chg:+.1f})")
+            n_lowmom += 1
+        if ab and price and price <= ab:
+            reasons.append(f"到放棄位${ab:.3f} (現${price:.3f})")
+            n_atabandon += 1
+        if reasons:
+            rtxt = " ".join(reasons)
+            if held > 0:
+                # CONFLICT: MJ 叫放棄但你有持倉 — 永遠唔 suppress, 亦永遠唔出 /sell
+                conflict_rows.append(
+                    f"  {head}\n   {rtxt}\n   → MJ 叫放棄, 但你有持倉 — 自己決定"
+                )
+                conflict_codes.append(code)
+            elif _fresh(code, "放棄" + rtxt):
+                abandon_rows.append(f"  {head} {rtxt}")
+                abandon_codes.append(code)
+
+        # ── ② New: 上一份功課冇 / info 有 New tag (永遠顯示) ──
+        is_new = bool(prev_codes and code not in prev_codes) or \
+                 any("New" in str(t) for t in info)
+        if is_new:
+            new_rows.append(
+                f"  {head} 動能{mom:.1f} 狀態{status_pct:+.0f}% 現${price:.3f}"
+            )
+
+        # ── ③ 動能提升 ──
+        if mom_txt and _fresh(code, "動能" + mom_txt):
+            mom_rows.append(f"  {head} {mom_txt} ({mom:.1f})")
+
+        # ── ④ 每日Notes (導師評語, 原文照登) ──
+        if note_txts:
+            ntxt = " ".join(note_txts)
+            if _fresh(code, "note" + ntxt):
+                note_rows.append(f"  {code} {name} — {ntxt}")
+
+        # ── ⑤ 到達危險位置 (只報最高一個) ──
+        pos_label = pos_val = None
+        if p3 and price >= p3:
+            pos_label, pos_val = "位置3", p3
+        elif p2 and price >= p2:
+            pos_label, pos_val = "位置2", p2
+        elif p0 and price >= p0:
+            pos_label, pos_val = "位置0", p0
+        if pos_label and _fresh(code, "位置" + pos_label):
+            danger_rows.append(
+                f"  {code} {name} {pos_label} ${price:.3f} ≥ ${pos_val:.3f} {hold_tag}"
+            )
+
+    # ── 組裝 (每組最多 8 條, 唔好搞爆 TG message) ──
+    def _cap(rows: list, limit: int = 8) -> str:
+        if len(rows) > limit:
+            return "\n".join(rows[:limit]) + f"\n  …及其他{len(rows) - limit}隻"
+        return "\n".join(rows)
+
+    body = []
+    for label, rows in (
+        ("⚠️ 要放棄 + 有持倉", conflict_rows),
+        ("🛑 要放棄",          abandon_rows),
+        ("🆕 新入選",          new_rows),
+        ("📈 動能提升",        mom_rows),
+        ("⚡ 到危險位置",      danger_rows),
+    ):
+        if rows:
+            body.append(f"{label} ({len(rows)}隻)\n" + _cap(rows))
+    if note_rows:
+        body.append("📝 James Notes\n" + _cap(note_rows))
+
+    summary = {
+        "generated_at":   now,
+        "pdf_date":       pdf_date,
+        "count":          len(stocks),
+        "n_conflict":     len(conflict_rows),
+        "n_abandon":      len(abandon_rows),
+        "n_new":          len(new_rows),
+        "n_mom_up":       len(mom_rows),
+        "n_danger":       len(danger_rows),
+        "n_notes":        len(note_rows),
+        "n_lowmom":       n_lowmom,
+        "n_at_abandon":   n_atabandon,
+        "conflict_codes": conflict_codes,
+        "abandon_codes":  abandon_codes,
+    }
+
+    if not readonly:
+        prune_cutoff = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        meta["alert_seen"] = {k: v for k, v in alert_seen.items() if v >= prune_cutoff}
+        mj["_meta"] = meta
+        save_mj_state(mj)
+
+    if not body:
+        return "", summary
+
+    text = (
+        f"📘 MJ 半新股 (功課 {pdf_date})\n"
+        "-------------------\n" + "\n".join(body)
+    )
+    return text, summary
+
+
 def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
     """readonly=True (check mode): 唔寫 state, 唔影響 🆕 基準 / suppression 記錄"""
     now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
@@ -1122,9 +1381,12 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
     no_data       = []
     no_data_held  = []  # 報價失敗嘅持倉股 (要顯示警告, 唔可以靜默消失)
     signals_meta  = {}  # 寫入 _meta.signals 俾 Dashboard 直接 render
+    fetched_quotes: dict = {}  # {4位code: quote|None} — 俾 MJ 層重用, 唔重複 call API
     total_buy_recommend = 0.0  # 全部建議買入金額
     # 成交量/蠟燭信號只喺 15:00 HKT 後有意義 (當日 candle 接近完整)
     vol_signals_on = datetime.now(timezone(timedelta(hours=8))).hour >= 15
+    # MJ 半新股名單 (輔助層): L型建倉信號時交叉顯示 MJ 動能做信心參考
+    mj_cross = load_mj_state().get("stocks", {})
 
     # Cross-run alert suppression: 同一信號 3 日內唔重複, 3日後先再提醒
     alert_seen = dict(state.get("_meta", {}).get("alert_seen", {}))
@@ -1156,6 +1418,10 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
 
         quote = fetch_hk_quote(code)
         time.sleep(0.2)
+        try:
+            fetched_quotes[f"{int(code):04d}"] = quote
+        except (TypeError, ValueError):
+            pass
 
         if not quote or not quote["mcap"] or not quote["price"]:
             # 持倉股報價失敗要出警告 — 唔可以靜默由報告消失
@@ -1380,6 +1646,15 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
                 final_buy_hkd = capped_shares * price
             else:
                 final_buy_hkd = buy_shares * price
+            # MJ 交叉信心線: L型主軸信號 + MJ 半新股名單 = 加大信心 / 低動能 = 提醒小心
+            mj_e = mj_cross.get(code)
+            if mj_e:
+                mj_mom = mj_e.get("mom", 0)
+                if mj_mom >= MJ_MOM_FLOOR:
+                    block += f"\n  📘 MJ 名單內 動能{mj_mom:.0f} — 半新股同步睇好, 可加信心"
+                else:
+                    block += f"\n  📘 MJ 名單內但低動能{mj_mom:.0f} — 半新股層叫放棄, 小注/觀望"
+                all_blocks[-1] = block
             buy_blocks.append(block)
             total_buy_recommend += final_buy_hkd
 
@@ -1427,6 +1702,9 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
                     "lots": final_buy_shares // lot_size if lot_size > 0 else 0,
                     "cmd": f"/buy {code} {final_buy_shares} {price}",
                 }
+                mj_e2 = mj_cross.get(code)
+                if mj_e2:
+                    sig_entry["buy"]["mj_mom"] = round(mj_e2.get("mom", 0), 1)
             if valid_tp:
                 sig_entry["sells"] = [{
                     "label": s.get("label", ""),
@@ -1585,6 +1863,11 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
             out.append(f"{i}. {first_line}{new_tag}\n{rest}")
         return f"\n{dash}\n".join(out)
 
+    # ── MJ 半新股系統 (獨立層, 只出警告, 冇 mj_state.json 就自動跳過) ──
+    mj_text, mj_summary = build_mj_section(
+        new_state, readonly=readonly, quotes=fetched_quotes
+    )
+
     # Save current signal codes + dynamic TRANCHE + signals for dashboard
     meta = new_state.get("_meta", {})
     meta["last_sell_codes"] = cur_sell_codes
@@ -1611,6 +1894,9 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         },
         "stocks": signals_meta,
     }
+    # MJ 半新股層 summary (Dashboard 日後可用; MJ 只係警告, 唔會有 buy/sell 命令)
+    if mj_summary:
+        meta["signals"]["mj"] = mj_summary
     new_state["_meta"] = meta
     if not readonly:
         save_state(new_state)
@@ -1634,7 +1920,8 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         nd_warning = f"\n\n⚠ 報價失敗(持倉股): {nd_codes} — 今次未有更新, 用上次數據"
 
     if alert_only:
-        if not sell_blocks and not buy_blocks and not debt_warn_blocks and not anomaly_blocks:
+        if not sell_blocks and not buy_blocks and not debt_warn_blocks \
+           and not anomaly_blocks and not mj_text:
             return f"{summary}\n\n暫無新訊號{nd_warning}"
         msg = summary
         if sell_blocks:
@@ -1646,6 +1933,8 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
             msg += f"\n\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}\n" + _numbered(debt_warn_blocks)
         if anomaly_blocks:
             msg += f"\n\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}\n" + _numbered(anomaly_blocks)
+        if mj_text:
+            msg += "\n\n" + mj_text
         msg += nd_warning
         return msg
 
@@ -1665,7 +1954,9 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
     if anomaly_blocks:
         parts.append(f"\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}")
         parts.append(_numbered(anomaly_blocks))
-    if sell_blocks or buy_blocks or debt_warn_blocks or anomaly_blocks:
+    if mj_text:
+        parts.append("\n" + mj_text)
+    if sell_blocks or buy_blocks or debt_warn_blocks or anomaly_blocks or mj_text:
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
     quiet = [b for b in all_blocks if b not in signal_blocks]
