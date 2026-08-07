@@ -81,7 +81,7 @@ SHELL_RECOVER_PROFIT_PCT = 80.0   # 殼價回升時門檻可低一點
 # M1 觸發邏輯：(市值≥4億 AND 浮盈≥100%)  OR  浮盈≥200%
 # mcap_m + mcap_gain_pct = 市值條件組合；gain_pct = 純浮盈獨立觸發
 POST_ZERO_MAIN = [
-    {"mcap_m": 400,  "mcap_gain_pct": 100.0, "gain_pct": 200.0, "sell_frac": None, "label": "M1 (4億+100% / 200%)"},
+    {"mcap_m": 500,  "mcap_gain_pct": 100.0, "gain_pct": 300.0, "sell_frac": None, "label": "M1 (5億+100% / 300%)"},
     {"mcap_m": 800,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (8億)"},
     {"mcap_m": 1200, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (12億)"},
     {"mcap_m": 1600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (16億)"},
@@ -91,7 +91,7 @@ POST_ZERO_MAIN = [
 
 # 創業板（主板門檻 × 0.4）
 POST_ZERO_GEM = [
-    {"mcap_m": 150, "mcap_gain_pct": 100.0, "gain_pct": 200.0, "sell_frac": None, "label": "M1 (1.5億+100% / 200%)"},
+    {"mcap_m": 200, "mcap_gain_pct": 100.0, "gain_pct": 300.0, "sell_frac": None, "label": "M1 (2億+100% / 300%)"},
     {"mcap_m": 300, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (3億)"},
     {"mcap_m": 450, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (4.5億)"},
     {"mcap_m": 600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (6億)"},

@@ -168,7 +168,7 @@ footer{text-align:center;padding:24px 0;font-size:11px;color:#484f58;border-top:
   </div>
   <p>每跌穿一層 → 買入$6,000 · 對照持倉(投入vs現值取大) → 差額補倉</p>
   <p style="margin-top:6px"><strong>【止賺/0成本】</strong></p>
-  <p>浮盈≥100% + 市值≥4億 或 浮盈≥200% → 賣出回收成本 → 剩餘 = 0成本持倉</p>
+  <p>浮盈≥100% + 市值≥5億 或 浮盈≥300% → 賣出回收成本 → 剩餘 = 0成本持倉</p>
   <p style="margin-top:6px"><strong>【負債監察】</strong>每月 check 負債比率</p>
   <div class="tier-row">
     <span class="tier" style="color:#d29922">&gt;60% ⚠️ 警告</span>
@@ -315,13 +315,13 @@ function render(state) {
     const shellM = board === 'main' ? 150 : 60;
     let sellSignal = null;
     if (tr.length && !zeroDone && !cleared && avgCost > 0) {
-      if ((gainPct >= 100 && mcap >= (board === 'main' ? 400 : 150)) || gainPct >= 200) {
+      if ((gainPct >= 100 && mcap >= (board === 'main' ? 500 : 200)) || gainPct >= 300) {
         sellSignal = { type: 'zero_cost', gainPct };
       }
     }
     // Post-zero rebuy 止賺：新買部分達 100% (大市) 或 200% (純浮盈)
     if (zeroDone && pzAvg > 0 && netInv > 0) {
-      if ((pzGain >= 100 && mcap >= (board === 'main' ? 400 : 150)) || pzGain >= 200) {
+      if ((pzGain >= 100 && mcap >= (board === 'main' ? 500 : 200)) || pzGain >= 300) {
         sellSignal = { type: 'post_zero_rebuy', gainPct: pzGain };
       }
     }
