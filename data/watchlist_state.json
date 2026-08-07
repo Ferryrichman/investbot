@@ -1871,6 +1871,15 @@
     "board": "main",
     "strategy": "mj"
   },
+  "9918": {
+    "tier_reached": 0,
+    "tranches": [],
+    "zero_cost_achieved": false,
+    "post_zero_done": [],
+    "notes": [],
+    "board": "main",
+    "strategy": "mj"
+  },
   "9929": {
     "tier_reached": 1,
     "tranches": [
