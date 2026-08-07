@@ -1347,7 +1347,8 @@ def build_mj_section(
         # ── 💰 入場區: 現價同建議買入位 (留意日收市價) 差距 ±30% 內 ──
         # 課程規則: 唔好低過留意位 30%, 亦唔好高過 30% — 呢個 band 先係
         # 合理 R:R 嘅入場區。排除已叫放棄嘅 (低動能/到放棄位)。每日照 show, 唔 suppress。
-        if wc and price and not reasons and -30 <= status_pct <= 30:
+        if wc and price and not reasons and -30 <= status_pct <= 30 \
+                and not rec.get("suspended"):
             # 即時市值: 用 PDF 市值按價格變動 re-scale (股數不變)
             pdf_p = rec.get("pdf_price") or 0
             mcap_now = (rec.get("mcap_y") or 0) * (price / pdf_p if pdf_p else 1)

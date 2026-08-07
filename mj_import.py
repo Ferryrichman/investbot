@@ -156,10 +156,10 @@ def do_import(pdf_path: Path) -> dict:
     old_stocks = old.get("stocks", {}) if isinstance(old, dict) else {}
     prev_codes = sorted(old_stocks.keys())
 
-    # 保留 monitor 寫落嘅 last_price / last_check
+    # 保留 monitor 寫落嘅 last_price / last_check + 手動標記嘅 suspended (停牌)
     for code, rec in stocks.items():
         prev = old_stocks.get(code) or {}
-        for k in ("last_price", "last_check"):
+        for k in ("last_price", "last_check", "suspended"):
             if k in prev:
                 rec[k] = prev[k]
 
