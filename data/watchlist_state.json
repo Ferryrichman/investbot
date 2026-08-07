@@ -110,24 +110,23 @@
     "tranches": [
       {
         "price": 0.133,
-        "hkd": 266,
-        "shares": 2000,
-        "date": "2026-08-07 06:49",
-        "note": "via TG"
-      },
-      {
-        "price": 0.133,
-        "hkd": 266,
-        "shares": 2000,
-        "date": "2026-08-07 06:50",
-        "note": "via TG"
+        "hkd": 2660,
+        "shares": 20000,
+        "date": "2026-08-07 06:51",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
     "post_zero_done": [],
     "notes": [],
     "board": "main",
-    "strategy": "mj"
+    "strategy": "mj",
+    "zero_cost_shares": null,
+    "zero_cost_initial_shares": null,
+    "zero_cost_price": null,
+    "zero_cost_date": null,
+    "zero_cost_tier": null,
+    "cleared": false
   },
   "1346": {
     "tier_reached": 1,
