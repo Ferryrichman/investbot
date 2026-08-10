@@ -172,10 +172,10 @@ footer{text-align:center;padding:24px 0;font-size:11px;color:#484f58;border-top:
   <p style="margin-top:6px"><strong>【負債監察】</strong>每月 check 負債比率</p>
   <div class="tier-row">
     <span class="tier" style="color:#d29922">&gt;60% ⚠️ 警告</span>
-    <span class="tier" style="color:#f85149">&gt;80% 🔴 強警告 · 暫停買入</span>
-    <span class="tier" style="color:#f85149">&gt;100% 🔴 建議平倉</span>
+    <span class="tier" style="color:#f85149">&gt;80% 🔴 強警告</span>
+    <span class="tier" style="color:#f85149">&gt;100% 🔴 負資產標誌 · 每90日覆核</span>
   </div>
-  <p style="font-size:11px;color:#8b949e">好轉 = 負債率回落至&lt;70%。&gt;100% 半年未好轉 → 強制平倉。&gt;80% 即暫停所有買入信號</p>
+  <p style="font-size:11px;color:#8b949e">好轉 = 負債率回落至&lt;70%。負債只作狀況顯示，唔會 block 買入信號 — 自己判斷</p>
   <p style="margin-top:6px"><strong>【清倉】</strong>全部賣晒 → 記錄已實現盈虧 · 歷史累計保留</p>
 </details>
 
@@ -348,8 +348,8 @@ function render(state) {
     } else {
       // Legacy fallback (state 未有 signals snapshot)
       if (sellSignal) sellSignals.push(item);
-      const debtBlockBuy = debtRatio != null && ((debtRatio > 125) || (debtRatio > 100 && shares <= 0) || (debtRatio > 80));
-      if (shortfall >= MIN_BUY && !debtBlockBuy) buySignals.push(item);
+      // 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況)
+      if (shortfall >= MIN_BUY) buySignals.push(item);
     }
     if (tr.length || cleared) holdings.push(item);
     else watchOnly.push(item);
@@ -497,31 +497,23 @@ function stockCard(s, mode) {
     const hasPos = s.shares > 0;
     if (s.debtRatio >= 900) {
       debtHtml = hasPos
-        ? `<div class="signal signal-debt-danger">🔴 資不抵債(股東權益為負)! — 建議平倉</div>`
-        : `<div class="signal signal-debt-danger">🔴 資不抵債(股東權益為負) — 暫停買入</div>`;
+        ? `<div class="signal signal-debt-danger">🔴 資不抵債 (股東權益為負)</div>`
+        : `<div class="signal signal-debt-danger">🔴 資不抵債 (股東權益為負)</div>`;
     } else if (s.debtRatio > 125) {
       debtHtml = hasPos
-        ? `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 建議平倉</div>`
-        : `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 暫停買入</div>`;
+        ? `<div class="signal signal-debt-danger">🔴 負債率${s.debtRatio.toFixed(0)}% 極高${daysStr}</div>`
+        : `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%</div>`;
     } else if (s.debtRatio > 100) {
       if (hasPos) {
         const review = (days >= 90 && (days % 90) <= 7) ? '<br>🔍 90日覆核到期 — 請查最新流動負債比率' : '';
         debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%${daysStr}${review}</div>`;
       } else {
-        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}% — 暫停買入</div>`;
+        debtHtml = `<div class="signal signal-debt-danger">🔴 負資產! 負債率${s.debtRatio.toFixed(0)}%</div>`;
       }
     } else if (s.debtRatio > 80) {
-      debtHtml = `<div class="signal signal-debt-danger">🔴 強警告! 負債率${s.debtRatio.toFixed(0)}%${daysStr} — 暫停買入</div>`;
+      debtHtml = `<div class="signal signal-debt-danger">🔴 強警告! 負債率${s.debtRatio.toFixed(0)}%${daysStr}</div>`;
     } else if (s.debtRatio > 60) {
       debtHtml = `<div class="signal signal-debt-warn">⚠️ 負債警告 負債率${s.debtRatio.toFixed(0)}%</div>`;
-    }
-  }
-  // Legacy only: suppress buy signal (SIG mode 由 monitor.py 決定咗買唔買, 唔使再壓)
-  if (!s.sigOn) {
-    const hasPos2 = s.shares > 0;
-    const blockBuy = (s.debtRatio > 125) || (s.debtRatio > 100 && !hasPos2) || (s.debtRatio > 80);
-    if (s.debtRatio != null && blockBuy && mode === 'buy') {
-      signalHtml = `<div class="signal signal-debt-danger">⛔ 負債率${s.debtRatio.toFixed(0)}%&gt;80% — 暫停買入</div>`;
     }
   }
 

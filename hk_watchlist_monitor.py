@@ -461,22 +461,15 @@ def fetch_debt_ratio(code: str) -> float | None:
 
 
 def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
-    """負債比率警告文字
-    規則:
-      資不抵債(權益為負, sentinel 999) → 有持倉建議平倉; 冇持倉暫停買入
-      >125% 有持倉 → 建議平倉; 冇持倉 → 暫停買入
-      >100% 有持倉 → 標誌負債, 每90日提示覆核流動負債比率; 冇持倉 → 暫停買入
-      >80%  → 暫停買入
-      >60%  → 警告
+    """負債比率狀況文字 — 純資訊, 唔 block 買入 (2026-08 用戶決定: 自己判斷)
+    等級:
+      資不抵債(權益為負, sentinel 999) / >125% 極高 / >100% 負資產(標誌+90日覆核) /
+      >80% 強警告 / >60% 警告
     好轉 = 跌回 <70% 才清除追蹤
     """
     if debt_ratio is None:
         return ""
     since = stock_st.get("debt_over100_since") if stock_st else None
-    has_holdings = False
-    if stock_st:
-        tr = stock_st.get("tranches", [])
-        has_holdings = sum(t.get("shares", 0) for t in tr) > 0
     days_str = ""
     days = 0
     if since:
@@ -490,38 +483,22 @@ def debt_warning(debt_ratio: float | None, stock_st: dict | None = None) -> str:
             except ValueError:
                 continue
     if debt_ratio >= 900:
-        if has_holdings:
-            return "  🔴 資不抵債(股東權益為負)! — 建議平倉"
-        return "  🔴 資不抵債(股東權益為負) — 暫停買入"
+        return "  🔴 資不抵債 (股東權益為負)"
     if debt_ratio > 125:
-        if has_holdings:
-            return f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str} — 建議平倉"
-        return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 暫停買入"
+        return f"  🔴 負債率{debt_ratio:.0f}% 極高{days_str}"
     if debt_ratio > 100:
-        if has_holdings:
-            msg = f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str}"
-            # 每 90 日提示覆核一次 (到期後 7 日內顯示)
-            if days >= 90 and (days % 90) <= 7:
-                msg += "\n  🔍 90日覆核到期 — 請查最新流動負債比率"
-            return msg
-        return f"  🔴 負資產! 負債率{debt_ratio:.0f}% — 暫停買入"
+        msg = f"  🔴 負資產! 負債率{debt_ratio:.0f}%{days_str}"
+        # 每 90 日提示覆核一次 (到期後 7 日內顯示)
+        if days >= 90 and (days % 90) <= 7:
+            msg += "\n  🔍 90日覆核到期 — 請查最新流動負債比率"
+        return msg
     if debt_ratio > 80:
         if since:
-            return f"  🔴 強警告! 負債率{debt_ratio:.0f}%{days_str} — 曾>100%未回<70% · 暫停買入"
-        return f"  🔴 強警告! 負債率{debt_ratio:.0f}% — 暫停買入"
+            return f"  🔴 強警告! 負債率{debt_ratio:.0f}%{days_str} — 曾>100%未回<70%"
+        return f"  🔴 強警告! 負債率{debt_ratio:.0f}%"
     if debt_ratio > 60:
         return f"  ⚠️ 負債警告 負債率{debt_ratio:.0f}%"
     return ""
-
-
-def is_buy_blocked_by_debt(debt_ratio: float | None, debt_stale: bool = False, has_pos: bool = False) -> bool:
-    """負債 block 買入 — 主 loop 同 build_stock_block 共用嘅單一實現
-    - 過時數據 + 冇倉 → block (唔知最新負債唔開新倉)
-    - 負債率 > 80% (含資不抵債 sentinel 999) → block, 有冇倉都一樣
-    """
-    if debt_stale and not has_pos:
-        return True
-    return debt_ratio is not None and debt_ratio > 80
 
 
 # ============================================================
@@ -954,10 +931,9 @@ def build_stock_block(
         lines.append(f"  ⚠️ 負債數據過時 (上次更新: {last_upd})")
 
     # ── 建倉訊號（差額補倉）── 不足1手就 skip
-    # 負債 block — 同主 loop 共用單一實現 (is_buy_blocked_by_debt)
+    # 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況, 自己判斷)
     has_pos = bool(tranches) and _get_shares(tranches, lot_size) > 0
-    debt_block_buy = is_buy_blocked_by_debt(debt_ratio, debt_stale, has_pos)
-    if shortfall >= MIN_BUY_HKD and not debt_block_buy:
+    if shortfall >= MIN_BUY_HKD:
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
         if est_shares > 0:
@@ -968,11 +944,6 @@ def build_stock_block(
             else:
                 lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
             lines.append(f"  /buy {code} {est_shares} {price}")
-    elif shortfall >= MIN_BUY_HKD and debt_block_buy:
-        if debt_ratio is not None and debt_ratio >= 900:
-            lines.append("  ⛔ 資不抵債 — 暫停買入")
-        else:
-            lines.append(f"  ⛔ 負債率{debt_ratio:.0f}%>80% — 暫停買入")
 
     # ── 止賺訊號 ── sell 0股 skip
     for sig in tp_signals:
@@ -1734,14 +1705,12 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         # ── 分類: sell / debt_warn / buy ──
         has_pos = shares_held > 0
 
-        # debt_block — 同 build_stock_block 共用單一實現
-        debt_block = is_buy_blocked_by_debt(dr, dr_stale, has_pos)
-
         # Fix #4: 新建倉/0成本重新建倉 最多2層 (2×TRANCHE)，避免一次落重注
         # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
+        # 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況, 自己判斷)
         MAX_NEW_BUY = TRANCHE_SIZE * 2
         final_buy_shares = 0
-        in_buy_section = shortfall >= MIN_BUY_HKD and buy_shares > 0 and not debt_block
+        in_buy_section = shortfall >= MIN_BUY_HKD and buy_shares > 0
         if in_buy_section:
             final_buy_hkd = shortfall
             final_buy_shares = buy_shares
@@ -2300,16 +2269,14 @@ def intraday_alert() -> str | None:
         stock_st["last_check"] = now_str
 
         # ── 買入觸發 check ──
-        dr = stock_st.get("debt_ratio")
-        debt_block = dr is not None and dr > 80
-
+        # 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況, 自己判斷)
         tiers_now = current_tier_reached(mcap_m, board)
         last_alerted_tier = stock_st.get("last_alert_tier", 0)
 
         # 📘 MJ倉唔跟 L型層級建倉 — 同 full report 一致, 永遠唔出買入信號
         mj_pos = stock_st.get("strategy") == "mj"
 
-        if tiers_now > last_alerted_tier and not debt_block and not mj_pos:
+        if tiers_now > last_alerted_tier and not mj_pos:
             # 同 full report 一致: 0成本股用 zero_cost_tier floor + post-zero 買入計
             if zero_done:
                 zero_tier = stock_st.get("zero_cost_tier") or 1
