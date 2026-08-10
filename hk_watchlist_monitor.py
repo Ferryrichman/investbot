@@ -1456,7 +1456,6 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
     all_blocks       = []
     buy_blocks       = []   # 建倉信號
     sell_blocks      = []   # 止賺信號 (有 /sell 指令)
-    debt_warn_blocks = []   # 負債警告 (有持倉, dr>60%, 冇 sell 指令)
     anomaly_blocks   = []   # 異常動向 (vol spike 但冇其他信號)
     no_data       = []
     no_data_held  = []  # 報價失敗嘅持倉股 (要顯示警告, 唔可以靜默消失)
@@ -1756,14 +1755,11 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         in_sell_section = has_pos and bool(valid_tp or sell_trigger_alerts)
         if in_sell_section:
             sell_blocks.append(block)
-        # 負債關注: 已入止賺 section 嘅唔重複印 (止賺卡已含負債行)
-        in_debt_section = (dr is not None and dr > 60 and has_pos and not in_sell_section)
-        if in_debt_section:
-            debt_warn_blocks.append(block)
+        # (⚠ 負債關注 section 已按用戶要求取消 2026-08 — 負債狀況只 inline 顯示)
 
         # 異常動向: 1) watch-only 嘅 sell trigger alerts (冇 /sell 命令)
         #          2) anomaly only alerts + 唔出現喺其他 section
-        in_other_section = in_sell_section or in_buy_section or in_debt_section
+        in_other_section = in_sell_section or in_buy_section
         watch_only_with_alert = not has_pos and bool(sell_trigger_alerts or anomaly_only_alerts)
         in_anomaly_section = bool(anomaly_only_alerts and not in_other_section) or watch_only_with_alert
         if in_anomaly_section:
@@ -1773,7 +1769,6 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         sig_sections = []
         if in_sell_section:    sig_sections.append("sell")
         if in_buy_section:     sig_sections.append("buy")
-        if in_debt_section:    sig_sections.append("debt")
         if in_anomaly_section: sig_sections.append("anomaly")
         dw_text = debt_warning(dr, stock_st)
         if sig_sections or ccass_alerts or dw_text:
@@ -1990,7 +1985,7 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
     if not readonly:
         save_state(new_state)
 
-    signal_blocks = sell_blocks + buy_blocks + debt_warn_blocks + anomaly_blocks
+    signal_blocks = sell_blocks + buy_blocks + anomaly_blocks
 
     # 建議買入總額 vs 可用現金
     budget_summary = ""
@@ -2009,7 +2004,7 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         nd_warning = f"\n\n⚠ 報價失敗(持倉股): {nd_codes} — 今次未有更新, 用上次數據"
 
     if alert_only:
-        if not sell_blocks and not buy_blocks and not debt_warn_blocks \
+        if not sell_blocks and not buy_blocks \
            and not anomaly_blocks and not mj_text:
             return f"{summary}\n\n暫無新訊號{nd_warning}"
         msg = summary
@@ -2018,8 +2013,6 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         if buy_blocks:
             msg += f"\n\n建倉信號 ({len(buy_blocks)}隻)\n{dash}\n" + _numbered(buy_blocks, last_buy_codes)
             msg += budget_summary
-        if debt_warn_blocks:
-            msg += f"\n\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}\n" + _numbered(debt_warn_blocks)
         if anomaly_blocks:
             msg += f"\n\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}\n" + _numbered(anomaly_blocks)
         if mj_text:
@@ -2037,15 +2030,12 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         parts.append(_numbered(buy_blocks, last_buy_codes))
         if budget_summary:
             parts.append(budget_summary.lstrip("\n"))
-    if debt_warn_blocks:
-        parts.append(f"\n⚠ 負債關注 ({len(debt_warn_blocks)}隻)\n{dash}")
-        parts.append(_numbered(debt_warn_blocks))
     if anomaly_blocks:
         parts.append(f"\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}")
         parts.append(_numbered(anomaly_blocks))
     if mj_text:
         parts.append("\n" + mj_text)
-    if sell_blocks or buy_blocks or debt_warn_blocks or anomaly_blocks or mj_text:
+    if sell_blocks or buy_blocks or anomaly_blocks or mj_text:
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
     quiet = [b for b in all_blocks if b not in signal_blocks]
