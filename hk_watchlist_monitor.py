@@ -30,8 +30,10 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 # ============================================================
 # ★ 配置區 ★
 # ============================================================
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8795735773:AAEeKN_eIc1_TEcxqAZvFSVHh85GAbfE8vA")
-CHAT_ID        = os.environ.get("CHAT_ID", "577581404")
+# ⚠️ 唔好 hardcode token — public repo 會 leak (2026-08 CRITICAL 修復)
+# GitHub Actions 由 secrets 注入; 本地 run 前 set env var
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+CHAT_ID        = os.environ.get("CHAT_ID", "")
 
 # ── Watchlist ──────────────────────────────────────────────
 # 格式: "股票號碼": {"board": "main"/"gem", "shell_m": 殼價百萬(可選), "lot": 每手股數(可選)}

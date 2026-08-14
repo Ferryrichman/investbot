@@ -22,6 +22,16 @@ export default {
       return new Response("OK", { status: 200 });
     }
 
+    // 保安: 驗證 Telegram webhook secret (set 咗 WEBHOOK_SECRET 先強制,
+    // 令部署後 set webhook secret 之前唔會即刻壞). 喺 parse body 之前擋。
+    const wantSecret = (env.WEBHOOK_SECRET || "").trim();
+    if (wantSecret) {
+      const gotSecret = request.headers.get("X-Telegram-Bot-Api-Secret-Token") || "";
+      if (gotSecret !== wantSecret) {
+        return new Response("forbidden", { status: 403 });
+      }
+    }
+
     try {
       const body = await request.json();
       const msg = body.message;
