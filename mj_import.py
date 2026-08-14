@@ -169,7 +169,7 @@ def do_import(pdf_path: Path) -> dict:
     # 保留 monitor 寫落嘅 last_price / last_check + 手動標記嘅 suspended (停牌)
     for code, rec in stocks.items():
         prev = old_stocks.get(code) or {}
-        for k in ("last_price", "last_check", "suspended"):
+        for k in ("last_price", "last_check", "suspended", "featured"):
             if k in prev:
                 rec[k] = prev[k]
 

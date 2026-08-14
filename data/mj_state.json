@@ -113,7 +113,9 @@
       "2350:位置位置": "2026-08-13",
       "2405:放棄到放棄位(現)": "2026-08-13",
       "6193:位置位置": "2026-08-11"
-    }
+    },
+    "featured_date": "01-08-2026",
+    "featured_count": 40
   },
   "stocks": {
     "0606": {
@@ -137,7 +139,8 @@
       "info": [
         "動能:",
         "高->中"
-      ]
+      ],
+      "featured": false
     },
     "1111": {
       "name": "華視集團控股",
@@ -163,7 +166,8 @@
         "有塔但乾身,繼續Keep"
       ],
       "last_price": 0.249,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1153": {
       "name": "佳源服務",
@@ -187,7 +191,8 @@
         "流動負債>流動資產"
       ],
       "last_price": 0.4,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1156": {
       "name": "CHINANEWENERGY",
@@ -212,7 +217,8 @@
         "位置0"
       ],
       "last_price": 0.295,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1163": {
       "name": "虎視傳媒",
@@ -234,7 +240,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.163,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1284": {
       "name": "新傳企劃",
@@ -256,7 +263,8 @@
       "dchg": 0.01,
       "info": [],
       "last_price": 0.475,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1334": {
       "name": "瑞昌國際控股",
@@ -280,7 +288,8 @@
         "位置0"
       ],
       "last_price": 1.11,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1343": {
       "name": "偉源控股",
@@ -302,7 +311,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.135,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1351": {
       "name": "輝煌明天",
@@ -327,7 +337,8 @@
         "未散貨繼續Keep"
       ],
       "last_price": 0.249,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1407": {
       "name": "交運燃氣",
@@ -351,7 +362,8 @@
         "位置0"
       ],
       "last_price": 0.58,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1408": {
       "name": "濠江機電",
@@ -375,7 +387,8 @@
         "位置0"
       ],
       "last_price": 0.34,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1433": {
       "name": "常達控股",
@@ -399,7 +412,8 @@
         "繼續Keep"
       ],
       "last_price": 0.081,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1455": {
       "name": "科利實業控股",
@@ -421,7 +435,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.243,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1473": {
       "name": "環聯連訊",
@@ -446,7 +461,8 @@
         "位置2"
       ],
       "last_price": 1.22,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1489": {
       "name": "GC CONSTRUCTION",
@@ -468,7 +484,8 @@
       "dchg": 0.05,
       "info": [
         "位置0"
-      ]
+      ],
+      "featured": false
     },
     "1490": {
       "name": "AI X TECH",
@@ -490,7 +507,8 @@
       "dchg": 0.07,
       "info": [],
       "last_price": 0.25,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1643": {
       "name": "現代中藥集團",
@@ -514,7 +532,8 @@
         "位置2"
       ],
       "last_price": 0.84,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1650": {
       "name": "HYGIEIA GROUP",
@@ -536,7 +555,8 @@
       "dchg": 0.08,
       "info": [],
       "last_price": 0.138,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1795": {
       "name": "亞東集團",
@@ -558,7 +578,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.44,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1855": {
       "name": "中慶股份",
@@ -585,7 +606,8 @@
         "繼續Keep"
       ],
       "last_price": 0.183,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1871": {
       "name": "嚮中國際",
@@ -609,7 +631,8 @@
         "位置0"
       ],
       "last_price": 0.305,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1927": {
       "name": "久久王",
@@ -634,7 +657,8 @@
         "高->中"
       ],
       "last_price": 0.27,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1936": {
       "name": "利特米",
@@ -658,7 +682,8 @@
         "有塔但乾身"
       ],
       "last_price": 0.86,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1941": {
       "name": "燁星集團",
@@ -683,7 +708,8 @@
         "位置2"
       ],
       "last_price": 0.575,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "1947": {
       "name": "美皓集團",
@@ -705,7 +731,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.54,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1957": {
       "name": "大人國際",
@@ -729,7 +756,8 @@
         "有塔但乾身"
       ],
       "last_price": 0.29,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "1971": {
       "name": "弘陽服務",
@@ -751,7 +779,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.305,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2107": {
       "name": "第一服務控股",
@@ -775,7 +804,8 @@
         "繼續Keep"
       ],
       "last_price": 0.4,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2125": {
       "name": "稻草熊娛樂",
@@ -797,7 +827,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.29,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2129": {
       "name": "LEGION CONSO",
@@ -821,7 +852,8 @@
         "位置0"
       ],
       "last_price": 0.218,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2132": {
       "name": "譽燊豐控股",
@@ -845,7 +877,8 @@
         "位置0"
       ],
       "last_price": 0.169,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2159": {
       "name": "麥迪衛康",
@@ -867,7 +900,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 1.68,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2165": {
       "name": "領悅服務集團",
@@ -889,7 +923,8 @@
       "dchg": 0.04,
       "info": [],
       "last_price": 1.62,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2167": {
       "name": "天潤雲",
@@ -913,7 +948,8 @@
         "位置0"
       ],
       "last_price": 3.96,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2177": {
       "name": "優趣匯控股",
@@ -935,7 +971,8 @@
       "dchg": 0.01,
       "info": [],
       "last_price": 2.16,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2187": {
       "name": "智欣集團控股",
@@ -957,7 +994,8 @@
       "dchg": 0.03,
       "info": [
         "New"
-      ]
+      ],
+      "featured": false
     },
     "2205": {
       "name": "康橋悅生活",
@@ -981,7 +1019,8 @@
         "位置0"
       ],
       "last_price": 0.575,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2215": {
       "name": "德信服務集團",
@@ -1005,7 +1044,8 @@
         "位置0"
       ],
       "last_price": 0.285,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2237": {
       "name": "中國石墨",
@@ -1027,7 +1067,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.194,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2260": {
       "name": "環龍控股",
@@ -1049,7 +1090,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 1.255,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2297": {
       "name": "潤邁德-B",
@@ -1073,7 +1115,8 @@
         "位置0"
       ],
       "last_price": 0.194,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2321": {
       "name": "雙財莊",
@@ -1097,7 +1140,8 @@
         "有塔但乾身"
       ],
       "last_price": 0.52,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2325": {
       "name": "雲康集團",
@@ -1119,7 +1163,8 @@
       "dchg": -0.02,
       "info": [],
       "last_price": 0.65,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2347": {
       "name": "友和集團",
@@ -1141,7 +1186,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.745,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2350": {
       "name": "數科集團",
@@ -1166,7 +1212,8 @@
         "位置2"
       ],
       "last_price": 0.625,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2370": {
       "name": "力高健康生活",
@@ -1188,7 +1235,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 1.1,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2381": {
       "name": "蜆殼電業",
@@ -1212,7 +1260,8 @@
         "位置0"
       ],
       "last_price": 0.242,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2392": {
       "name": "玄武雲",
@@ -1234,7 +1283,8 @@
       "dchg": -0.01,
       "info": [],
       "last_price": 1.0,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2405": {
       "name": "力盟科技",
@@ -1260,7 +1310,8 @@
         "%"
       ],
       "last_price": 0.345,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2415": {
       "name": "梅斯健康",
@@ -1282,7 +1333,8 @@
       "dchg": 1.07,
       "info": [],
       "last_price": 0.75,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2421": {
       "name": "嘉創地産",
@@ -1304,7 +1356,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.59,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2440": {
       "name": "迷策略",
@@ -1329,7 +1382,8 @@
         "高"
       ],
       "last_price": 0.905,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2455": {
       "name": "潤華服務",
@@ -1354,7 +1408,8 @@
         "高"
       ],
       "last_price": 0.67,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2457": {
       "name": "步陽國際",
@@ -1379,7 +1434,8 @@
         "高"
       ],
       "last_price": 0.365,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2486": {
       "name": "普樂師集團控股",
@@ -1401,7 +1457,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 4.4,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2497": {
       "name": "富景中國控股",
@@ -1426,7 +1483,8 @@
         "高"
       ],
       "last_price": 0.64,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2501": {
       "name": "邁越科技",
@@ -1448,7 +1506,8 @@
       "dchg": 0.03,
       "info": [],
       "last_price": 1.395,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2502": {
       "name": "金源氫化",
@@ -1473,7 +1532,8 @@
         "位置0"
       ],
       "last_price": 0.58,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2505": {
       "name": "EDA集團控股",
@@ -1500,7 +1560,8 @@
         "乾身,殘價,繼續Keep"
       ],
       "last_price": 0.67,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2528": {
       "name": "尚晉國際控股",
@@ -1525,7 +1586,8 @@
         "位置2"
       ],
       "last_price": 0.9,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2540": {
       "name": "樂思集團",
@@ -1547,7 +1609,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.75,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2545": {
       "name": "中贛通信",
@@ -1571,7 +1634,8 @@
         "位置0"
       ],
       "last_price": 0.41,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "2593": {
       "name": "草姬集團",
@@ -1598,7 +1662,8 @@
         "雖然比系統趕,但MJ決定繼續Keep"
       ],
       "last_price": 0.99,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2605": {
       "name": "METALIGHT",
@@ -1622,7 +1687,8 @@
         "繼續Keep"
       ],
       "last_price": 1.245,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "2625": {
       "name": "江蘇宏信",
@@ -1646,7 +1712,8 @@
         "位置2"
       ],
       "last_price": 2.095,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "6193": {
       "name": "泰林科建",
@@ -1671,7 +1738,8 @@
         "位置0"
       ],
       "last_price": 0.395,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "6611": {
       "name": "三巽集團",
@@ -1696,7 +1764,8 @@
       ],
       "last_price": 0.046,
       "last_check": "2026-08-14 15:46",
-      "suspended": true
+      "suspended": true,
+      "featured": false
     },
     "6909": {
       "name": "百得利控股",
@@ -1723,7 +1792,8 @@
         "雖然比系統趕,但MJ決定繼續Keep"
       ],
       "last_price": 0.23,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "6999": {
       "name": "領地控股",
@@ -1748,7 +1818,8 @@
         "高危"
       ],
       "last_price": 0.117,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "8489": {
       "name": "裕程物流",
@@ -1772,7 +1843,8 @@
         "位置2"
       ],
       "last_price": 0.17,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "8529": {
       "name": "優博控股",
@@ -1797,7 +1869,8 @@
         "位置2"
       ],
       "last_price": 0.3,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "8549": {
       "name": "金葉國際集團",
@@ -1822,7 +1895,8 @@
         "高"
       ],
       "last_price": 0.211,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "8616": {
       "name": "新威工程集團",
@@ -1847,7 +1921,8 @@
         "位置0"
       ],
       "last_price": 0.07,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": false
     },
     "8657": {
       "name": "TRUE PARTNER",
@@ -1873,7 +1948,8 @@
         "繼續Keep"
       ],
       "last_price": 0.315,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "9608": {
       "name": "宋都服務",
@@ -1899,7 +1975,8 @@
         "有塔但乾身"
       ],
       "last_price": 0.05,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "9916": {
       "name": "興業物聯",
@@ -1921,7 +1998,8 @@
       "dchg": -0.02,
       "info": [],
       "last_price": 0.365,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     },
     "9918": {
       "name": "麗年國際",
@@ -1943,7 +2021,8 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.92,
-      "last_check": "2026-08-14 15:46"
+      "last_check": "2026-08-14 15:46",
+      "featured": true
     }
   }
 }

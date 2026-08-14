@@ -1365,12 +1365,14 @@ def build_mj_section(
             # 市值紀律: 合 L型入場區 (主板 ≤2億 / GEM ≤0.8億, 8xxx 當 GEM) 先係首選
             is_gem = code.startswith("8")
             mcap_ok = mcap_now <= (0.8 if is_gem else 2.0)
+            feat = bool(rec.get("featured"))
             entry_rows.append({
                 "mcap_ok": mcap_ok,
                 "held": held > 0,
+                "featured": feat,
                 "mom": mom,
                 "dist": abs(status_pct),
-                "row": (f"  {code} {name} [{mcap_now:.2f}億] {status_pct:+.0f}% "
+                "row": (f"  {'🔸' if feat else ''}{code} {name} [{mcap_now:.2f}億] {status_pct:+.0f}% "
                         f"留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"),
             })
 
@@ -1391,10 +1393,10 @@ def build_mj_section(
         if rows:
             body.append(f"{label} ({len(rows)}隻)\n" + _cap(rows))
     if entry_rows:
-        # TOP 建議買入: 未持倉, ⭐市值合格排先, 組內按 (動能 - 貼位距離/3), 最多 10 隻
-        # (2026-08 用戶要求: 只 show TOP 10, 完整名單留返 TG /mj)
+        # TOP 建議買入: 未持倉, 🔸重點名單 → ⭐市值合格 → (動能-貼位/3), 最多 10 隻
+        # (2026-08 用戶: 重點名單 40 隻優先; 只 show TOP 10, 完整留返 /mj)
         cands = [e for e in entry_rows if not e["held"]]
-        cands.sort(key=lambda e: (not e["mcap_ok"], -(e["mom"] - e["dist"] / 3)))
+        cands.sort(key=lambda e: (not e["featured"], not e["mcap_ok"], -(e["mom"] - e["dist"] / 3)))
         top_rows = [("  ⭐" + e["row"][2:]) if e["mcap_ok"] else e["row"]
                     for e in cands[:10]]
         half = max(100, round(TRANCHE_SIZE / 2 / 100) * 100)
@@ -1420,7 +1422,7 @@ def build_mj_section(
 
         hdr = (f"💰 TOP 建議買入 ({len(top_rows)}隻精選 / 入場區共{len(entry_rows)}隻) — "
                f"注碼 ${half:,}/注, 完整名單: /mj"
-               f"\n  ⭐ = 主板≤2億 / GEM≤0.8億 · 排名 = 動能+貼位")
+               f"\n  🔸=MJ重點名單 · ⭐=主板≤2億/GEM≤0.8億 · 排名=重點+動能+貼位")
         if mj_inv > 0:
             icon = "⚠️ 爆Cap" if mj_inv >= MJ_BUDGET_CAP else "OK"
             hdr += f"\n  📊 MJ倉已投 ${mj_inv:,.0f} / 上限 ${MJ_BUDGET_CAP:,} [{icon}]"
