@@ -47,7 +47,7 @@ TRANCHE_SIZE = 6_000    # default; 開 alert 時動態 = TOTAL / 100 (cash + mar
 MIN_BUY_HKD  = 1_000    # 最低買入信號 $1,000，細過唔出
 
 # ── 資金管理 ─────────────────────────────────────────────
-TOTAL_PORTFOLIO = 332_043   # 初始入金 (cash + invested). 入金/抽資需更新
+TOTAL_PORTFOLIO = 331_831   # 初始入金 (cash + invested). 2026-08-13 對齊 broker. 入金/抽資需更新
 MIN_CASH_PCT    = 0.20      # 保持至少20%現金
 
 # ── 主板買入觸發市值 (百萬 HKD) ───────────────────────────
@@ -262,13 +262,42 @@ def fetch_hk_quote(code: str) -> dict | None:
         long_ = q.get("longName", "")
         # prefer longName if it contains Chinese characters
         name = long_ if long_ and any('一' <= c <= '鿿' for c in long_) else short
+        price = q.get("regularMarketPrice")
+        chg   = q.get("regularMarketChangePercent", 0)
+        mcap  = q.get("marketCap")
+
+        # 低流動股 stale-quote 防護 (2026-08 1971 事故: 零成交日 quote 黏住
+        # 前一日震倉 odd tick 出 -15%): 大變動時同 chart 日線對數, 差 >5%
+        # 就用日線 close。真跌市兩邊一致, 唔會誤殺。
+        if price and chg is not None and abs(chg) >= 10:
+            try:
+                rc = s.get(
+                    f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                    f"?range=5d&interval=1d&crumb={crumb}",
+                    timeout=10, headers={"Accept": "application/json"},
+                )
+                cres = rc.json().get("chart", {}).get("result")
+                closes = [c for c in cres[0]["indicators"]["quote"][0]["close"]
+                          if c is not None] if cres else []
+                if closes:
+                    chart_close = closes[-1]
+                    if chart_close > 0 and abs(price - chart_close) / chart_close > 0.05:
+                        if mcap:
+                            mcap = mcap * chart_close / price
+                        prev = closes[-2] if len(closes) >= 2 else None
+                        chg = ((chart_close - prev) / prev * 100) if prev else 0
+                        print(f"  [quote] {symbol} stale tick ${price} → 日線 ${chart_close}")
+                        price = chart_close
+            except Exception:
+                pass
+
         return {
             "symbol": symbol,
             "name":   name,
             "name_en": short,
-            "price":  q.get("regularMarketPrice"),
-            "chg":    q.get("regularMarketChangePercent", 0),
-            "mcap":   q.get("marketCap"),
+            "price":  price,
+            "chg":    chg,
+            "mcap":   mcap,
             "shares": q.get("sharesOutstanding"),
         }
     except Exception as e:
@@ -1326,9 +1355,14 @@ def build_mj_section(
             # 市值紀律: 合 L型入場區 (主板 ≤2億 / GEM ≤0.8億, 8xxx 當 GEM) 先係首選
             is_gem = code.startswith("8")
             mcap_ok = mcap_now <= (0.8 if is_gem else 2.0)
-            entry_rows.append((not mcap_ok, abs(status_pct),
-                f"  {code} {name} [{mcap_now:.2f}億] {status_pct:+.0f}% "
-                f"留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"))
+            entry_rows.append({
+                "mcap_ok": mcap_ok,
+                "held": held > 0,
+                "mom": mom,
+                "dist": abs(status_pct),
+                "row": (f"  {code} {name} [{mcap_now:.2f}億] {status_pct:+.0f}% "
+                        f"留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"),
+            })
 
     # ── 組裝 (每組最多 8 條, 唔好搞爆 TG message) ──
     def _cap(rows: list, limit: int = 8) -> str:
@@ -1347,11 +1381,12 @@ def build_mj_section(
         if rows:
             body.append(f"{label} ({len(rows)}隻)\n" + _cap(rows))
     if entry_rows:
-        # 排序: 市值合 L型區排先, 組內按貼近留意位
-        entry_rows.sort(key=lambda x: (x[0], x[1]))
-        star_rows  = ["  ⭐" + r[2:] for hi, _, r in entry_rows if not hi]
-        other_rows = [r for hi, _, r in entry_rows if hi]
-        rows = star_rows + other_rows
+        # TOP 建議買入: 未持倉, ⭐市值合格排先, 組內按 (動能 - 貼位距離/3), 最多 10 隻
+        # (2026-08 用戶要求: 只 show TOP 10, 完整名單留返 TG /mj)
+        cands = [e for e in entry_rows if not e["held"]]
+        cands.sort(key=lambda e: (not e["mcap_ok"], -(e["mom"] - e["dist"] / 3)))
+        top_rows = [("  ⭐" + e["row"][2:]) if e["mcap_ok"] else e["row"]
+                    for e in cands[:10]]
         half = max(100, round(TRANCHE_SIZE / 2 / 100) * 100)
 
         # ── 資金紀律 (L型優先): MJ 預算上限 + 現金 gate ──
@@ -1373,15 +1408,19 @@ def build_mj_section(
         cash_now = TOTAL_PORTFOLIO - total_inv_all + cleared_pnl
         cash_pct_now = cash_now / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
 
-        hdr = (f"💰 入場區 ±30% ({len(rows)}隻, ⭐{len(star_rows)}隻市值合L型區) — "
-               f"建議注碼 ${half:,}/注, 可向下撈但唔低過放棄位"
-               f"\n  ⭐ = 主板≤2億 / GEM≤0.8億 (市值紀律首選)")
+        hdr = (f"💰 TOP 建議買入 ({len(top_rows)}隻精選 / 入場區共{len(entry_rows)}隻) — "
+               f"注碼 ${half:,}/注, 完整名單: /mj"
+               f"\n  ⭐ = 主板≤2億 / GEM≤0.8億 · 排名 = 動能+貼位")
         if mj_inv > 0:
             icon = "⚠️ 爆Cap" if mj_inv >= MJ_BUDGET_CAP else "OK"
             hdr += f"\n  📊 MJ倉已投 ${mj_inv:,.0f} / 上限 ${MJ_BUDGET_CAP:,} [{icon}]"
         if cash_pct_now < MJ_CASH_GATE:
             hdr += f"\n  ⛔ 現金{cash_pct_now:.0f}% < {MJ_CASH_GATE}% — 建議暫停 MJ 新倉, 留錢俾 L型主軸"
-        body.append(hdr + "\n" + _cap(rows, 15))
+        if top_rows:
+            body.append(hdr + "\n" + "\n".join(top_rows))
+        elif mj_inv > 0:
+            # 冇 TOP 候選但有 MJ 倉 → 淨係 show 預算狀態
+            body.append(hdr)
     if note_rows:
         body.append("📝 James Notes\n" + _cap(note_rows))
 
