@@ -884,6 +884,8 @@ def build_stock_block(
     ccass_alerts: list[str] | None = None,
     debt_ratio: float | None = None,
     debt_stale: bool = False,
+    buy_capped: bool = False,
+    full_shortfall: float | None = None,
 ) -> str:
     mcap_m    = quote["mcap"] / 1e6
     lot_size  = stock_st.get("lot_size", 1)
@@ -966,12 +968,18 @@ def build_stock_block(
         est_shares = round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
         if est_shares > 0:
+            # 被 cap 嘅補倉: 顯示總差額 + 今次注碼 (分注紀律, 每次最多2注)
+            cap_note = ""
+            if buy_capped and full_shortfall and full_shortfall > shortfall:
+                cap_note = f" [總差${full_shortfall:,.0f}, 分注每次最多2注]"
             if zero_done:
-                lines.append(f"  >> 重新建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+                lines.append(f"  >> 重新建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股){cap_note}")
             elif not tranches:
-                lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+                lines.append(f"  >> 建倉 ${shortfall:,.0f} ({est_lots}手/{est_shares:,}股){cap_note}")
             else:
-                lines.append(f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
+                lines.append(f"  >> 補倉 今次${shortfall:,.0f} ({est_lots}手/{est_shares:,}股){cap_note}"
+                             if cap_note else
+                             f"  >> 補倉 差${shortfall:,.0f} ({est_lots}手/{est_shares:,}股)")
             lines.append(f"  /buy {code} {est_shares} {price}")
 
     # ── 止賺訊號 ── sell 0股 skip
@@ -1743,30 +1751,27 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         # ── 分類: sell / debt_warn / buy ──
         has_pos = shares_held > 0
 
-        # Fix #4: 新建倉/0成本重新建倉 最多2層 (2×TRANCHE)，避免一次落重注
+        # Fix #4: 所有買入信號 (新建倉/補倉/0成本重新建倉) 每次最多 2×TRANCHE
+        # 分注紀律: 深跌股唔會一次過叫追晒成條 ladder (2026-08: 1965 $21K 事故)
         # 細於 MIN_BUY_HKD 嘅 shortfall 唔出買信號
         # 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況, 自己判斷)
         MAX_NEW_BUY = TRANCHE_SIZE * 2
         final_buy_shares = 0
         in_buy_section = shortfall >= MIN_BUY_HKD and buy_shares > 0
         if in_buy_section:
-            final_buy_hkd = shortfall
-            final_buy_shares = buy_shares
-            if not tranches or zero_done:
-                # 新建倉 / 0成本重新建倉: cap shortfall
-                capped = min(shortfall, MAX_NEW_BUY)
-                capped_shares = round_to_lots(capped / price, lot_size, "down") if price > 0 else 0
-                if capped_shares == 0:
-                    # 一手都貴過 cap → 允許最少一手做入場 (用戶選項 b)
-                    capped_shares = lot_size
-                if capped_shares != buy_shares:
-                    capped_amt = capped_shares * price
-                    block = build_stock_block(code, board, quote, stock_st, capped_amt, tp_signals, ccass_alerts, dr, dr_stale)
-                    all_blocks[-1] = block  # 同步替換, 避免 full report 印兩個唔同版本
-                final_buy_shares = capped_shares
-                final_buy_hkd = capped_shares * price
-            else:
-                final_buy_hkd = buy_shares * price
+            capped = min(shortfall, MAX_NEW_BUY)
+            capped_shares = round_to_lots(capped / price, lot_size, "down") if price > 0 else 0
+            if capped_shares == 0:
+                # 一手都貴過 cap → 允許最少一手做入場 (用戶選項 b)
+                capped_shares = lot_size
+            if capped_shares != buy_shares:
+                capped_amt = capped_shares * price
+                block = build_stock_block(code, board, quote, stock_st, capped_amt,
+                                          tp_signals, ccass_alerts, dr, dr_stale,
+                                          buy_capped=True, full_shortfall=shortfall)
+                all_blocks[-1] = block  # 同步替換, 避免 full report 印兩個唔同版本
+            final_buy_shares = capped_shares
+            final_buy_hkd = capped_shares * price
             # MJ 交叉信心線: L型主軸信號 + MJ 半新股名單 = 加大信心 / 低動能 = 提醒小心
             mj_e = mj_cross.get(code)
             if mj_e:
@@ -2323,8 +2328,8 @@ def intraday_alert() -> str | None:
                 current_val = shares_held * price if shares_held > 0 else 0
                 position = max(actual_inv, current_val)
             shortfall = max(0, expected_inv - position) if expected_inv > 0 else 0
-            # 新建倉/0成本重新建倉 cap (同 full report)
-            if shortfall > 0 and (not tranches or zero_done):
+            # 所有買入信號每次最多 2×TRANCHE — 分注紀律 (同 full report)
+            if shortfall > 0:
                 shortfall = min(shortfall, TRANCHE_SIZE * 2)
 
             if shortfall >= MIN_BUY_HKD:
