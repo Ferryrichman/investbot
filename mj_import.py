@@ -56,30 +56,40 @@ def parse_pdf(pdf_path: Path) -> tuple[str, dict]:
         m = PDF_DATE_RE.search(page.get_text())
         pdf_date = m.group(1) if m else ""
 
-        # 按 y 座標分組成行 (÷3 容忍細微 baseline 差異)，每行按 x 排序
+        # 按 y 座標分組成行 — 容差 clustering (唔用 round(y/3): 固定 bin 會喺
+        # baseline 跨越 bin 邊界時將一行切開兩份, 令該行漏 import — 2026-08 review)
         words = page.get_text("words")   # (x0, y0, x1, y1, word, ...)
-        rows: dict[int, list] = defaultdict(list)
-        for w in words:
-            rows[round(w[1] / 3)].append((w[0], w[4]))
+        groups: list[dict] = []          # [{y, words:[(x0,word)]}]
+        for w in sorted(words, key=lambda w: w[1]):   # 按 y0 排
+            y0 = w[1]
+            if groups and abs(y0 - groups[-1]["y"]) <= 2.5:
+                groups[-1]["words"].append((w[0], w[4]))
+            else:
+                groups.append({"y": y0, "words": [(w[0], w[4])]})
 
         stocks: dict[str, dict] = {}
-        for _key in sorted(rows):
-            toks = [t[1] for t in sorted(rows[_key], key=lambda x: x[0])]
-            # 資料行 = >=15 個 token，第 1 個係序號(全數字)，第 2 個係 4 位股票代號
+        skipped_rows = []
+        for g in groups:
+            toks = [t[1] for t in sorted(g["words"], key=lambda x: x[0])]
+            # 資料行 = >=15 個 token，第 1 個係序號(全數字)，
+            # 第 2 個係股票代號 (1-5 位數字 — 支持 <1000 嘅細 code)
             if len(toks) < 15:
                 continue
             if not toks[0].isdigit():
                 continue
-            if not (len(toks[1]) == 4 and toks[1].isdigit()):
+            if not (1 <= len(toks[1]) <= 5 and toks[1].isdigit()):
                 continue
 
             try:
                 rec = _parse_row(toks)
-            except (ValueError, IndexError) as e:
+            except (ValueError, IndexError, StopIteration) as e:
                 print(f"  [skip] {toks[:4]} … parse 失敗: {e}")
+                skipped_rows.append(toks[:4])
                 continue
             stocks[rec.pop("_code")] = rec
 
+        if skipped_rows:
+            print(f"  ⚠️ {len(skipped_rows)} 行 parse 失敗, 請 check PDF 格式")
         return pdf_date, stocks
     finally:
         doc.close()
