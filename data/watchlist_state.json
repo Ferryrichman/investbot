@@ -17,13 +17,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 191.89,
-    "last_price": 0.249,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 184.96,
+    "last_price": 0.24,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 25.4,
     "ipo_date": "2023-11-10",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1147": {
     "tier_reached": 1,
@@ -35,9 +35,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 226.99,
-    "last_price": 0.111,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 241.3,
+    "last_price": 0.118,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 3.2,
     "ipo_date": "2020-05-13"
@@ -69,9 +69,9 @@
     "notes": [],
     "zero_cost_date": "2026-07-16",
     "lot_size": 4000,
-    "last_mcap_m": 208.77,
-    "last_price": 0.295,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 198.16,
+    "last_price": 0.28,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 107,
     "debt_over100_since": "2026-05",
@@ -99,11 +99,11 @@
     "lot_size": 5000,
     "last_mcap_m": 285.0,
     "last_price": 0.475,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 18.1,
     "ipo_date": "2023-07-18",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1343": {
     "tier_reached": 0,
@@ -130,9 +130,9 @@
     "lot_size": 5000,
     "last_mcap_m": 143.64,
     "last_price": 0.135,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "debt_ratio": 42.7,
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1346": {
     "tier_reached": 1,
@@ -146,7 +146,7 @@
     "lot_size": 4000,
     "last_mcap_m": 869.18,
     "last_price": 1.36,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 4.1,
     "ipo_date": "2019-11-13"
@@ -171,11 +171,11 @@
     "lot_size": 2000,
     "last_mcap_m": 255.2,
     "last_price": 0.58,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 17.6,
     "ipo_date": "2022-11-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1408": {
     "tier_reached": 1,
@@ -197,11 +197,11 @@
     "lot_size": 2000,
     "last_mcap_m": 170.0,
     "last_price": 0.34,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 7.5,
     "ipo_date": "2020-09-11",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1429": {
     "tier_reached": 1,
@@ -223,14 +223,14 @@
     "notes": [],
     "zero_cost_date": "2026-05-18",
     "lot_size": 8000,
-    "last_mcap_m": 216.0,
-    "last_price": 0.135,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 240.0,
+    "last_price": 0.15,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 11.1,
     "zero_cost_tier": 1,
     "ipo_date": "2020-09-29",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1433": {
     "tier_reached": 2,
@@ -254,11 +254,11 @@
     "lot_size": 10000,
     "last_mcap_m": 161.15,
     "last_price": 0.081,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 19.8,
     "ipo_date": "2020-03-12",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1449": {
     "tier_reached": 2,
@@ -278,13 +278,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 543.33,
-    "last_price": 0.815,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 540.0,
+    "last_price": 0.81,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 60.1,
     "ipo_date": "2020-08-06",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1455": {
     "tier_reached": 1,
@@ -296,9 +296,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 310.69,
-    "last_price": 0.243,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 311.97,
+    "last_price": 0.244,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 11.3,
     "ipo_date": "2020-09-15"
@@ -323,15 +323,15 @@
     "notes": [],
     "zero_cost_date": "2026-05-18",
     "lot_size": 4000,
-    "last_mcap_m": 1437.29,
-    "last_price": 1.22,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 1519.76,
+    "last_price": 1.29,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 52.3,
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 4000,
     "ipo_date": "2021-02-19",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1489": {
     "tier_reached": 1,
@@ -343,9 +343,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 900.0,
-    "last_price": 0.9,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 975.0,
+    "last_price": 0.975,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 4.9,
     "ipo_date": "2022-10-10"
@@ -370,13 +370,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 320.0,
-    "last_price": 0.16,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 316.0,
+    "last_price": 0.158,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 17.7,
     "ipo_date": "2019-04-25",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1553": {
     "tier_reached": 1,
@@ -388,9 +388,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 607.32,
-    "last_price": 1.4,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 637.69,
+    "last_price": 1.47,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 6.8,
     "ipo_date": "2019-12-18"
@@ -413,13 +413,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2500,
-    "last_mcap_m": 197.5,
-    "last_price": 0.395,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 195.0,
+    "last_price": 0.39,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 47.9,
     "ipo_date": "2019-10-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1615": {
     "tier_reached": 1,
@@ -441,13 +441,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 234.0,
-    "last_price": 0.39,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 231.0,
+    "last_price": 0.385,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 6.8,
     "ipo_date": "2018-09-10",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1620": {
     "tier_reached": 3,
@@ -490,13 +490,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 145.2,
-    "last_price": 0.121,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 147.6,
+    "last_price": 0.123,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 16.7,
     "ipo_date": "2018-06-28",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1643": {
     "tier_reached": 1,
@@ -520,12 +520,12 @@
     "lot_size": 3000,
     "last_mcap_m": 604.8,
     "last_price": 0.84,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0.0,
     "zero_cost_tier": 1,
     "ipo_date": "2021-01-15",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1650": {
     "tier_reached": 1,
@@ -545,13 +545,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 276.0,
-    "last_price": 0.138,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 278.0,
+    "last_price": 0.139,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 6.8,
     "ipo_date": "2020-07-03",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1740": {
     "tier_reached": 3,
@@ -573,11 +573,11 @@
     "lot_size": 5000,
     "last_mcap_m": 167.04,
     "last_price": 0.161,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0.4,
     "ipo_date": "2020-01-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1767": {
     "tier_reached": 1,
@@ -591,7 +591,7 @@
     "lot_size": 10000,
     "last_mcap_m": 325.0,
     "last_price": 0.325,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 1.7,
     "ipo_date": "2019-01-14"
@@ -625,13 +625,13 @@
     "notes": [],
     "zero_cost_date": "2026-07-10",
     "lot_size": 4000,
-    "last_mcap_m": 448.16,
-    "last_price": 0.565,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 467.99,
+    "last_price": 0.59,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 3.8,
     "ipo_date": "2019-02-27",
-    "debt_updated": "2026-08-14",
+    "debt_updated": "2026-08-17",
     "zero_cost_initial_shares": 8000,
     "zero_cost_tier": 1
   },
@@ -645,9 +645,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 3000,
-    "last_mcap_m": 264.0,
-    "last_price": 0.44,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 273.0,
+    "last_price": 0.455,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 54,
     "ipo_date": "2020-11-18"
@@ -672,13 +672,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 405.0,
-    "last_price": 1.125,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 396.0,
+    "last_price": 1.1,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 85.3,
     "ipo_date": "2019-05-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1843": {
     "tier_reached": 2,
@@ -702,11 +702,11 @@
     "lot_size": 4000,
     "last_mcap_m": 228.0,
     "last_price": 0.285,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 30.5,
     "ipo_date": "2019-10-23",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1871": {
     "tier_reached": 2,
@@ -735,11 +735,11 @@
     "lot_size": 4000,
     "last_mcap_m": 132.97,
     "last_price": 0.305,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 21.9,
     "ipo_date": "2019-10-24",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1891": {
     "tier_reached": 2,
@@ -763,11 +763,11 @@
     "lot_size": 4000,
     "last_mcap_m": 165.0,
     "last_price": 0.165,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 28.7,
     "ipo_date": "2019-03-15",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1927": {
     "tier_reached": 3,
@@ -791,11 +791,11 @@
     "lot_size": 5000,
     "last_mcap_m": 213.84,
     "last_price": 0.27,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 42.2,
     "ipo_date": "2021-03-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1941": {
     "tier_reached": 3,
@@ -831,9 +831,9 @@
     "notes": [],
     "zero_cost_date": "2026-06-08",
     "lot_size": 2000,
-    "last_mcap_m": 233.05,
-    "last_price": 0.575,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 235.08,
+    "last_price": 0.58,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 50,
     "zero_cost_tier": 1,
@@ -861,11 +861,11 @@
     "lot_size": 5000,
     "last_mcap_m": 324.08,
     "last_price": 0.54,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 11.2,
     "ipo_date": "2022-12-14",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "1955": {
     "tier_reached": 1,
@@ -877,9 +877,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 307.5,
-    "last_price": 0.615,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 310.0,
+    "last_price": 0.62,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 38.6,
     "ipo_date": "2019-10-16"
@@ -896,7 +896,7 @@
     "lot_size": 5000,
     "last_mcap_m": 350.0,
     "last_price": 0.35,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 36.6,
     "ipo_date": "2019-09-30"
@@ -922,7 +922,7 @@
     "lot_size": 1000,
     "last_mcap_m": 55.31,
     "last_price": 0.143,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "debt_ratio": 103,
     "debt_over100_since": "2026-05",
     "ipo_date": "2021-07-08"
@@ -966,13 +966,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 1000,
-    "last_mcap_m": 126.58,
-    "last_price": 0.305,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 136.95,
+    "last_price": 0.33,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 1.8,
     "ipo_date": "2020-07-07",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2108": {
     "tier_reached": 1,
@@ -994,13 +994,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 4000,
-    "last_mcap_m": 316.0,
-    "last_price": 0.395,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 304.0,
+    "last_price": 0.38,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 49.2,
     "ipo_date": "2019-03-06",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2129": {
     "tier_reached": 2,
@@ -1022,11 +1022,11 @@
     "lot_size": 5000,
     "last_mcap_m": 272.5,
     "last_price": 0.218,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 21.9,
     "ipo_date": "2021-01-13",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2159": {
     "tier_reached": 1,
@@ -1038,9 +1038,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 8000,
-    "last_mcap_m": 441.65,
-    "last_price": 1.68,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 465.3,
+    "last_price": 1.77,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 34.1,
     "ipo_date": "2021-01-19"
@@ -1066,14 +1066,14 @@
     "zero_cost_date": "2026-05-18",
     "lot_size": 1000,
     "last_mcap_m": 402.5,
-    "last_price": 0.575,
-    "last_check": "2026-08-14 15:45",
+    "last_price": 0.574999988079071,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 1.3,
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 1000,
     "ipo_date": "2021-07-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2215": {
     "tier_reached": 0,
@@ -1123,13 +1123,13 @@
     "notes": [],
     "zero_cost_date": "2026-08-07",
     "lot_size": 1000,
-    "last_mcap_m": 251.45,
-    "last_price": 0.285,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 273.51,
+    "last_price": 0.31,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 2.3,
     "ipo_date": "2021-07-15",
-    "debt_updated": "2026-08-14",
+    "debt_updated": "2026-08-17",
     "zero_cost_initial_shares": 10000,
     "zero_cost_tier": 1
   },
@@ -1145,7 +1145,7 @@
     "lot_size": 5000,
     "last_mcap_m": 402.38,
     "last_price": 0.202,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0.3,
     "ipo_date": "2019-05-21"
@@ -1160,9 +1160,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 310.0,
-    "last_price": 0.31,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 300.0,
+    "last_price": 0.3,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0,
     "ipo_date": "2020-02-19"
@@ -1177,9 +1177,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 360.65,
-    "last_price": 0.745,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 353.38,
+    "last_price": 0.73,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 7.1,
     "ipo_date": "2022-06-10"
@@ -1194,9 +1194,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 546.88,
-    "last_price": 0.625,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 542.5,
+    "last_price": 0.62,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 4.7,
     "ipo_date": "2022-09-26"
@@ -1211,9 +1211,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 200,
-    "last_mcap_m": 227.77,
-    "last_price": 3.4,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 233.8,
+    "last_price": 3.49,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 9,
     "ipo_date": "2022-04-29"
@@ -1238,11 +1238,11 @@
     "lot_size": 500,
     "last_mcap_m": 220.0,
     "last_price": 1.1,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 7.0,
     "ipo_date": "2022-03-31",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2372": {
     "tier_reached": 1,
@@ -1273,7 +1273,7 @@
     "lot_size": 4000,
     "last_mcap_m": 808.0,
     "last_price": 1.01,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 17.7,
     "zero_cost_tier": 1,
@@ -1311,13 +1311,13 @@
     "lot_size": 10000,
     "last_mcap_m": 484.0,
     "last_price": 0.242,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 2.8,
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 10000,
     "ipo_date": "2020-06-02",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2455": {
     "tier_reached": 1,
@@ -1346,13 +1346,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 197.27,
-    "last_price": 0.67,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 200.21,
+    "last_price": 0.68,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 33.0,
     "ipo_date": "2023-01-17",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2457": {
     "tier_reached": 1,
@@ -1374,13 +1374,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 365.0,
-    "last_price": 0.365,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 375.0,
+    "last_price": 0.375,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 1.5,
     "ipo_date": "2022-12-15",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2497": {
     "tier_reached": 1,
@@ -1394,7 +1394,7 @@
     "lot_size": 2000,
     "last_mcap_m": 320.0,
     "last_price": 0.64,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 21.1,
     "ipo_date": "2024-03-28"
@@ -1409,9 +1409,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 697.5,
-    "last_price": 1.395,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 727.5,
+    "last_price": 1.455,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 40.1,
     "ipo_date": "2023-10-11"
@@ -1436,11 +1436,11 @@
     "lot_size": 1000,
     "last_mcap_m": 298.75,
     "last_price": 0.67,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 73.1,
     "ipo_date": "2024-05-28",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "2528": {
     "tier_reached": 1,
@@ -1473,11 +1473,11 @@
     "lot_size": 2000,
     "last_mcap_m": 360.0,
     "last_price": 0.9,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 45.4,
     "ipo_date": "2020-01-13",
-    "debt_updated": "2026-08-14",
+    "debt_updated": "2026-08-17",
     "zero_cost_initial_shares": 12000,
     "zero_cost_tier": 1
   },
@@ -1493,7 +1493,7 @@
     "lot_size": 1000,
     "last_mcap_m": 448.0,
     "last_price": 2.8,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0.6,
     "ipo_date": "2024-05-17"
@@ -1508,9 +1508,9 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 262.4,
-    "last_price": 0.41,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 259.2,
+    "last_price": 0.405,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 56.7,
     "ipo_date": "2024-07-03"
@@ -1527,7 +1527,7 @@
     "lot_size": 2000,
     "last_mcap_m": 352.0,
     "last_price": 0.88,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 2.7,
     "ipo_date": "2019-01-11"
@@ -1544,7 +1544,7 @@
     "lot_size": 2000,
     "last_mcap_m": 680.0,
     "last_price": 1.36,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0.2,
     "ipo_date": "2019-11-15"
@@ -1578,15 +1578,15 @@
     "notes": [],
     "zero_cost_date": "2026-06-11",
     "lot_size": 5000,
-    "last_mcap_m": 198.0,
-    "last_price": 0.198,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 202.0,
+    "last_price": 0.202,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 2.2,
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 25000,
     "ipo_date": "2017-09-21",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "6913": {
     "tier_reached": 0,
@@ -1608,11 +1608,11 @@
     "lot_size": 2000,
     "last_mcap_m": 166.75,
     "last_price": 0.125,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 25.0,
     "ipo_date": "2021-07-13",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "6939": {
     "tier_reached": 1,
@@ -1634,15 +1634,15 @@
     "notes": [],
     "zero_cost_date": "2026-05-18",
     "lot_size": 2000,
-    "last_mcap_m": 768.79,
-    "last_price": 1.235,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 796.8,
+    "last_price": 1.28,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 7.4,
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 4000,
     "ipo_date": "2021-03-31",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "8036": {
     "tier_reached": 0,
@@ -1662,12 +1662,12 @@
     "notes": [],
     "board": "gem",
     "lot_size": 10000,
-    "last_mcap_m": 49.33,
-    "last_price": 0.043,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 45.88,
+    "last_price": 0.04,
+    "last_check": "2026-08-17 10:00",
     "debt_ratio": 3.3,
     "ipo_date": "2019-02-19",
-    "debt_updated": "2026-08-14",
+    "debt_updated": "2026-08-17",
     "zero_cost_initial_shares": null,
     "zero_cost_date": null,
     "zero_cost_tier": null,
@@ -1695,7 +1695,7 @@
     "lot_size": 5000,
     "last_mcap_m": 62.93,
     "last_price": 0.174,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "gem",
     "debt_ratio": 118,
     "debt_over100_since": "2026-05",
@@ -1721,13 +1721,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 10000,
-    "last_mcap_m": 80.0,
-    "last_price": 0.08,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 79.0,
+    "last_price": 0.079,
+    "last_check": "2026-08-17 10:00",
     "board": "gem",
     "debt_ratio": 6.5,
     "ipo_date": "2017-11-15",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "8447": {
     "tier_reached": 2,
@@ -1770,11 +1770,11 @@
     "lot_size": 10000,
     "last_mcap_m": 58.0,
     "last_price": 0.058,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "gem",
     "debt_ratio": 76.4,
     "ipo_date": "2018-04-16",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "8495": {
     "tier_reached": 1,
@@ -1788,7 +1788,7 @@
     "lot_size": 4000,
     "last_mcap_m": 82.56,
     "last_price": 0.215,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "board": "gem",
     "debt_ratio": 66.6,
     "ipo_date": "2017-12-05"
@@ -1805,7 +1805,7 @@
     "last_mcap_m": 524.0,
     "last_price": 0.655,
     "lot_size": 4000,
-    "last_check": "2026-08-14 15:45"
+    "last_check": "2026-08-17 10:00"
   },
   "8549": {
     "tier_reached": 0,
@@ -1828,9 +1828,9 @@
     "lot_size": 5000,
     "last_mcap_m": 84.4,
     "last_price": 0.211,
-    "last_check": "2026-08-14 15:45",
+    "last_check": "2026-08-17 10:00",
     "debt_ratio": 5.7,
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "8620": {
     "tier_reached": 1,
@@ -1857,13 +1857,13 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 5000,
-    "last_mcap_m": 74.98,
-    "last_price": 0.142,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 77.62,
+    "last_price": 0.147,
+    "last_check": "2026-08-17 10:00",
     "board": "gem",
     "debt_ratio": 71.4,
     "ipo_date": "2020-04-20",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "8622": {
     "tier_reached": 0,
@@ -1877,7 +1877,7 @@
     "last_mcap_m": 88.15,
     "last_price": 0.171,
     "lot_size": 8000,
-    "last_check": "2026-08-14 15:45"
+    "last_check": "2026-08-17 10:00"
   },
   "9916": {
     "tier_reached": 0,
@@ -1898,11 +1898,11 @@
     "board": "main",
     "strategy": "mj",
     "lot_size": 2000,
-    "last_mcap_m": 146.0,
-    "last_price": 0.365,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 148.0,
+    "last_price": 0.37,
+    "last_check": "2026-08-17 10:00",
     "debt_ratio": 0.3,
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "9918": {
     "tier_reached": 0,
@@ -1923,11 +1923,11 @@
     "board": "main",
     "strategy": "mj",
     "lot_size": 2000,
-    "last_mcap_m": 92.0,
-    "last_price": 0.92,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 96.0,
+    "last_price": 0.96,
+    "last_check": "2026-08-17 10:00",
     "debt_ratio": 42.4,
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "9929": {
     "tier_reached": 1,
@@ -1949,15 +1949,15 @@
     "notes": [],
     "zero_cost_date": "2026-05-18",
     "lot_size": 10000,
-    "last_mcap_m": 3930.0,
-    "last_price": 1.965,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 3950.0,
+    "last_price": 1.975,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 0.5,
     "zero_cost_tier": 1,
     "zero_cost_initial_shares": 10000,
     "ipo_date": "2020-02-14",
-    "debt_updated": "2026-08-14"
+    "debt_updated": "2026-08-17"
   },
   "0368": {
     "tier_reached": 1,
@@ -1969,24 +1969,18 @@
     "notes": [],
     "zero_cost_date": null,
     "lot_size": 2000,
-    "last_mcap_m": 3960.0,
-    "last_price": 4.95,
-    "last_check": "2026-08-14 15:45",
+    "last_mcap_m": 4000.0,
+    "last_price": 5.0,
+    "last_check": "2026-08-17 10:00",
     "board": "main",
     "debt_ratio": 69.2,
     "ipo_date": "2020-07-17"
   },
   "_meta": {
     "last_sell_codes": [
-      "1111",
       "1449",
-      "1927",
-      "2370",
-      "2457",
       "2505",
-      "3830",
-      "8400",
-      "8549"
+      "8400"
     ],
     "last_buy_codes": [
       "1433",
@@ -1996,15 +1990,11 @@
     "alert_seen": {
       "1407:🕯️長上影線高位—莊家出貨蠟燭": "2026-07-31",
       "1473:📋SDI增持(--):ChiefEecutiveOfficer買股": "2026-08-06",
-      "1871:📊異常成交(日均)": "2026-07-15",
       "3830:🚨高危派貨警示:高位+大成交+成本倉": "2026-08-03",
       "1156:📊異常成交高位(日均)": "2026-07-29",
       "1156:🚨高危派貨警示:高位+大成交+成本倉": "2026-07-29",
       "6913:📉高位連日陰燭—逐步派發": "2026-07-31",
-      "8447:🕯️長上影線高位—莊家出貨蠟燭": "2026-07-16",
-      "1284:📉高位連日陰燭—逐步派發": "2026-07-17",
       "1582:🕯️長上影線高位—莊家出貨蠟燭": "2026-08-10",
-      "1891:📊異常成交(日均)": "2026-07-17",
       "2129:🕯️長上影線高位—莊家出貨蠟燭": "2026-08-10",
       "3830:🕯️長上影線高位—莊家出貨蠟燭": "2026-08-14",
       "1111:📊異常成交高位(日均)": "2026-08-07",
@@ -2082,13 +2072,13 @@
       "8549:🕯️長上影線高位—莊家出貨蠟燭": "2026-08-14"
     },
     "signals": {
-      "generated_at": "2026-08-14 15:45",
+      "generated_at": "2026-08-17 10:00",
       "tranche_size": 5200,
       "portfolio": {
         "total_inv": 212075,
-        "total_val": 396117,
-        "total_gain": 184042,
-        "gain_pct": 86.8,
+        "total_val": 397004,
+        "total_gain": 184929,
+        "gain_pct": 87.2,
         "cash_est": 119756,
         "cash_pct": 36.1,
         "total_portfolio": 331831,
@@ -2097,17 +2087,9 @@
         "n_can_zero": 3
       },
       "stocks": {
-        "1111": {
-          "sections": [
-            "sell"
-          ],
-          "alerts": [
-            "🕯️ 長上影線高位 — 莊家出貨蠟燭"
-          ]
-        },
         "1156": {
           "sections": [],
-          "debt_text": "🔴 負資產! 負債率107%（已標誌105日）"
+          "debt_text": "🔴 負資產! 負債率107%（已標誌108日）"
         },
         "1433": {
           "sections": [
@@ -2118,7 +2100,7 @@
             "shares": 50000,
             "lots": 5,
             "cmd": "/buy 1433 50000 0.081",
-            "mj_mom": 64.1
+            "mj_mom": 64.0
           }
         },
         "1449": {
@@ -2131,28 +2113,16 @@
               "type": "ZERO_COST",
               "shares": 8000,
               "lots": 8,
-              "recv": 6520,
+              "recv": 6480,
               "remain": 14000,
-              "cmd": "/sell 1449 8000 0.815"
+              "cmd": "/sell 1449 8000 0.81"
             }
           ],
-          "debt_text": "⚠️ 負債警告 負債率60%",
-          "alerts": [
-            "🕯️ 長上影線高位 — 莊家出貨蠟燭",
-            "🚨 高危派貨警示: 高位+大成交 + +210%獲利"
-          ]
+          "debt_text": "⚠️ 負債警告 負債率60%"
         },
         "1832": {
           "sections": [],
           "debt_text": "🔴 強警告! 負債率85%"
-        },
-        "1927": {
-          "sections": [
-            "sell"
-          ],
-          "alerts": [
-            "🚨 高危派貨警示: 高位+大成交 + +100%獲利"
-          ]
         },
         "1965": {
           "sections": [
@@ -2164,24 +2134,7 @@
             "lots": 72,
             "cmd": "/buy 1965 72000 0.143"
           },
-          "debt_text": "🔴 負資產! 負債率103%（已標誌105日）"
-        },
-        "2370": {
-          "sections": [
-            "sell"
-          ],
-          "alerts": [
-            "📊 異常成交 高位 (8.0x 30日均)",
-            "🚨 高危派貨警示: 高位+大成交 + +167%獲利"
-          ]
-        },
-        "2457": {
-          "sections": [
-            "sell"
-          ],
-          "alerts": [
-            "📉 高位連3日陰燭 — 逐步派發"
-          ]
+          "debt_text": "🔴 負資產! 負債率103%（已標誌108日）"
         },
         "2505": {
           "sections": [
@@ -2200,17 +2153,9 @@
           ],
           "debt_text": "⚠️ 負債警告 負債率73%"
         },
-        "3830": {
-          "sections": [
-            "sell"
-          ],
-          "alerts": [
-            "🕯️ 長上影線高位 — 莊家出貨蠟燭"
-          ]
-        },
         "8241": {
           "sections": [],
-          "debt_text": "🔴 負資產! 負債率118%（已標誌105日）"
+          "debt_text": "🔴 負資產! 負債率118%（已標誌108日）"
         },
         "8400": {
           "sections": [
@@ -2222,9 +2167,9 @@
               "type": "ZERO_COST",
               "shares": 10000,
               "lots": 1,
-              "recv": 800,
+              "recv": 790,
               "remain": 80000,
-              "cmd": "/sell 8400 10000 0.08"
+              "cmd": "/sell 8400 10000 0.079"
             }
           ]
         },
@@ -2236,14 +2181,6 @@
           "sections": [],
           "debt_text": "⚠️ 負債警告 負債率67%"
         },
-        "8549": {
-          "sections": [
-            "sell"
-          ],
-          "alerts": [
-            "🕯️ 長上影線高位 — 莊家出貨蠟燭"
-          ]
-        },
         "8620": {
           "sections": [],
           "debt_text": "⚠️ 負債警告 負債率71%"
@@ -2254,23 +2191,29 @@
         }
       },
       "mj": {
-        "generated_at": "2026-08-14 15:46",
-        "pdf_date": "06-08-2026",
-        "count": 74,
+        "generated_at": "2026-08-17 10:01",
+        "pdf_date": "13-08-2026",
+        "count": 77,
         "n_conflict": 2,
-        "n_abandon": 0,
-        "n_new": 0,
-        "n_mom_up": 0,
-        "n_danger": 0,
-        "n_entry_zone": 39,
-        "n_notes": 0,
+        "n_abandon": 5,
+        "n_new": 3,
+        "n_mom_up": 10,
+        "n_danger": 9,
+        "n_entry_zone": 40,
+        "n_notes": 12,
         "n_lowmom": 1,
         "n_at_abandon": 6,
         "conflict_codes": [
           "1473",
           "2505"
         ],
-        "abandon_codes": []
+        "abandon_codes": [
+          "1351",
+          "1855",
+          "2405",
+          "2593",
+          "6909"
+        ]
       }
     }
   }
