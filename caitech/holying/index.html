@@ -131,7 +131,8 @@ footer{text-align:center;padding:24px 0;font-size:11px;color:#484f58;border-top:
     <h1><span>好L型</span>財技</h1>
   </div>
   <div class="meta">
-    <div>最後更新: <span id="lastUpdate">—</span></div>
+    <div>最後更新: <span id="lastUpdate">—</span><span id="sigGen"></span></div>
+    <div id="sigStale" style="font-size:11px;color:#8b949e;margin-top:2px"></div>
   </div>
 </header>
 
@@ -261,6 +262,7 @@ function render(state) {
 
   let totalInv = 0, totalVal = 0, totalRealized = 0;
   let lastCheck = '';
+  let newestTranche = '';  // 最新一筆買賣時間 — SIG staleness check 用
 
   for (const [code, v] of watched) {
     const board = v.board || 'main';
@@ -269,8 +271,10 @@ function render(state) {
     const tr = v.tranches || [];
     const zeroDone = v.zero_cost_achieved || false;
     const cleared = v.cleared || false;
+    const isMj = v.strategy === 'mj';  // 📘 半新股倉：冇 tier 買入, 唔套用 L型應投/倉位
 
     if (v.last_check && v.last_check > lastCheck) lastCheck = v.last_check;
+    for (const t of tr) { const d = t.date || ''; if (d > newestTranche) newestTranche = d; }
 
     // netInv = 淨投入 (買入-賣出收回), grossInv = 總買入 (shortfall 用)
     const netInv = tr.reduce((s,t) => s + (t.hkd||0), 0);
@@ -296,6 +300,8 @@ function render(state) {
       position = Math.max(grossInv, val);
       shortfall = expected > 0 ? Math.max(0, expected - position) : 0;
     }
+    // 📘 MJ倉冇 tier 買入邏輯 — 清零 L型應投/倉位/差額, 避免誘導手動補注
+    if (isMj) { expected = 0; position = 0; shortfall = 0; }
 
     // Avg cost & gain — 同 TG Bot 一致，用淨投入
     const avgCost = shares > 0 ? netInv / shares : 0;
@@ -337,7 +343,7 @@ function render(state) {
     const item = { code, board, mcap, price, shares, netInv, grossInv, val, position, expected,
                    shortfall, avgCost, gainPct, zeroDone, cleared, sellSignal, debtRatio, debtOver100Since,
                    chg: v.last_check ? 0 : 0, name: '', realizedPnl: v.realized_pnl || 0,
-                   zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1,
+                   zeroShares: v.zero_cost_shares || 0, lotSize: v.lot_size || 1, isMj,
                    sigOn: !!SIG, sig: (SIG && SIG.stocks) ? SIG.stocks[code] : null };
 
     if (SIG) {
@@ -349,7 +355,8 @@ function render(state) {
       // Legacy fallback (state 未有 signals snapshot)
       if (sellSignal) sellSignals.push(item);
       // 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況)
-      if (shortfall >= MIN_BUY) buySignals.push(item);
+      // 📘 MJ倉唔套用 tier 補倉信號 (isMj 已令 shortfall=0, 呢度明確排除)
+      if (!isMj && shortfall >= MIN_BUY) buySignals.push(item);
     }
     if (tr.length || cleared) holdings.push(item);
     else watchOnly.push(item);
@@ -371,6 +378,20 @@ function render(state) {
   const cashOk = cashPct >= MIN_CASH * 100;
 
   document.getElementById('lastUpdate').textContent = lastCheck || '—';
+
+  // ── SIG staleness check — 讀 SIG.generated_at, 對比 tranche 時間 / 最新 last_check ──
+  const sigGenEl = document.getElementById('sigGen');
+  const sigStaleEl = document.getElementById('sigStale');
+  if (SIG && SIG.generated_at) {
+    const gen = SIG.generated_at;
+    sigGenEl.textContent = ' · 信號 ' + gen;
+    // 若有買賣新過信號生成時間, 或信號舊過最新價格檢查 → 信號可能過時
+    const stale = (lastCheck && gen < lastCheck) || (newestTranche && newestTranche > gen);
+    sigStaleEl.textContent = stale ? '⚠ 信號可能過時, 等下次 alert 更新' : '';
+  } else {
+    sigGenEl.textContent = '';
+    sigStaleEl.textContent = '';
+  }
   document.getElementById('summary').innerHTML = `
     <div class="row">
       <div class="item"><span class="label">持倉</span><span class="val">${holdings.length}隻</span></div>
@@ -412,6 +433,8 @@ function stockCard(s, mode) {
   const code4 = String(s.code).padStart(4, '0');
   const mcapStr = s.mcap ? fmtMcap(s.mcap) : '—';
   const boardTag = s.board === 'gem' ? ' <span style="color:#d29922;font-size:10px">GEM</span>' : '';
+  const mjBadge = s.isMj ? ' <span style="color:#58a6ff;font-size:11px" title="半新股倉">📘</span>' : '';
+  const mjHtml = s.isMj ? `<div class="stock-pos" style="color:#58a6ff">📘 半新股 · 止賺: 主板5億/GEM2億 + 回報100%</div>` : '';
 
   let posHtml = '';
   if (s.zeroDone) {
@@ -519,11 +542,12 @@ function stockCard(s, mode) {
 
   return `<div class="stock">
     <div class="stock-hdr">
-      <span class="stock-code">${code4}</span>${boardTag}
+      <span class="stock-code">${code4}</span>${boardTag}${mjBadge}
       <span class="stock-price">$${s.price.toFixed(3)}</span>
       <span class="stock-mcap">${mcapStr}</span>
     </div>
     ${posHtml}
+    ${mjHtml}
     ${debtHtml}
     ${signalHtml}
   </div>`;

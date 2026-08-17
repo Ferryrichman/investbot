@@ -81,44 +81,70 @@ export default {
   },
 };
 
+// 數字驗證: 打錯字/有逗號會變 NaN, 而 `x<=0` 捉唔到 NaN,
+// JSON.stringify 會將 NaN 寫做 null 污染 state → 先喺入口擋住。
+// 合法先返 number, 否則返 null (由 caller 出錯誤訊息)。
+function _parseNum(tok) {
+  const n = Number(String(tok).replace(/,/g, ""));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
 async function handleCommand(text, env) {
   const parts = text.split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
   if (cmd === "/buy") {
     if (parts.length < 4) return "用法: /buy CODE 股數 價錢 [mj] [force]\n例: /buy 1740 70000 0.114";
-    const [, code, shares, price] = parts;
+    const code = parts[1];
+    const shares = _parseNum(parts[2]);
+    if (shares === null) return "❌ 格式錯誤: " + parts[2];
+    const price = _parseNum(parts[3]);
+    if (price === null) return "❌ 格式錯誤: " + parts[3];
     const extras = parts.slice(4).map((t) => t.toLowerCase());
     const force = extras.includes("force");
     const mjTag = extras.includes("mj");
-    return await recordBuy(code, parseInt(shares), parseFloat(price), env, force, mjTag);
+    return await recordBuy(code, shares, price, env, force, mjTag);
   }
 
   if (cmd === "/sell") {
     if (parts.length < 4) return "用法: /sell CODE 股數 價錢\n例: /sell 1740 10000 0.20";
-    const [, code, shares, price] = parts;
+    const code = parts[1];
+    const shares = _parseNum(parts[2]);
+    if (shares === null) return "❌ 格式錯誤: " + parts[2];
+    const price = _parseNum(parts[3]);
+    if (price === null) return "❌ 格式錯誤: " + parts[3];
     const force = (parts[4] || "").toLowerCase() === "force";
-    return await recordSell(code, parseInt(shares), parseFloat(price), env, force);
+    return await recordSell(code, shares, price, env, force);
   }
 
   if (cmd === "/zerocost") {
     if (parts.length < 3) return "用法: /zerocost CODE 剩餘股數\n例: /zerocost 2370 13000";
-    const [, code, remaining] = parts;
-    return await markZeroCost(code, parseInt(remaining), env);
+    const code = parts[1];
+    const remaining = _parseNum(parts[2]);
+    if (remaining === null) return "❌ 格式錯誤: " + parts[2];
+    return await markZeroCost(code, remaining, env);
   }
 
   if (cmd === "/modify") {
     if (parts.length < 4) return "用法: /modify CODE 股數 平均價\n例: /modify 1740 70000 0.114";
-    const [, code, shares, avgPrice] = parts;
+    const code = parts[1];
+    const shares = _parseNum(parts[2]);
+    if (shares === null) return "❌ 格式錯誤: " + parts[2];
+    const avgPrice = _parseNum(parts[3]);
+    if (avgPrice === null) return "❌ 格式錯誤: " + parts[3];
     const force = (parts[4] || "").toLowerCase() === "force";
-    return await modifyHolding(code, parseInt(shares), parseFloat(avgPrice), env, force);
+    return await modifyHolding(code, shares, avgPrice, env, force);
   }
 
   if (cmd === "/del") {
-    if (parts.length < 2) return "用法:\n/del CODE — 刪除持倉\n/del CODE watchlist — 刪除持倉+移除監察";
+    if (parts.length < 2) return "用法:\n/del CODE — 刪除持倉\n/del CODE mj — 取消 MJ倉標記\n/del CODE watchlist — 刪除持倉+移除監察";
     const delWL = (parts[2] || "").toLowerCase();
     if (delWL === "watchlist" || delWL === "wl") {
       return await delAll(parts[1], env);
+    }
+    if (delWL === "mj") {
+      return await untagMj(parts[1], env);
     }
     return await delHolding(parts[1], env);
   }
@@ -126,28 +152,32 @@ async function handleCommand(text, env) {
   if (cmd === "/add") {
     if (parts.length < 2) {
       return (
-        "用法: /add CODE [main/gem] [mj]\n" +
+        "用法: /add CODE [main/gem] [mj/nomj]\n" +
         "例: /add 1234\n例: /add 8888 gem\n" +
         "例: /add 8657 mj — 標記 MJ倉策略 (板塊自動判斷)\n" +
-        "例: /add 2625 main mj"
+        "例: /add 2625 main mj\n例: /add 8657 nomj — 取消 MJ倉標記"
       );
     }
     const t2 = (parts[2] || "").toLowerCase();
     const t3 = (parts[3] || "").toLowerCase();
-    const strategy = (t2 === "mj" || t3 === "mj") ? "mj" : null;
-    let board;
+    let strategyOp = null;
+    if (t2 === "mj" || t3 === "mj") strategyOp = "mj";
+    else if (t2 === "nomj" || t3 === "nomj") strategyOp = "nomj";
+    // 板塊: 冇明確指定就靠 code 判斷 (8 字頭 = 創業板), 唔再一律 default main
+    let board, boardExplicit = true;
     if (t2 === "gem") board = "gem";
     else if (t2 === "main") board = "main";
-    else if (strategy === "mj") {
-      // 冇明確指定板塊: 8 字頭 = 創業板
+    else {
       board = String(parts[1]).padStart(4, "0").startsWith("8") ? "gem" : "main";
-    } else board = "main";
-    return await addToWatchlist(parts[1], board, env, strategy);
+      boardExplicit = false;
+    }
+    return await addToWatchlist(parts[1], board, env, strategyOp, boardExplicit);
   }
 
   if (cmd === "/remove") {
-    if (parts.length < 2) return "用法: /remove CODE\n例: /remove 1234";
-    return await removeFromWatchlist(parts[1], env);
+    if (parts.length < 2) return "用法: /remove CODE [force]\n例: /remove 1234";
+    const force = (parts[2] || "").toLowerCase() === "force";
+    return await removeFromWatchlist(parts[1], env, force);
   }
 
   if (cmd === "/watchlist") {
@@ -248,7 +278,7 @@ async function getState(env) {
   return { state: JSON.parse(content), sha: data.sha };
 }
 
-async function saveState(state, sha, message, env) {
+async function saveState(state, sha, message, env, _retried = false) {
   const token = (env.GITHUB_TOKEN || "").trim();
   const repo = (env.GITHUB_REPO || "").trim();
   const url = `https://api.github.com/repos/${repo}/contents/${STATE_PATH}`;
@@ -269,6 +299,15 @@ async function saveState(state, sha, message, env) {
   });
   if (!res.ok) {
     const body = await res.text();
+    // 409 = sha 過期 (多數係 Actions 啱啱 push 咗). 攞返新 sha retry 一次先認輸,
+    // 否則命令會靜靜丟失。
+    if (res.status === 409 && !_retried) {
+      const fresh = await getState(env);
+      return await saveState(state, fresh.sha, message, env, true);
+    }
+    if (res.status === 409) {
+      throw new Error("儲存衝突: state 啱啱被其他更新改咗, 請等幾秒再打多次命令");
+    }
     throw new Error(`GitHub save ${res.status}: ${body.slice(0, 200)}`);
   }
   return true;
@@ -303,6 +342,17 @@ async function undoLast(env, force = false) {
   const tgCommit = commits[idx];
   const originalCommitMessage = tgCommit.commit.message;
   const undoneCmd = originalCommitMessage.replace(/^tg:\s+/, "");
+
+  // b2. idx>0 = 最近嘅 TG 命令上面仲有 idx 個較新 commit (findIndex 揀第一個 tg:,
+  //     所以佢哋一定係 auto-run). 還原到 TG 命令之前會一併丟棄呢啲更新 → 要 force。
+  if (idx > 0 && !force) {
+    return (
+      `⚠️ 要退回嘅 TG 命令上面仲有 ${idx} 個較新更新:\n` +
+      `${originalCommitMessage}\n` +
+      `已退回會一併丟棄 ${idx} 個 auto-run 更新 (報價/signals/alert_seen)\n` +
+      `確認要退回請打: /undo force`
+    );
+  }
 
   // c. 24 小時防呆: 太舊嘅命令, 中間可能夾雜 auto-run 更新會一併還原
   const commitDate = new Date(tgCommit.commit.committer.date);
@@ -357,6 +407,17 @@ async function recordBuy(code, shares, price, env, force = false, mjTag = false)
   const code4 = String(code).padStart(4, "0");
   if (shares <= 0 || price <= 0) return `❌ 股數同價錢必須 > 0`;
   const { state, sha } = await getState(env);
+  // 防呆: /buy 一個從未監察又冇持倉嘅 code, 多數係 code 打錯 → 會產生冇 board 嘅
+  // 幽靈持倉 (monitor watchlist loop 靠 board 揀股, 之後睇唔到 → 停止報價/止賺).
+  // 抄 /modify 嗰個 unknown-code guard. (mjTag 會補 board, 唔算幽靈, 放行)
+  const existing = state[code4];
+  const isUnknown = !existing || (!existing.board && !(existing.tranches || []).length);
+  if (isUnknown && !mjTag && !force) {
+    return (
+      `⚠️ ${code4} 唔喺監察名單, 亦冇持倉記錄 — 懷疑 code 打錯?\n` +
+      `想真係買入: /add ${code4} [main/gem] 先, 或者命令尾加 force`
+    );
+  }
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
@@ -407,35 +468,75 @@ async function recordBuy(code, shares, price, env, force = false, mjTag = false)
   return `${code4} 買入 ${shares.toLocaleString()}股 @$${price} 投$${hkd.toLocaleString()}\n累計投入$${total.toLocaleString()}${mjNote}${extraWarn}`;
 }
 
-async function addToWatchlist(code, board, env, strategy = null) {
+// strategyOp: "mj" = 標記 MJ倉, "nomj" = 清 MJ倉標記, null = 唔特別指定
+// boardExplicit: 用戶有冇明確講板塊 (冇 → 我哋靠 code 判斷, 要 echo 出嚟)
+async function addToWatchlist(code, board, env, strategyOp = null, boardExplicit = true) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
   const mjTag = "📘 MJ倉策略 (止賺: 市值達標+100%)";
   if (state[code4] && state[code4].board) {
-    // 已監察: 唯一可以做嘅係補標 MJ倉
-    if (strategy === "mj" && state[code4].strategy !== "mj") {
+    // 已監察 (有 board): 只可以改 MJ倉標記
+    const cur = state[code4].strategy === "mj";
+    if (strategyOp === "mj") {
+      if (cur) return `${code4} 已經喺監察清單 (${state[code4].board}) 📘MJ倉`;
       state[code4].strategy = "mj";
       await saveState(state, sha, `tg: mark ${code4} mj`, env);
       return `${code4} 已喺監察清單 (${state[code4].board}) — 現已標記\n${mjTag}`;
     }
-    return `${code4} 已經喺監察清單 (${state[code4].board})${state[code4].strategy === "mj" ? " 📘MJ倉" : ""}`;
+    if (strategyOp === "nomj") {
+      if (!cur) return `${code4} 已喺監察清單 (${state[code4].board}), 本身唔係 MJ倉`;
+      delete state[code4].strategy;
+      await saveState(state, sha, `tg: unmark ${code4} mj`, env);
+      return `${code4} 已取消 MJ倉標記 (仍喺監察清單 ${state[code4].board})`;
+    }
+    return `${code4} 已經喺監察清單 (${state[code4].board})${cur ? " 📘MJ倉" : ""}`;
   }
+  const isReAdd = !!state[code4];
   if (!state[code4]) {
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
   state[code4].board = board;
-  if (strategy) state[code4].strategy = strategy;
+  // reconcile strategy: 有 mj op → set; 否則清走任何殘留 strategy。
+  // (removeFromWatchlist 保留 strategy:"mj", 若唔喺度清, re-add 會靜靜維持 MJ倉)
+  let reconcileNote = "";
+  if (strategyOp === "mj") {
+    state[code4].strategy = "mj";
+  } else if (state[code4].strategy) {
+    delete state[code4].strategy;
+    if (isReAdd) reconcileNote = "\n(已清除之前 MJ倉標記, 要 MJ倉請加 mj)";
+  }
 
-  await saveState(state, sha, `tg: add ${code4} (${board}${strategy ? " " + strategy : ""})`, env);
+  await saveState(state, sha, `tg: add ${code4} (${board}${state[code4].strategy ? " " + state[code4].strategy : ""})`, env);
   let msg = `${code4} 已加入監察 (${board === "gem" ? "創業板" : "主板"})`;
-  if (strategy === "mj") msg += `\n${mjTag}`;
+  if (!boardExplicit) {
+    msg += `\n(板塊自動判斷為${board === "gem" ? "創業板" : "主板"}, 如錯請 /remove ${code4} 後再 /add ${code4} ${board === "gem" ? "main" : "gem"})`;
+  }
+  if (state[code4].strategy === "mj") msg += `\n${mjTag}`;
+  msg += reconcileNote;
   return msg + "\n每朝09:00自動檢查";
 }
 
-async function removeFromWatchlist(code, env) {
+// 取消 MJ倉標記 (/del CODE mj): 只清 strategy, 唔郁 board/持倉
+async function untagMj(code, env) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
   if (!state[code4]) return `${code4} 唔存在`;
+  if (state[code4].strategy !== "mj") return `${code4} 本身唔係 MJ倉, 無需取消`;
+  delete state[code4].strategy;
+  await saveState(state, sha, `tg: unmark ${code4} mj`, env);
+  return `${code4} 已取消 MJ倉標記`;
+}
+
+async function removeFromWatchlist(code, env, force = false) {
+  const code4 = String(code).padStart(4, "0");
+  const { state, sha } = await getState(env);
+  if (!state[code4]) return `${code4} 唔存在`;
+  // 若仍持倉, 淨刪 board 會製造 orphan 持倉 (monitor + dashboard 靠 board filter,
+  // 之後停止計價/止賺信號). 要 force 先准。
+  const held = _shares(state[code4].tranches || []);
+  if (held > 0 && !force) {
+    return `⚠️ ${code4} 仍持 ${held.toLocaleString()} 股 — 移除監察會停止報價/止賺信號, 確認加 force`;
+  }
   delete state[code4].board;
 
   await saveState(state, sha, `tg: remove ${code4}`, env);
@@ -591,19 +692,27 @@ async function recordSell(code, sharesSold, price, env, force = false) {
     if (mcapM0) state[code4].zero_cost_tier = _tierReached(mcapM0, state[code4].board || "main");
     msg += `\n剩${remainShares.toLocaleString()}股 🎉 0成本達成！免費持倉`;
   } else if (state[code4].zero_cost_achieved) {
-    // 0成本後賣出 (M2-M5 或自行減持): 減免費股數 + 標記已到達嘅 milestone
-    const prevZ = state[code4].zero_cost_shares || 0;
-    state[code4].zero_cost_shares = Math.max(0, prevZ - sharesSold);
+    // 0成本後賣出: 分開兩個 pool。
+    //  1. rebuy pool = 0成本後再撈返嘅貨 (= 賣出前總持股 - 免費股數)
+    //  2. zero_cost pool = 免費股 (zero_cost_shares)
+    // 賣出先扣 rebuy pool, 超出先扣免費股 — 唔好連 rebuy 都當免費股扣。
+    const heldBefore = remainShares + sharesSold;
+    const zBefore = state[code4].zero_cost_shares || 0;
+    const rebuyOutstanding = Math.max(0, heldBefore - zBefore);
+    const fromRebuy = Math.min(sharesSold, rebuyOutstanding);
+    const fromZero = sharesSold - fromRebuy;
+    state[code4].zero_cost_shares = Math.max(0, zBefore - fromZero);
     if (!state[code4].post_zero_done) state[code4].post_zero_done = [];
     const done = state[code4].post_zero_done;
     if (!done.includes(0)) done.push(0); // M1 完成於0成本時
+    // milestone 純以市值達標判斷 (唔好單憑「有賣出」就 mark), 且所有已達嘅都 mark
+    // (移除 break — 一次跨兩個 milestone 唔會漏, 免得重複賣同一 20%)
     const MS = (state[code4].board === "gem") ? [150, 300, 450, 600, 750] : [400, 800, 1200, 1600, 2000];
     const mcapM = state[code4].last_mcap_m || 0;
     for (let i = 1; i < MS.length; i++) {
       if (mcapM >= MS[i] && !done.includes(i)) {
         done.push(i);
         msg += `\n✅ M${i + 1} 標記完成`;
-        break;
       }
     }
     msg += `\n剩${remainShares.toLocaleString()}股 (0成本剩${state[code4].zero_cost_shares.toLocaleString()}股)`;
@@ -623,14 +732,21 @@ async function markZeroCost(code, remainShares, env) {
   const now = new Date().toISOString().slice(0, 10);
   state[code4].zero_cost_achieved = true;
   state[code4].zero_cost_shares = remainShares;
+  // 同 recordSell auto-zero-cost 一致: set initial_shares + M1 done + tier floor,
+  // 否則 net_inv 仍正 + tier 未 set → monitor 會叫即刻全 重新建倉。
+  state[code4].zero_cost_initial_shares = remainShares;
   state[code4].zero_cost_date = now;
   if (!state[code4].post_zero_done) state[code4].post_zero_done = [];
   if (!state[code4].post_zero_done.includes(0)) {
     state[code4].post_zero_done.push(0);
   }
+  const mcapM = state[code4].last_mcap_m;
+  if (mcapM) state[code4].zero_cost_tier = _tierReached(mcapM, state[code4].board || "main");
 
   await saveState(state, sha, `tg: zerocost ${code4} remain=${remainShares}`, env);
-  return `${code4} 已標記0成本 剩${remainShares}股免費持倉`;
+  let msg = `${code4} 已標記0成本 剩${remainShares.toLocaleString()}股免費持倉`;
+  if (state[code4].zero_cost_tier) msg += `\n(重新建倉 floor = tier ${state[code4].zero_cost_tier})`;
+  return msg;
 }
 
 function _pnl(inv, val) {

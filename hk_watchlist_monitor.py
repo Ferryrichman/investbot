@@ -65,13 +65,6 @@ GEM_TIERS_M  = [80, 60, 50, 40, 30]
 MAIN_SHELL_M = 150   # 主板殼價保守下限（百萬）
 GEM_SHELL_M  = 60    # 創業板殼價保守下限（百萬）
 
-# ── 止賺門檻 ─────────────────────────────────────────────
-# 第一目標：浮盈達此 % → 賣夠回成本，0成本持倉
-ZERO_COST_TRIGGER_PCT = 100.0
-
-# 第二目標：市值回升至殼價 + 浮盈>=此% → 賣夠回成本（如未做）
-SHELL_RECOVER_PROFIT_PCT = 80.0   # 殼價回升時門檻可低一點
-
 # ── 0成本後 Post-Zero 里程碑 ──────────────────────────────
 # 格式: {"mcap_m": 市值門檻(百萬), "gain_pct": 浮盈%門檻(None=不用), "sell_frac": 賣剩餘比例, "label": 標籤}
 # M1 雙觸發：市值 OR 浮盈% (任一成立)
@@ -659,6 +652,17 @@ def calc_zero_cost_sell(
     return shares_to_sell, remaining, total_invested
 
 
+def _post_zero_tranches(tranches: list[dict], zero_date: str) -> list[dict]:
+    """0成本日之後嘅新買入 tranches (正 hkd)。
+    用 >= 同完整 timestamp 比較 (worker 寫 UTC date, monitor 寫 HKT — 同日 rebuy
+    唔可以因為 date-only strict > 而隱形)。zero_date 空 → 冇 post-zero 記錄可判斷。
+    """
+    if not zero_date:
+        return []
+    return [t for t in tranches
+            if t.get("hkd", 0) > 0 and t.get("date", "") >= zero_date]
+
+
 def check_take_profit(
     current_price: float, mcap_m: float, board: str,
     avg_cost: float | None, gain_pct: float,
@@ -728,17 +732,16 @@ def check_take_profit(
 
     # ── 階段二：已達0成本，追蹤後市目標 ──────────────────
     else:
-        net_inv = sum(t.get("hkd", 0) for t in tranches)
-        total_shares_held = sum(t.get("shares", 0) for t in tranches)
+        zero_date = stock_st.get("zero_cost_date", "")
+        pz_tr = _post_zero_tranches(tranches, zero_date)
 
-        # 若 net_inv > 0 (重新買入後)，唔出 milestone 信號（免費股已被稀釋）
-        # 但要 check 新買入嗰部分有冇達到自己嘅0成本條件
-        if net_inv > 0:
-            zero_date = stock_st.get("zero_cost_date", "")
-            pz_tr = [t for t in tranches
-                     if t.get("hkd", 0) > 0 and zero_date
-                     and t.get("date", "")[:10] > zero_date]
-            if pz_tr and current_price > 0:
+        # 有 0成本後嘅新買入 → 唔出免費股 milestone (免費股已被稀釋)，
+        # 只 check 新買嗰部分有冇達到自己嘅0成本條件。
+        # 用 pz_tr 判斷 (同 report / shortfall 一致) — 唔用 net_inv:
+        #   net_inv ≤ 0 (0成本套現超本金) 嘅 rebuy 一樣要行呢條分支,
+        #   否則會錯誤 re-enable M2-M5 免費股止賺又冇 rebuy 自己嘅止賺。
+        if pz_tr:
+            if current_price > 0:
                 pz_inv = sum(t["hkd"] for t in pz_tr)
                 pz_shares_raw = sum(t.get("shares", 0) for t in pz_tr)
                 pz_avg = pz_inv / pz_shares_raw if pz_shares_raw > 0 else 0
@@ -888,6 +891,7 @@ def build_stock_block(
     debt_stale: bool = False,
     buy_capped: bool = False,
     full_shortfall: float | None = None,
+    buy_shares: int | None = None,
 ) -> str:
     mcap_m    = quote["mcap"] / 1e6
     lot_size  = stock_st.get("lot_size", 1)
@@ -932,9 +936,7 @@ def build_stock_block(
             lines.append("  📘 MJ倉 已0成本 — 跟 MJ 位置2/3 警報自由操作")
         # 顯示0成本之後嘅新買入
         zero_date = stock_st.get("zero_cost_date", "")
-        pz_tr = [t for t in tranches
-                 if t.get("hkd", 0) > 0 and zero_date
-                 and t.get("date", "")[:10] > zero_date]
+        pz_tr = _post_zero_tranches(tranches, zero_date)
         if pz_tr:
             pz_inv = sum(t["hkd"] for t in pz_tr)
             pz_shares = sum(t.get("shares", 0) for t in pz_tr)
@@ -967,7 +969,9 @@ def build_stock_block(
     # 負債唔再 block 買入 (2026-08 用戶決定: 只顯示狀況, 自己判斷)
     has_pos = bool(tranches) and _get_shares(tranches, lot_size) > 0
     if shortfall >= MIN_BUY_HKD:
-        est_shares = round_to_lots(shortfall / price, lot_size, "down")
+        # buy_shares 有值就直接用嗰個股數印 (同 _meta.signals.buy.shares 一致),
+        # 唔好由 HKD amount 反推 — 避免 float 誤差令印出嘅 /buy 差一手。
+        est_shares = buy_shares if buy_shares is not None else round_to_lots(shortfall / price, lot_size, "down")
         est_lots   = est_shares // lot_size if lot_size > 0 else 0
         if est_shares > 0:
             # 被 cap 嘅補倉: 顯示總差額 + 今次注碼 (分注紀律, 每次最多2注)
@@ -1238,9 +1242,15 @@ def build_mj_section(
     prev_codes = set(meta.get("prev_codes") or [])
     alert_seen = dict(meta.get("alert_seen") or {})
 
-    def _fresh(code_: str, text_: str, window_days: int = 3) -> bool:
-        """同一信號 3 日內唔重複轟炸 (key 去數字化 — 數值日日變, 類型唔變)"""
-        key = f"{code_}:" + re.sub(r"[\d,.\s%$x×+-]+", "", text_)[:48]
+    def _mk_key(code_: str, text_: str, key_: str | None = None) -> str:
+        """suppression key。key_ 有值就唔經去數字化 regex (避免 位置0/2/3
+        去數後 collapse 成同一 key CODE:位置位置 → 高危位置被錯誤 suppress)。"""
+        if key_ is not None:
+            return f"{code_}:{key_}"
+        return f"{code_}:" + re.sub(r"[\d,.\s%$x×+-]+", "", text_)[:48]
+
+    def _is_fresh(key: str, window_days: int = 3) -> bool:
+        """純檢查 (唔 stamp) — 3 日內出過就唔再重複。stamp 留返俾真正送出嘅 row。"""
         last = alert_seen.get(key)
         if last:
             try:
@@ -1250,13 +1260,16 @@ def build_mj_section(
                     return False
             except ValueError:
                 pass
-        alert_seen[key] = today_str
         return True
 
+    # 每組 row 以 (suppression_key|None, 顯示文字) 收集; key=None = 永不 suppress。
+    # 只喺 _cap_stamp 對 survive (冇被 8-row cap 砍) 嘅 row 先 stamp alert_seen,
+    # 避免被截走嘅 row 記錄為已送但其實冇送 → 3 日內唔會再出。
     conflict_rows, abandon_rows, new_rows = [], [], []
     mom_rows, danger_rows, note_rows      = [], [], []
     entry_rows = []  # 💰 入場區: 現價貼近留意位 ±30% (建議買入位 = 留意日收市價)
     conflict_codes, abandon_codes         = [], []
+    mj_no_quote = []  # 報價失敗 (用上次價) 嘅 code — 永不 suppress 嘅警告
     n_lowmom = n_atabandon = 0
 
     for code in sorted(stocks):
@@ -1273,12 +1286,15 @@ def build_mj_section(
             price = q["price"]
             rec["last_price"] = price
             rec["last_check"] = now
+            got_quote = True
         else:
             price = rec.get("last_price") or rec.get("pdf_price") or 0
+            got_quote = False
+            mj_no_quote.append(code)
 
-        # ── 用新鮮價重算現時狀態% ──
+        # ── 用新鮮價重算現時狀態% (報價失敗就唔覆寫, 保留上次 status_pct) ──
         wc = rec.get("watch_close") or 0
-        if wc:
+        if got_quote and wc:
             rec["status_pct"] = round((price - wc) / wc * 100, 1)
         status_pct = rec.get("status_pct") or 0
 
@@ -1316,30 +1332,35 @@ def build_mj_section(
             if held > 0:
                 # CONFLICT: MJ 叫放棄但你有持倉 — 永遠唔 suppress, 亦永遠唔出 /sell
                 conflict_rows.append(
-                    f"  {head}\n   {rtxt}\n   → MJ 叫放棄, 但你有持倉 — 自己決定"
+                    (None, f"  {head}\n   {rtxt}\n   → MJ 叫放棄, 但你有持倉 — 自己決定")
                 )
                 conflict_codes.append(code)
-            elif _fresh(code, "放棄" + rtxt):
-                abandon_rows.append(f"  {head} {rtxt}")
-                abandon_codes.append(code)
+            else:
+                k = _mk_key(code, "放棄" + rtxt)
+                if _is_fresh(k):
+                    abandon_rows.append((k, f"  {head} {rtxt}"))
+                    abandon_codes.append(code)
 
         # ── ② New: 上一份功課冇 / info 有 New tag (永遠顯示) ──
         is_new = bool(prev_codes and code not in prev_codes) or \
                  any("New" in str(t) for t in info)
         if is_new:
             new_rows.append(
-                f"  {head} 動能{mom:.1f} 狀態{status_pct:+.0f}% 現${price:.3f}"
+                (None, f"  {head} 動能{mom:.1f} 狀態{status_pct:+.0f}% 現${price:.3f}")
             )
 
         # ── ③ 動能提升 ──
-        if mom_txt and _fresh(code, "動能" + mom_txt):
-            mom_rows.append(f"  {head} {mom_txt} ({mom:.1f})")
+        if mom_txt:
+            k = _mk_key(code, "動能" + mom_txt)
+            if _is_fresh(k):
+                mom_rows.append((k, f"  {head} {mom_txt} ({mom:.1f})"))
 
         # ── ④ 每日Notes (導師評語, 原文照登) ──
         if note_txts:
             ntxt = " ".join(note_txts)
-            if _fresh(code, "note" + ntxt):
-                note_rows.append(f"  {code} {name} — {ntxt}")
+            k = _mk_key(code, "note" + ntxt)
+            if _is_fresh(k):
+                note_rows.append((k, f"  {code} {name} — {ntxt}"))
 
         # ── ⑤ 到達危險位置 (只報最高一個) ──
         pos_label = pos_val = None
@@ -1349,10 +1370,14 @@ def build_mj_section(
             pos_label, pos_val = "位置2", p2
         elif p0 and price >= p0:
             pos_label, pos_val = "位置0", p0
-        if pos_label and _fresh(code, "位置" + pos_label):
-            danger_rows.append(
-                f"  {code} {name} {pos_label} ${price:.3f} ≥ ${pos_val:.3f} {hold_tag}"
-            )
+        if pos_label:
+            # explicit key: 位置0/2/3 各自獨立, 唔會去數後 collapse 成同一 key
+            pos_key = {"位置0": "posZero", "位置2": "posTwo", "位置3": "posThree"}[pos_label]
+            k = _mk_key(code, "位置" + pos_label, key_=pos_key)
+            if _is_fresh(k):
+                danger_rows.append(
+                    (k, f"  {code} {name} {pos_label} ${price:.3f} ≥ ${pos_val:.3f} {hold_tag}")
+                )
 
         # ── 💰 入場區: 現價同建議買入位 (留意日收市價) 差距 ±30% 內 ──
         # 課程規則: 唔好低過留意位 30%, 亦唔好高過 30% — 呢個 band 先係
@@ -1377,10 +1402,16 @@ def build_mj_section(
             })
 
     # ── 組裝 (每組最多 8 條, 唔好搞爆 TG message) ──
-    def _cap(rows: list, limit: int = 8) -> str:
-        if len(rows) > limit:
-            return "\n".join(rows[:limit]) + f"\n  …及其他{len(rows) - limit}隻"
-        return "\n".join(rows)
+    # rows = list[(key|None, text)]。只 stamp 真正 survive (冇被 cap 砍) 嘅 row,
+    # 令被截走嗰啲下次仲會再出 (唔會記錯做已送)。
+    def _cap_stamp(rows: list, limit: int = 8) -> str:
+        for k, _t in rows[:limit]:
+            if k is not None:
+                alert_seen[k] = today_str
+        texts = [t for _k, t in rows]
+        if len(texts) > limit:
+            return "\n".join(texts[:limit]) + f"\n  …及其他{len(texts) - limit}隻"
+        return "\n".join(texts)
 
     body = []
     for label, rows in (
@@ -1391,7 +1422,7 @@ def build_mj_section(
         ("⚡ 到危險位置",      danger_rows),
     ):
         if rows:
-            body.append(f"{label} ({len(rows)}隻)\n" + _cap(rows))
+            body.append(f"{label} ({len(rows)}隻)\n" + _cap_stamp(rows))
     if entry_rows:
         # TOP 建議買入: 未持倉, 🔸重點名單 → ⭐市值合格 → (動能-貼位/3), 最多 10 隻
         # (2026-08 用戶: 重點名單 40 隻優先; 只 show TOP 10, 完整留返 /mj)
@@ -1434,7 +1465,36 @@ def build_mj_section(
             # 冇 TOP 候選但有 MJ 倉 → 淨係 show 預算狀態
             body.append(hdr)
     if note_rows:
-        body.append("📝 James Notes\n" + _cap(note_rows))
+        body.append("📝 James Notes\n" + _cap_stamp(note_rows))
+
+    # ── 📕 已離開功課名單但仍持倉 (兩層都追蹤唔到嘅缺口) ──
+    # strategy=="mj" 但跌出最新功課 PDF 又仲有貨 → 冇買賣信號, 冇 MJ 位置追蹤。
+    # 永不 suppress, 連持股一齊出, 提醒用戶自己決定去留。
+    mj_codes_now = set(stocks)
+    left_rows = []
+    for c_, s_ in (watchlist_state or {}).items():
+        if c_.startswith("_") or c_ in mj_codes_now:
+            continue
+        if s_.get("strategy") != "mj":
+            continue
+        held_ = sum(t.get("shares", 0) for t in (s_.get("tranches") or []))
+        if held_ <= 0:
+            continue
+        nm_ = s_.get("name") or ""
+        lp_ = s_.get("last_price") or 0
+        price_str = f" 現${lp_:.3f}" if lp_ else ""
+        left_rows.append(f"  {c_} {nm_} 持{held_:,.0f}股{price_str}")
+    if left_rows:
+        body.append(
+            f"📕 已離開功課名單但仍持倉 ({len(left_rows)}隻) — 自己決定去留\n"
+            + "\n".join(left_rows)
+        )
+
+    # ── ⚠ MJ 報價失敗 (用上次價) — 永不 suppress ──
+    if mj_no_quote:
+        body.append(
+            f"⚠ MJ 報價失敗 {len(mj_no_quote)}隻 (用上次價): " + ", ".join(mj_no_quote)
+        )
 
     summary = {
         "generated_at":   now,
@@ -1449,8 +1509,10 @@ def build_mj_section(
         "n_notes":        len(note_rows),
         "n_lowmom":       n_lowmom,
         "n_at_abandon":   n_atabandon,
+        "n_no_quote":     len(mj_no_quote),
         "conflict_codes": conflict_codes,
         "abandon_codes":  abandon_codes,
+        "no_quote_codes": mj_no_quote,
     }
 
     if not readonly:
@@ -1592,10 +1654,7 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
             expected_inv    = effective_tiers * TRANCHE_SIZE
             # 計算0成本之後嘅新買入 (post-zero buys)
             zero_date = stock_st.get("zero_cost_date", "")
-            post_zero_inv = sum(
-                t.get("hkd", 0) for t in tranches
-                if t.get("hkd", 0) > 0 and zero_date and t.get("date", "")[:10] > zero_date
-            )
+            post_zero_inv = sum(t.get("hkd", 0) for t in _post_zero_tranches(tranches, zero_date))
             position  = post_zero_inv
             shortfall = max(0, expected_inv - position) if expected_inv > 0 else 0
         else:
@@ -1702,8 +1761,15 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
                     f"🚨 高危派貨警示: {' + '.join(high_risk_flags)}"
                 )
 
-        # Cross-run suppression: 同一類信號 3 日內唔重複轟炸
-        ccass_alerts = [a for a in ccass_alerts if _fresh_alert(code, a)]
+        # Cross-run suppression: 同一類信號 3 日內唔重複轟炸。
+        # 保留兩個 list:
+        #   raw_alerts   = 未過濾 (今次真實偵測到嘅全部) → 寫入 _meta.signals (Dashboard),
+        #                  Dashboard 唔應該繼承 message-level 3日 suppression 而漏咗派貨 alert
+        #                  甚至令成隻股跌出止賺 tab。
+        #   fresh_alerts = 過濾後 → 只用喺 outbound TG text + TG section 分類 (避免轟炸)。
+        raw_alerts = list(ccass_alerts)
+        fresh_alerts = [a for a in raw_alerts if _fresh_alert(code, a)]
+        ccass_alerts = fresh_alerts  # 下游 TG block / section 分類用 fresh
 
         # 負債比率（只 check 有持倉嘅股票，省 API call）
         dr = None
@@ -1772,7 +1838,8 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
                 capped_amt = capped_shares * price
                 block = build_stock_block(code, board, quote, stock_st, capped_amt,
                                           tp_signals, ccass_alerts, dr, dr_stale,
-                                          buy_capped=True, full_shortfall=shortfall)
+                                          buy_capped=True, full_shortfall=shortfall,
+                                          buy_shares=capped_shares)
                 all_blocks[-1] = block  # 同步替換, 避免 full report 印兩個唔同版本
             final_buy_shares = capped_shares
             final_buy_hkd = capped_shares * price
@@ -1796,30 +1863,35 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
                 "減持", "CCASS OUT", "Broker SURGE", "派貨", "派散戶",
                 "🚨", "⛔ 連環減持", "🕯️", "📉 高位連"
             ])
-        sell_trigger_alerts = [a for a in ccass_alerts if _is_sell_trigger(a)]
-        anomaly_only_alerts = [a for a in ccass_alerts if not _is_sell_trigger(a)]
 
-        # 真正止賺信號 — 必須有持倉先有意義
-        in_sell_section = has_pos and bool(valid_tp or sell_trigger_alerts)
+        def _classify(alerts: list[str]) -> tuple[bool, bool]:
+            """(in_sell, in_anomaly) — 用同一套規則, 分別餵 fresh (TG) / raw (Dashboard)。"""
+            st_alerts = [a for a in alerts if _is_sell_trigger(a)]
+            an_alerts = [a for a in alerts if not _is_sell_trigger(a)]
+            sell = has_pos and bool(valid_tp or st_alerts)
+            other = sell or in_buy_section
+            watch_only = (not has_pos) and bool(st_alerts or an_alerts)
+            anomaly = bool(an_alerts and not other) or watch_only
+            return sell, anomaly
+
+        # TG message: 用 fresh (suppression 只用喺 outbound text)
+        in_sell_section, in_anomaly_section = _classify(fresh_alerts)
         if in_sell_section:
             sell_blocks.append(block)
         # (⚠ 負債關注 section 已按用戶要求取消 2026-08 — 負債狀況只 inline 顯示)
-
-        # 異常動向: 1) watch-only 嘅 sell trigger alerts (冇 /sell 命令)
-        #          2) anomaly only alerts + 唔出現喺其他 section
-        in_other_section = in_sell_section or in_buy_section
-        watch_only_with_alert = not has_pos and bool(sell_trigger_alerts or anomaly_only_alerts)
-        in_anomaly_section = bool(anomaly_only_alerts and not in_other_section) or watch_only_with_alert
         if in_anomaly_section:
             anomaly_blocks.append(block)
 
         # ── _meta.signals: Dashboard 直接 render, 單一邏輯來源 ──
+        # section membership + alerts 用 raw (唔繼承 suppression), 令派貨 alert /
+        # 止賺 tab 唔會因為 3日內出過而喺 Dashboard 靜靜消失。
+        dash_sell, dash_anomaly = _classify(raw_alerts)
         sig_sections = []
-        if in_sell_section:    sig_sections.append("sell")
-        if in_buy_section:     sig_sections.append("buy")
-        if in_anomaly_section: sig_sections.append("anomaly")
+        if dash_sell:       sig_sections.append("sell")
+        if in_buy_section:  sig_sections.append("buy")
+        if dash_anomaly:    sig_sections.append("anomaly")
         dw_text = debt_warning(dr, stock_st)
-        if sig_sections or ccass_alerts or dw_text:
+        if sig_sections or raw_alerts or dw_text:
             sig_entry = {"sections": sig_sections}
             if in_buy_section and final_buy_shares > 0:
                 sig_entry["buy"] = {
@@ -1843,8 +1915,8 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
                 } for s in valid_tp]
             if dw_text:
                 sig_entry["debt_text"] = dw_text.strip().replace("\n", " · ")
-            if ccass_alerts:
-                sig_entry["alerts"] = ccass_alerts
+            if raw_alerts:
+                sig_entry["alerts"] = raw_alerts
             signals_meta[code] = sig_entry
 
     # ── Auto-fix: 淨投入 ≤ 0 但未標0成本 → 自動補標 ──
@@ -1931,7 +2003,8 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
     cash_pct       = cash_est / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
     cash_ok        = cash_pct >= MIN_CASH_PCT * 100
     cash_icon      = "OK" if cash_ok else "LOW"
-    deploy_limit   = TOTAL_PORTFOLIO * (1 - MIN_CASH_PCT)
+    # 真正可部署 = 現金 - 20% 現金 floor (唔可以食晒現金去買, 要留 20%)
+    deployable     = max(0.0, cash_est - TOTAL_PORTFOLIO * MIN_CASH_PCT)
 
     sep = "\n"
 
@@ -2019,6 +2092,7 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
             "gain_pct": round(gain_pct_total, 1),
             "cash_est": round(cash_est),
             "cash_pct": round(cash_pct, 1),
+            "deployable": round(deployable),
             "total_portfolio": TOTAL_PORTFOLIO,
             "n_holdings": n_holdings,
             "n_zero": n_zero,
@@ -2035,15 +2109,15 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
 
     signal_blocks = sell_blocks + buy_blocks + anomaly_blocks
 
-    # 建議買入總額 vs 可用現金
+    # 建議買入總額 vs 可部署 (已預留 20% 現金 floor)
     budget_summary = ""
     if total_buy_recommend > 0:
-        budget_icon = "OK" if total_buy_recommend <= cash_est else "⚠️ 超出"
+        budget_icon = "OK" if total_buy_recommend <= deployable else "⚠️ 超出"
         budget_summary = (
-            f"\n建議買入總額: ${total_buy_recommend:,.0f} / 可用 ${cash_est:,.0f} [{budget_icon}]"
+            f"\n建議買入總額: ${total_buy_recommend:,.0f} / 可部署 ${deployable:,.0f} (已預留20%) [{budget_icon}]"
         )
-        if total_buy_recommend > cash_est:
-            budget_summary += "\n→ 現金不足，請選擇優先股票"
+        if total_buy_recommend > deployable:
+            budget_summary += "\n→ 超出可部署額 (要留20%現金)，請選擇優先股票"
 
     # 持倉股報價失敗警告 — alert 同 full report 都要顯示
     nd_warning = ""
@@ -2206,6 +2280,9 @@ def mark_post_zero(code: str, milestone_idx: int):
 # ============================================================
 
 def print_allocation_plan():
+    # 用動態注碼 (cash + market val)/100, 唔好用 hardcode default 6000
+    global TRANCHE_SIZE
+    TRANCHE_SIZE = _compute_dynamic_tranche(load_state())
     print(f"\n{'='*60}")
     print(f"  資金分配計劃  (每注: HKD {TRANCHE_SIZE:,})")
     print(f"{'='*60}")
@@ -2224,9 +2301,7 @@ def print_allocation_plan():
             cumulative += TRANCHE_SIZE
             print(f"  第{i+1}層  < {t}M HKD      HKD {TRANCHE_SIZE:>8,}    HKD {cumulative:>8,}")
 
-    print(f"\n  止賺規則:")
-    print(f"    浮盈 >= {ZERO_COST_TRIGGER_PCT:.0f}%              → 賣剛好夠回成本的股數 → 0成本持倉")
-    print(f"    市值回升殼價 + 浮盈>={SHELL_RECOVER_PROFIT_PCT:.0f}%  → 同上，賣夠回成本 → 0成本持倉")
+    # 止賺規則純由 POST_ZERO_MAIN/GEM 生成 (M1 = 0成本觸發, 見下方後市目標)
     def _ms_trigger_str(ms):
         parts = []
         mcap_g = ms.get("mcap_gain_pct")
@@ -2321,10 +2396,7 @@ def intraday_alert() -> str | None:
                 effective_tiers = max(0, tiers_now - zero_tier)
                 expected_inv = effective_tiers * TRANCHE_SIZE
                 zero_date = stock_st.get("zero_cost_date", "")
-                position = sum(
-                    t.get("hkd", 0) for t in tranches
-                    if t.get("hkd", 0) > 0 and zero_date and t.get("date", "")[:10] > zero_date
-                )
+                position = sum(t.get("hkd", 0) for t in _post_zero_tranches(tranches, zero_date))
             else:
                 expected_inv = tiers_now * TRANCHE_SIZE
                 actual_inv = sum(t["hkd"] for t in tranches if t.get("hkd", 0) > 0)
@@ -2388,18 +2460,48 @@ def intraday_alert() -> str | None:
 # Telegram
 # ============================================================
 
-def tg_send(msg: str):
+def tg_send(msg: str) -> bool:
+    """發 TG。全部 chunk 都成功送到先返 True。
+    有 retry (429 honour retry_after; 網絡/HTTP 錯誤都重試), 令 caller 可以喺
+    送失敗時唔好靜靜吞咗信號 (state 應留返下次重試)。
+    """
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    all_ok = True
     for chunk in [msg[i:i+4000] for i in range(0, len(msg), 4000)]:
-        r = requests.post(url, json={
-            "chat_id": CHAT_ID,
-            "text": chunk,
-            "disable_web_page_preview": True
-        }, timeout=15)
-        res = r.json()
-        if not res.get("ok"):
-            print(f"TG 失敗: {res.get('description')}")
+        sent = False
+        for attempt in range(3):
+            try:
+                r = requests.post(url, json={
+                    "chat_id": CHAT_ID,
+                    "text": chunk,
+                    "disable_web_page_preview": True
+                }, timeout=15)
+            except requests.RequestException as e:
+                print(f"TG 送出異常 (第{attempt+1}次): {e}")
+                time.sleep(2 * (attempt + 1))
+                continue
+            # 429 限流: honour retry_after 再試
+            if r.status_code == 429:
+                try:
+                    retry_after = int(r.json().get("parameters", {}).get("retry_after", 5))
+                except (ValueError, AttributeError):
+                    retry_after = 5
+                print(f"TG 429 限流, {retry_after}s 後重試")
+                time.sleep(retry_after + 1)
+                continue
+            try:
+                res = r.json()
+            except ValueError:
+                res = {}
+            if r.status_code == 200 and res.get("ok"):
+                sent = True
+                break
+            print(f"TG 失敗 (第{attempt+1}次, HTTP {r.status_code}): {res.get('description')}")
+            time.sleep(2 * (attempt + 1))
+        if not sent:
+            all_ok = False
         time.sleep(0.3)
+    return all_ok
 
 
 # ============================================================
@@ -2407,30 +2509,45 @@ def tg_send(msg: str):
 # ============================================================
 
 def _git_pull_state():
-    """Best-effort sync local state.json with remote (no-op if not a repo or no remote).
-    Pull 失敗/衝突時 → abort rebase 並直接取 remote 版 state.json (remote 係 canonical)。
+    """Best-effort sync local state 檔案 with remote (no-op if not a repo or no remote).
+    Pull 失敗/衝突時 → abort rebase 並直接取 remote 版 (remote 係 canonical)。
+    watchlist_state.json 同 mj_state.json (兩個都 auto-commit) 都要硬化。
     """
     import subprocess
     repo = Path(__file__).parent
     def _run(*cmd, timeout=15):
         return subprocess.run(list(cmd), cwd=repo, capture_output=True, text=True, timeout=timeout)
+    # git porcelain 全部 unmerged (衝突) code — 唔止 UU/AA/DD
+    UNMERGED = {"DD", "AU", "UD", "UA", "DU", "AA", "UU"}
+    state_files = [
+        ("data/watchlist_state.json", STATE_FILE),
+        ("data/mj_state.json",        MJ_STATE_FILE),
+    ]
     try:
         result = _run("git", "pull", "--rebase", "--autostash", timeout=20)
         if result.returncode != 0 and "up to date" not in result.stdout.lower():
             print(f"[git pull] {result.stderr.strip() or result.stdout.strip()}")
-        # 衝突/rebase 中斷 → abort + 用 remote 版 state (避免 conflict markers 損壞 JSON)
-        chk = _run("git", "status", "--porcelain", "data/watchlist_state.json")
-        if chk.returncode == 0 and chk.stdout.strip()[:2] in ("UU", "AA", "DD"):
+        # 衝突/rebase 中斷 → abort + 用 remote 版 (避免 conflict markers 損壞 JSON)
+        conflicted = []
+        for rel, _p in state_files:
+            chk = _run("git", "status", "--porcelain", rel)
+            if chk.returncode == 0 and chk.stdout.strip()[:2] in UNMERGED:
+                conflicted.append(rel)
+        if conflicted:
             _run("git", "rebase", "--abort")
-            _run("git", "checkout", "origin/main", "--", "data/watchlist_state.json")
-            print("[git pull] 衝突已解決: 採用 remote state.json")
-        # 最後防線: state.json 必須係 valid JSON
-        try:
-            json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            _run("git", "rebase", "--abort")
-            _run("git", "checkout", "origin/main", "--", "data/watchlist_state.json")
-            print("[git pull] state.json 損壞 — 已還原 remote 版本")
+            for rel in conflicted:
+                _run("git", "checkout", "origin/main", "--", rel)
+            print(f"[git pull] 衝突已解決: 採用 remote {', '.join(conflicted)}")
+        # 最後防線: 每個 state 檔案都必須係 valid JSON
+        for rel, path in state_files:
+            if not path.exists():
+                continue
+            try:
+                json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                _run("git", "rebase", "--abort")
+                _run("git", "checkout", "origin/main", "--", rel)
+                print(f"[git pull] {rel} 損壞 — 已還原 remote 版本")
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
         print(f"[git pull] skipped: {e}")
 
@@ -2452,15 +2569,28 @@ if __name__ == "__main__":
         print(monitor_report(alert_only=False, readonly=True))
 
     elif mode == "alert":
+        # build → send → 成功先算數。monitor_report 內部已 persist suppression / 🆕 / mj
+        # state, 若送失敗就 rollback 返 build 前嘅檔案內容, 令嗰批信號下次仲會再出
+        # (唔會因為 send 失敗而被靜音 3 日)。
+        pre_state = STATE_FILE.read_text(encoding="utf-8") if STATE_FILE.exists() else None
+        pre_mj    = MJ_STATE_FILE.read_text(encoding="utf-8") if MJ_STATE_FILE.exists() else None
         report = monitor_report(alert_only=True)
         print(report)
-        tg_send(report)
-        # Reset intraday flags after morning report
-        st = load_state()
-        for code, v in st.items():
-            v.pop("last_alert_tier", None)
-            v.pop("tp_alerted", None)
-        save_state(st)
+        ok = tg_send(report)
+        if ok:
+            # Reset intraday flags after morning report
+            st = load_state()
+            for code, v in st.items():
+                if isinstance(v, dict):
+                    v.pop("last_alert_tier", None)
+                    v.pop("tp_alerted", None)
+            save_state(st)
+        else:
+            print("[alert] TG 送出失敗 — rollback state, 下次會重試 (唔靜音信號)")
+            if pre_state is not None:
+                STATE_FILE.write_text(pre_state, encoding="utf-8")
+            if pre_mj is not None:
+                MJ_STATE_FILE.write_text(pre_mj, encoding="utf-8")
 
     elif mode == "intraday":
         msg = intraday_alert()
