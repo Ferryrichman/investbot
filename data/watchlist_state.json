@@ -910,6 +910,13 @@
         "shares": 69000,
         "date": "2026-05-18",
         "note": "sync from TG Bot"
+      },
+      {
+        "price": 0.13,
+        "hkd": 130,
+        "shares": 1000,
+        "date": "2026-08-19 07:48",
+        "note": "via TG"
       }
     ],
     "zero_cost_achieved": false,
