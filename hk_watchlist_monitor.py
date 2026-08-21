@@ -1268,6 +1268,7 @@ def build_mj_section(
     conflict_rows, abandon_rows, new_rows = [], [], []
     mom_rows, danger_rows, note_rows      = [], [], []
     entry_rows = []  # 💰 入場區: 現價貼近留意位 ±30% (建議買入位 = 留意日收市價)
+    top_rows = []    # 頭 10 精選 (寫入 _meta.signals.mj 俾 /mj 直接 render)
     conflict_codes, abandon_codes         = [], []
     mj_no_quote = []  # 報價失敗 (用上次價) 嘅 code — 永不 suppress 嘅警告
     n_lowmom = n_atabandon = 0
@@ -1506,6 +1507,7 @@ def build_mj_section(
         "n_mom_up":       len(mom_rows),
         "n_danger":       len(danger_rows),
         "n_entry_zone":   len(entry_rows),
+        "entry_top":      top_rows,          # 頭10精選, /mj 直接 render (同 alert 一致)
         "n_notes":        len(note_rows),
         "n_lowmom":       n_lowmom,
         "n_at_abandon":   n_atabandon,

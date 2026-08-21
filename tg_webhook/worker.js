@@ -994,18 +994,24 @@ async function getMj(code, env) {
   } else {
     out.push("🛑 要放棄: 冇");
   }
-  if (entry.length) {
-    entry.sort((a, b) => a.d - b.d);  // 最貼留意位排最前
+  // 入場區: 優先用 monitor 計好嘅頭十精選 (含 🔸重點/⭐市值/停牌過濾, 同 alert 一致)
+  const mjSig = (state._meta && state._meta.signals && state._meta.signals.mj) || {};
+  const entryTop = mjSig.entry_top || [];
+  if (entryTop.length) {
     out.push("-------------------");
-    out.push(`💰 入場區 ±30% (${entry.length}隻) — 貼近留意位, 可細注試倉`);
-    out.push(entry.slice(0, 20).map(e => e.row).join("\n"));
-    if (entry.length > 20) out.push(`…及其他${entry.length - 20}隻`);
+    out.push(`💰 TOP 建議買入 (頭${entryTop.length} / 入場區共${mjSig.n_entry_zone || entry.length}隻)`);
+    out.push(entryTop.map(r => r.trim()).join("\n"));
+    out.push("🔸=重點 ⭐=市值合L型");
+  } else if (entry.length) {
+    // fallback (未 run alert): 舊計法頭十
+    entry.sort((a, b) => a.d - b.d);
+    out.push("-------------------");
+    out.push(`💰 入場區 ±30% (頭10 / 共${entry.length}隻)`);
+    out.push(entry.slice(0, 10).map(e => e.row).join("\n"));
   }
   out.push("-------------------");
-  out.push(`⚡ 到危險位置: ${nDanger}隻`);
-  out.push(`📉 低動能(<${MJ_MOM_FLOOR}): ${nLowMom}隻`);
-  out.push("\n💡 MJ 信號只係警告, 買賣自己決定");
-  out.push("💡 /mj CODE 睇單隻詳情");
+  out.push(`⚡ 到危險位置: ${nDanger}隻 · 📉 低動能<${MJ_MOM_FLOOR}: ${nLowMom}隻`);
+  out.push("💡 只係警告, 自己決定 · /mj CODE 睇單隻");
   return out.join("\n");
 }
 
