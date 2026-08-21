@@ -625,10 +625,17 @@
         "shares": -8000,
         "date": "2026-07-10 02:36",
         "note": "sell via TG"
+      },
+      {
+        "price": 1,
+        "hkd": -4000,
+        "shares": -4000,
+        "date": "2026-08-21 02:06",
+        "note": "sell via TG"
       }
     ],
     "zero_cost_achieved": true,
-    "zero_cost_shares": 8000,
+    "zero_cost_shares": 4000,
     "zero_cost_price": null,
     "post_zero_done": [
       0
