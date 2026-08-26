@@ -131,7 +131,7 @@
       "2350:posZero": "2026-08-24",
       "2502:posZero": "2026-08-24",
       "2528:posZero": "2026-08-17",
-      "8529:posZero": "2026-08-20",
+      "8529:posZero": "2026-08-26",
       "8616:posZero": "2026-08-24",
       "2159:放棄低動能(變化)": "2026-08-24",
       "2237:動能動能:高>中": "2026-08-24",
@@ -154,7 +154,7 @@
       "p0": 0.52,
       "p2": 0.79,
       "p3": 1.054,
-      "status_pct": -4.2,
+      "status_pct": -15.4,
       "lot_hkd": 260.0,
       "mcap_y": 4.93,
       "ccass5": 91.7,
@@ -165,8 +165,8 @@
         "動能:",
         "高->中"
       ],
-      "last_price": 0.249,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.22,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1111": {
@@ -193,7 +193,7 @@
         "有塔但乾身,繼續Keep"
       ],
       "last_price": 0.241,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1153": {
@@ -218,7 +218,7 @@
         "流動負債>流動資產"
       ],
       "last_price": 0.365,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1156": {
@@ -244,7 +244,7 @@
         "位置0"
       ],
       "last_price": 0.25,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1163": {
@@ -267,7 +267,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.163,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1284": {
@@ -290,7 +290,7 @@
       "dchg": 0.04,
       "info": [],
       "last_price": 0.465,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1334": {
@@ -304,7 +304,7 @@
       "p0": 1.82,
       "p2": 3.539,
       "p3": 5.899,
-      "status_pct": 30.2,
+      "status_pct": 24.7,
       "lot_hkd": 2975.0,
       "mcap_y": 5.9,
       "ccass5": 94.3,
@@ -314,8 +314,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 1.185,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.135,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1343": {
@@ -338,7 +338,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.134,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1351": {
@@ -352,7 +352,7 @@
       "p0": 0.74,
       "p2": 1.178,
       "p3": 1.964,
-      "status_pct": -53.2,
+      "status_pct": -48.6,
       "lot_hkd": 480.0,
       "mcap_y": 1.45,
       "ccass5": 89.7,
@@ -363,8 +363,8 @@
         "位置0,",
         "未散貨繼續Keep"
       ],
-      "last_price": 0.173,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.19,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1407": {
@@ -378,7 +378,7 @@
       "p0": 0.76,
       "p2": 1.323,
       "p3": 1.764,
-      "status_pct": 56.6,
+      "status_pct": 61.8,
       "lot_hkd": 1220.0,
       "mcap_y": 2.68,
       "ccass5": 93.8,
@@ -388,8 +388,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.595,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.615,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1408": {
@@ -403,7 +403,7 @@
       "p0": 0.468,
       "p2": 0.721,
       "p3": 0.961,
-      "status_pct": 60.3,
+      "status_pct": 58.1,
       "lot_hkd": 680.0,
       "mcap_y": 1.68,
       "ccass5": 86.2,
@@ -413,8 +413,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.375,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.37,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1433": {
@@ -439,7 +439,7 @@
         "繼續Keep"
       ],
       "last_price": 0.081,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1455": {
@@ -453,7 +453,7 @@
       "p0": 0.44,
       "p2": 0.613,
       "p3": 0.919,
-      "status_pct": 10.4,
+      "status_pct": 10.9,
       "lot_hkd": 1250.0,
       "mcap_y": 3.16,
       "ccass5": 92.2,
@@ -461,8 +461,8 @@
       "ipo": "15-09-2020",
       "dchg": 0.01,
       "info": [],
-      "last_price": 0.244,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.245,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1473": {
@@ -476,7 +476,7 @@
       "p0": 0.81,
       "p2": 1.484,
       "p3": 2.225,
-      "status_pct": 187.7,
+      "status_pct": 158.0,
       "lot_hkd": 5480.0,
       "mcap_y": 16.14,
       "ccass5": 87.8,
@@ -487,8 +487,8 @@
         "位置0",
         "位置2"
       ],
-      "last_price": 1.165,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.045,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1489": {
@@ -502,7 +502,7 @@
       "p0": 0.92,
       "p2": 1.425,
       "p3": 2.035,
-      "status_pct": 219.6,
+      "status_pct": 238.0,
       "lot_hkd": 5100.0,
       "mcap_y": 10.19,
       "ccass5": 91.8,
@@ -513,8 +513,8 @@
         "位置0",
         "位置0"
       ],
-      "last_price": 1.47,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.555,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1490": {
@@ -537,7 +537,7 @@
       "dchg": 0.01,
       "info": [],
       "last_price": 0.25,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1643": {
@@ -551,7 +551,7 @@
       "p0": 1.32,
       "p2": 2.635,
       "p3": 4.391,
-      "status_pct": 17.4,
+      "status_pct": 21.2,
       "lot_hkd": 2490.0,
       "mcap_y": 5.98,
       "ccass5": 86.7,
@@ -561,8 +561,8 @@
       "info": [
         "位置2"
       ],
-      "last_price": 0.775,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.8,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1650": {
@@ -585,7 +585,7 @@
       "dchg": 0.01,
       "info": [],
       "last_price": 0.14,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1795": {
@@ -608,7 +608,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.46,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1855": {
@@ -635,8 +635,8 @@
         "%",
         "繼續Keep"
       ],
-      "last_price": 0.1940000057220459,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.194,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1871": {
@@ -661,7 +661,7 @@
         "位置0"
       ],
       "last_price": 0.3,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1927": {
@@ -684,7 +684,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.265,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1936": {
@@ -709,7 +709,7 @@
         "有塔但乾身"
       ],
       "last_price": 0.87,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1941": {
@@ -735,7 +735,7 @@
         "位置2"
       ],
       "last_price": 0.58,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "1947": {
@@ -758,7 +758,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.55,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1957": {
@@ -772,7 +772,7 @@
       "p0": 0.46,
       "p2": 0.751,
       "p3": 1.002,
-      "status_pct": 25.6,
+      "status_pct": 14.5,
       "lot_hkd": 725.0,
       "mcap_y": 1.82,
       "ccass5": 84.7,
@@ -782,8 +782,8 @@
       "info": [
         "有塔但乾身"
       ],
-      "last_price": 0.285,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.26,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "1971": {
@@ -797,7 +797,7 @@
       "p0": 0.52,
       "p2": 1.122,
       "p3": 1.496,
-      "status_pct": 24.5,
+      "status_pct": 13.2,
       "lot_hkd": 330.0,
       "mcap_y": 1.37,
       "ccass5": 89.5,
@@ -805,8 +805,8 @@
       "ipo": "07-07-2020",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.33,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.3,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2107": {
@@ -820,7 +820,7 @@
       "p0": 0.5,
       "p2": 0.927,
       "p3": 1.545,
-      "status_pct": 70.0,
+      "status_pct": 68.0,
       "lot_hkd": 1000.0,
       "mcap_y": 5.06,
       "ccass5": 88.1,
@@ -830,8 +830,8 @@
       "info": [
         "繼續Keep"
       ],
-      "last_price": 0.425,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.42,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2125": {
@@ -854,7 +854,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 0.29,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2129": {
@@ -868,7 +868,7 @@
       "p0": 0.26,
       "p2": 0.427,
       "p3": 0.569,
-      "status_pct": 71.9,
+      "status_pct": 69.5,
       "lot_hkd": 1100.0,
       "mcap_y": 2.7,
       "ccass5": 88.9,
@@ -878,8 +878,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.22,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.217,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2132": {
@@ -893,7 +893,7 @@
       "p0": 0.208,
       "p2": 0.359,
       "p3": 0.479,
-      "status_pct": 66.3,
+      "status_pct": 53.8,
       "lot_hkd": 1360.0,
       "mcap_y": 2.66,
       "ccass5": 90.9,
@@ -903,8 +903,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.173,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.16,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2159": {
@@ -930,7 +930,7 @@
         "Score"
       ],
       "last_price": 1.78,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2165": {
@@ -944,7 +944,7 @@
       "p0": 2.42,
       "p2": 3.894,
       "p3": 5.84,
-      "status_pct": 35.5,
+      "status_pct": 36.0,
       "lot_hkd": 1620.0,
       "mcap_y": 4.64,
       "ccass5": 95.3,
@@ -952,8 +952,8 @@
       "ipo": "07-12-2021",
       "dchg": 0.0,
       "info": [],
-      "last_price": 1.64,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.645,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2167": {
@@ -967,7 +967,7 @@
       "p0": 5.46,
       "p2": 12.739,
       "p3": 17.835,
-      "status_pct": 49.5,
+      "status_pct": 51.3,
       "lot_hkd": 822.0,
       "mcap_y": 7.12,
       "ccass5": 95.5,
@@ -977,8 +977,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 4.08,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 4.13,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2177": {
@@ -1001,7 +1001,7 @@
       "dchg": 0.0,
       "info": [],
       "last_price": 2.105,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2187": {
@@ -1015,7 +1015,7 @@
       "p0": 1.0,
       "p2": 1.776,
       "p3": 2.368,
-      "status_pct": -8.0,
+      "status_pct": -11.0,
       "lot_hkd": 3920.0,
       "mcap_y": 4.31,
       "ccass5": 81.2,
@@ -1023,8 +1023,8 @@
       "ipo": "26-03-2021",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.46,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.445,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2205": {
@@ -1038,7 +1038,7 @@
       "p0": 1.28,
       "p2": 2.348,
       "p3": 3.131,
-      "status_pct": -10.9,
+      "status_pct": -6.3,
       "lot_hkd": 650.0,
       "mcap_y": 4.03,
       "ccass5": 94.0,
@@ -1048,8 +1048,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.57,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.6,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2215": {
@@ -1063,7 +1063,7 @@
       "p0": 0.5,
       "p2": 0.782,
       "p3": 1.173,
-      "status_pct": -6.4,
+      "status_pct": -21.6,
       "lot_hkd": 300.0,
       "mcap_y": 2.66,
       "ccass5": 98.4,
@@ -1073,8 +1073,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.234,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.196,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2237": {
@@ -1088,7 +1088,7 @@
       "p0": 0.48,
       "p2": 0.733,
       "p3": 0.977,
-      "status_pct": -11.1,
+      "status_pct": -12.8,
       "lot_hkd": 1900.0,
       "mcap_y": 3.1,
       "ccass5": 88.9,
@@ -1099,8 +1099,8 @@
         "動能:",
         "高->中"
       ],
-      "last_price": 0.216,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.212,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2260": {
@@ -1123,7 +1123,7 @@
       "dchg": -0.49,
       "info": [],
       "last_price": 1.265,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2297": {
@@ -1137,7 +1137,7 @@
       "p0": 0.4,
       "p2": 0.794,
       "p3": 1.191,
-      "status_pct": 1.5,
+      "status_pct": -0.5,
       "lot_hkd": 190.0,
       "mcap_y": 2.65,
       "ccass5": 78.9,
@@ -1147,8 +1147,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.199,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.195,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2321": {
@@ -1162,7 +1162,7 @@
       "p0": 0.8,
       "p2": 1.183,
       "p3": 1.775,
-      "status_pct": 23.7,
+      "status_pct": 25.0,
       "lot_hkd": 2600.0,
       "mcap_y": 5.2,
       "ccass5": 94.4,
@@ -1172,8 +1172,8 @@
       "info": [
         "有塔但乾身"
       ],
-      "last_price": 0.495,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.5,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2325": {
@@ -1187,7 +1187,7 @@
       "p0": 1.58,
       "p2": 2.378,
       "p3": 3.567,
-      "status_pct": -26.3,
+      "status_pct": -25.6,
       "lot_hkd": 325.0,
       "mcap_y": 4.04,
       "ccass5": 82.1,
@@ -1195,8 +1195,8 @@
       "ipo": "18-05-2022",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.575,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.58,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2347": {
@@ -1210,7 +1210,7 @@
       "p0": 1.52,
       "p2": 2.383,
       "p3": 3.575,
-      "status_pct": -5.9,
+      "status_pct": -6.6,
       "lot_hkd": 1420.0,
       "mcap_y": 3.41,
       "ccass5": 90.4,
@@ -1218,8 +1218,8 @@
       "ipo": "06-10-2022",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.715,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.71,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2350": {
@@ -1233,7 +1233,7 @@
       "p0": 0.6,
       "p2": 1.121,
       "p3": 1.57,
-      "status_pct": 115.3,
+      "status_pct": 122.0,
       "lot_hkd": 3400.0,
       "mcap_y": 5.9,
       "ccass5": 80.3,
@@ -1244,8 +1244,8 @@
         "位置0",
         "位置2"
       ],
-      "last_price": 0.635,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.655,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2370": {
@@ -1259,7 +1259,7 @@
       "p0": 2.18,
       "p2": 3.311,
       "p3": 4.415,
-      "status_pct": 35.3,
+      "status_pct": 17.4,
       "lot_hkd": 580.0,
       "mcap_y": 2.32,
       "ccass5": 90.7,
@@ -1267,8 +1267,8 @@
       "ipo": "31-03-2022",
       "dchg": -0.02,
       "info": [],
-      "last_price": 1.475,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.28,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2381": {
@@ -1282,7 +1282,7 @@
       "p0": 0.26,
       "p2": 0.404,
       "p3": 0.673,
-      "status_pct": 66.4,
+      "status_pct": 94.7,
       "lot_hkd": 2500.0,
       "mcap_y": 5.02,
       "ccass5": 90.2,
@@ -1292,8 +1292,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.218,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.255,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2392": {
@@ -1307,7 +1307,7 @@
       "p0": 2.14,
       "p2": 3.871,
       "p3": 5.807,
-      "status_pct": -1.9,
+      "status_pct": -15.9,
       "lot_hkd": 515.0,
       "mcap_y": 5.74,
       "ccass5": 83.4,
@@ -1315,8 +1315,8 @@
       "ipo": "08-07-2022",
       "dchg": -0.01,
       "info": [],
-      "last_price": 1.05,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.9,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2405": {
@@ -1343,7 +1343,7 @@
         "%"
       ],
       "last_price": 0.355,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2415": {
@@ -1357,7 +1357,7 @@
       "p0": 1.58,
       "p2": 2.741,
       "p3": 3.655,
-      "status_pct": 1.3,
+      "status_pct": -1.3,
       "lot_hkd": 187.5,
       "mcap_y": 4.55,
       "ccass5": 91.4,
@@ -1365,8 +1365,8 @@
       "ipo": "27-04-2023",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.8,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.78,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2421": {
@@ -1380,7 +1380,7 @@
       "p0": 1.24,
       "p2": 2.131,
       "p3": 3.196,
-      "status_pct": -2.4,
+      "status_pct": -7.3,
       "lot_hkd": 1200.0,
       "mcap_y": 3.01,
       "ccass5": 88.7,
@@ -1388,8 +1388,8 @@
       "ipo": "23-03-2023",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.605,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.575,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2440": {
@@ -1403,7 +1403,7 @@
       "p0": 2.22,
       "p2": 3.607,
       "p3": 5.411,
-      "status_pct": -14.4,
+      "status_pct": -17.1,
       "lot_hkd": 910.0,
       "mcap_y": 3.75,
       "ccass5": 83.4,
@@ -1414,8 +1414,8 @@
         "動能:",
         "高"
       ],
-      "last_price": 0.95,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.92,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2455": {
@@ -1441,7 +1441,7 @@
         "高"
       ],
       "last_price": 0.68,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2457": {
@@ -1467,7 +1467,7 @@
         "高"
       ],
       "last_price": 0.39,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2486": {
@@ -1481,7 +1481,7 @@
       "p0": 5.8,
       "p2": 11.472,
       "p3": 19.121,
-      "status_pct": 51.7,
+      "status_pct": 43.3,
       "lot_hkd": 882.0,
       "mcap_y": 4.99,
       "ccass5": 98.3,
@@ -1489,8 +1489,8 @@
       "ipo": "05-11-2023",
       "dchg": 0.0,
       "info": [],
-      "last_price": 4.4,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 4.155,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2497": {
@@ -1504,7 +1504,7 @@
       "p0": 1.04,
       "p2": 1.418,
       "p3": 2.127,
-      "status_pct": 14.4,
+      "status_pct": 11.5,
       "lot_hkd": 1240.0,
       "mcap_y": 3.08,
       "ccass5": 96.1,
@@ -1515,8 +1515,8 @@
         "動能:",
         "高"
       ],
-      "last_price": 0.595,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.58,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2501": {
@@ -1530,7 +1530,7 @@
       "p0": 1.94,
       "p2": 4.445,
       "p3": 6.223,
-      "status_pct": 46.4,
+      "status_pct": 42.8,
       "lot_hkd": 2920.0,
       "mcap_y": 7.25,
       "ccass5": 93.3,
@@ -1538,8 +1538,8 @@
       "ipo": "11-10-2023",
       "dchg": -0.01,
       "info": [],
-      "last_price": 1.42,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.385,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2502": {
@@ -1553,7 +1553,7 @@
       "p0": 0.58,
       "p2": 0.873,
       "p3": 1.455,
-      "status_pct": 110.3,
+      "status_pct": 81.0,
       "lot_hkd": 1100.0,
       "mcap_y": 5.26,
       "ccass5": 93.1,
@@ -1564,8 +1564,8 @@
         "位置0",
         "位置0"
       ],
-      "last_price": 0.61,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.525,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2505": {
@@ -1579,7 +1579,7 @@
       "p0": 2.18,
       "p2": 4.284,
       "p3": 5.713,
-      "status_pct": -43.1,
+      "status_pct": -44.0,
       "lot_hkd": 670.0,
       "mcap_y": 3.1,
       "ccass5": 89.0,
@@ -1592,8 +1592,8 @@
         "%",
         "乾身,殘價,繼續Keep"
       ],
-      "last_price": 0.62,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.61,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2528": {
@@ -1619,7 +1619,7 @@
         "位置2"
       ],
       "last_price": 0.92,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2540": {
@@ -1633,7 +1633,7 @@
       "p0": 1.94,
       "p2": 2.788,
       "p3": 4.182,
-      "status_pct": -13.5,
+      "status_pct": -20.8,
       "lot_hkd": 1875.0,
       "mcap_y": 4.5,
       "ccass5": 91.1,
@@ -1641,8 +1641,8 @@
       "ipo": "08-03-2024",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.83,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.76,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2545": {
@@ -1656,7 +1656,7 @@
       "p0": 0.54,
       "p2": 0.935,
       "p3": 1.247,
-      "status_pct": 66.0,
+      "status_pct": 67.9,
       "lot_hkd": 860.0,
       "mcap_y": 2.72,
       "ccass5": 88.1,
@@ -1666,8 +1666,8 @@
       "info": [
         "位置0"
       ],
-      "last_price": 0.44,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.445,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "2593": {
@@ -1681,7 +1681,7 @@
       "p0": 3.02,
       "p2": 5.567,
       "p3": 9.278,
-      "status_pct": -38.4,
+      "status_pct": -37.7,
       "lot_hkd": 768.0,
       "mcap_y": 1.28,
       "ccass5": 88.3,
@@ -1694,8 +1694,8 @@
         "%",
         "雖然比系統趕,但MJ決定繼續Keep"
       ],
-      "last_price": 0.93,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.94,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2605": {
@@ -1709,7 +1709,7 @@
       "p0": 3.06,
       "p2": 6.455,
       "p3": 8.607,
-      "status_pct": -22.5,
+      "status_pct": -24.8,
       "lot_hkd": 532.0,
       "mcap_y": 2.04,
       "ccass5": 88.1,
@@ -1719,8 +1719,8 @@
       "info": [
         "繼續Keep"
       ],
-      "last_price": 1.185,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.15,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "2625": {
@@ -1734,7 +1734,7 @@
       "p0": 4.8,
       "p2": 8.495,
       "p3": 11.327,
-      "status_pct": -18.5,
+      "status_pct": -20.0,
       "lot_hkd": 2080.0,
       "mcap_y": 4.89,
       "ccass5": 96.8,
@@ -1744,8 +1744,8 @@
       "info": [
         "位置2"
       ],
-      "last_price": 1.955,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.92,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "6193": {
@@ -1759,7 +1759,7 @@
       "p0": 0.4,
       "p2": 0.633,
       "p3": 0.949,
-      "status_pct": 87.5,
+      "status_pct": 85.0,
       "lot_hkd": 800.0,
       "mcap_y": 1.58,
       "ccass5": 91.3,
@@ -1770,8 +1770,8 @@
         "位置0",
         "位置0"
       ],
-      "last_price": 0.375,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.37,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "6611": {
@@ -1796,7 +1796,7 @@
         "低殘市值"
       ],
       "last_price": 0.046,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "suspended": true,
       "featured": false
     },
@@ -1825,7 +1825,7 @@
         "雖然比系統趕,但MJ決定繼續Keep"
       ],
       "last_price": 0.22,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "6999": {
@@ -1851,7 +1851,7 @@
         "高危"
       ],
       "last_price": 0.117,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "8489": {
@@ -1865,7 +1865,7 @@
       "p0": 0.27,
       "p2": 0.408,
       "p3": 0.611,
-      "status_pct": 31.9,
+      "status_pct": 31.1,
       "lot_hkd": 850.0,
       "mcap_y": 0.53,
       "ccass5": 90.0,
@@ -1875,8 +1875,8 @@
       "info": [
         "位置2"
       ],
-      "last_price": 0.178,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.177,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "8529": {
@@ -1890,7 +1890,7 @@
       "p0": 0.28,
       "p2": 0.403,
       "p3": 0.605,
-      "status_pct": 85.3,
+      "status_pct": 113.3,
       "lot_hkd": 1550.0,
       "mcap_y": 1.57,
       "ccass5": 90.6,
@@ -1901,8 +1901,8 @@
         "位置0",
         "位置2"
       ],
-      "last_price": 0.265,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.305,
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "8549": {
@@ -1916,7 +1916,7 @@
       "p0": 0.48,
       "p2": 0.98,
       "p3": 1.633,
-      "status_pct": -16.7,
+      "status_pct": -16.2,
       "lot_hkd": 1050.0,
       "mcap_y": 0.84,
       "ccass5": 88.9,
@@ -1927,8 +1927,8 @@
         "動能:",
         "高"
       ],
-      "last_price": 0.2,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.201,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "8616": {
@@ -1954,7 +1954,7 @@
         "位置0"
       ],
       "last_price": 0.072,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": false
     },
     "8657": {
@@ -1981,7 +1981,7 @@
         "繼續Keep"
       ],
       "last_price": 0.3,
-      "last_check": "2026-08-26 10:01",
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "9608": {
@@ -1995,7 +1995,7 @@
       "p0": 0.11,
       "p2": 0.241,
       "p3": 0.322,
-      "status_pct": -10.9,
+      "status_pct": -5.5,
       "lot_hkd": 500.0,
       "mcap_y": 1.88,
       "ccass5": 87.0,
@@ -2005,8 +2005,8 @@
       "info": [
         "有塔但乾身"
       ],
-      "last_price": 0.049,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.052,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "9916": {
@@ -2020,7 +2020,7 @@
       "p0": 0.8,
       "p2": 1.481,
       "p3": 2.221,
-      "status_pct": -12.5,
+      "status_pct": -11.3,
       "lot_hkd": 740.0,
       "mcap_y": 1.46,
       "ccass5": 90.0,
@@ -2028,8 +2028,8 @@
       "ipo": "03-09-2020",
       "dchg": 0.02,
       "info": [],
-      "last_price": 0.35,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 0.355,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     },
     "9918": {
@@ -2043,7 +2043,7 @@
       "p0": 2.22,
       "p2": 3.849,
       "p3": 6.415,
-      "status_pct": -10.4,
+      "status_pct": -8.1,
       "lot_hkd": 1960.0,
       "mcap_y": 0.98,
       "ccass5": 89.2,
@@ -2051,8 +2051,8 @@
       "ipo": "01-10-2020",
       "dchg": 0.0,
       "info": [],
-      "last_price": 0.995,
-      "last_check": "2026-08-26 10:01",
+      "last_price": 1.02,
+      "last_check": "2026-08-26 15:46",
       "featured": true
     }
   }
