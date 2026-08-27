@@ -1054,7 +1054,15 @@
   },
   "2125": {
     "tier_reached": 0,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.28,
+        "hkd": 280,
+        "shares": 1000,
+        "date": "2026-08-27 08:10",
+        "note": "via TG"
+      }
+    ],
     "zero_cost_achieved": false,
     "post_zero_done": [],
     "notes": [],
