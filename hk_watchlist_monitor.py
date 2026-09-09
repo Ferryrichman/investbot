@@ -107,7 +107,12 @@ MJ_MOM_FLOOR  = 55      # 動能下限，低過就係「要放棄」
 MJ_POOL_PCT     = 0.40   # MJ 池 = 現金 × 40%
 MJ_STOCK_PCT    = 0.10   # 每隻 ≤ 池嘅 10%
 MJ_SPLIT_NOTES  = 2      # 每隻分注數
+MJ_NOTE_HKD = 2_500   # 注碼固定 (手動校準制); 現金2% 偏離 >25% 時 alert 提示重估
 MJ_CASH_GATE    = 25     # 現金 % 低過呢個數 → 提示暫停 MJ 新倉
+
+# ── TG HTML 摺疊區 sentinel (monitor_report 包住 MJ section, tg_send 轉做 <blockquote>) ──
+MJ_FOLD_START = "\x01FOLD\x01"
+MJ_FOLD_END   = "\x01/FOLD\x01"
 
 # ── CCASS 集中度警戒設定 ──────────────────────────────────
 # top10_pct 在最近 N 個交易日內升幅達此門檻 → 觸發 CCASS IN 警示
@@ -1336,9 +1341,8 @@ def build_mj_section(
             rtxt = " ".join(reasons)
             if held > 0:
                 # CONFLICT: MJ 叫放棄但你有持倉 — 永遠唔 suppress, 亦永遠唔出 /sell
-                conflict_rows.append(
-                    (None, f"  {head}\n   {rtxt}\n   → MJ 叫放棄, 但你有持倉 — 自己決定")
-                )
+                # (trailing "→ MJ 叫放棄" 提示唔逐隻重複, 組裝時成組共用一行)
+                conflict_rows.append((None, f"  {head} — {rtxt}"))
                 conflict_codes.append(code)
             else:
                 k = _mk_key(code, "放棄" + rtxt)
@@ -1396,14 +1400,20 @@ def build_mj_section(
             is_gem = code.startswith("8")
             mcap_ok = mcap_now <= (0.8 if is_gem else 2.0)
             feat = bool(rec.get("featured"))
+            # compact row (mobile-first): 留意/現價留返 /mj CODE 睇, 呢度淨係做排名摘要
+            # James notes 做最後參考 — 有 note 就縮短掛喺行尾
+            note_sfx = f" · {note_txts[0][:8]}" if note_txts else ""
             entry_rows.append({
                 "mcap_ok": mcap_ok,
                 "held": held > 0,
+                "in_watchlist": hold_tag != "未監察",  # 已喺 L list (持倉/監察) → 唔入 TOP
                 "featured": feat,
                 "mom": mom,
+                "mcap_now": mcap_now,
+                "has_note": bool(note_txts),
                 "dist": abs(status_pct),
-                "row": (f"  {'🔸' if feat else ''}{code} {name} [{mcap_now:.2f}億] {status_pct:+.0f}% "
-                        f"留意${wc:.3f} 現${price:.3f} 動能{mom:.0f} {hold_tag}"),
+                "row": (f"  {'🔸' if feat else ''}{code} {name} {mcap_now:.1f}億 {status_pct:+.0f}% "
+                        f"動{mom:.0f}{note_sfx}"),
             })
 
     # ── 組裝 (每組最多 8 條, 唔好搞爆 TG message) ──
@@ -1427,12 +1437,19 @@ def build_mj_section(
         ("⚡ 到危險位置",      danger_rows),
     ):
         if rows:
-            body.append(f"{label} ({len(rows)}隻)\n" + _cap_stamp(rows))
+            section = f"{label} ({len(rows)}隻)\n" + _cap_stamp(rows)
+            if label == "⚠️ 要放棄 + 有持倉":
+                # 組內每隻股份共用一行提示, 唔逐隻重複
+                section += "\n  → MJ 叫放棄, 自己決定去留"
+            body.append(section)
     if entry_rows:
         # TOP 建議買入: 未持倉, 🔸重點名單 → ⭐市值合格 → (動能-貼位/3), 最多 10 隻
         # (2026-08 用戶: 重點名單 40 隻優先; 只 show TOP 10, 完整留返 /mj)
-        cands = [e for e in entry_rows if not e["held"]]
-        cands.sort(key=lambda e: (not e["featured"], not e["mcap_ok"], -(e["mom"] - e["dist"] / 3)))
+        # TOP 10 排名 (2026-09-09 用戶規則):
+        #   入場 gate = 狀態 ≤30% (entry_rows 已 filter) + 唔喺 L list (持倉/監察都剔, 用其他 MJ 股補位)
+        #   排序: ①動能為主 ②市值 (⭐ 主板≤2億/GEM≤0.8億 最優, 再細再好) ③James notes 參考
+        cands = [e for e in entry_rows if not e["in_watchlist"]]
+        cands.sort(key=lambda e: (-e["mom"], not e["mcap_ok"], e["mcap_now"], not e["has_note"], e["dist"]))
         top_rows = [("  ⭐" + e["row"][2:]) if e["mcap_ok"] else e["row"]
                     for e in cands[:10]]
         # ── 資金紀律 (2026-09-09 用戶規則):
@@ -1457,15 +1474,21 @@ def build_mj_section(
 
         mj_pool   = max(0, cash_now) * MJ_POOL_PCT
         per_stock = mj_pool * MJ_STOCK_PCT
-        half      = max(100, round(per_stock / MJ_SPLIT_NOTES / 100) * 100)
+        half      = MJ_NOTE_HKD                    # 注碼固定 (手動校準制, 見 MJ_NOTE_HKD)
+        target    = per_stock / MJ_SPLIT_NOTES      # 理論注碼 = 現金2% (池40%×股10%÷2注)
 
-        hdr = (f"💰 TOP 建議買入 ({len(top_rows)}隻精選 / 入場區共{len(entry_rows)}隻) — 完整名單: /mj"
-               f"\n  注碼 ${half:,}/注 · 每隻上限 ${per_stock:,.0f} (分{MJ_SPLIT_NOTES}注)"
-               f"\n  🔸=MJ重點名單 · ⭐=主板≤2億/GEM≤0.8億 · 排名=重點+動能+貼位")
+        def _fmt_money_k(v: float) -> str:
+            """money ≥$10K 顯示 $NN.NK (1位小數), 否則 $X,XXX 全數"""
+            return f"${v/1000:.1f}K" if v >= 10_000 else f"${v:,.0f}"
+
         icon = "⚠️ 爆Cap" if mj_inv >= mj_pool else "OK"
-        hdr += f"\n  📊 MJ池已投 ${mj_inv:,.0f} / 上限 ${mj_pool:,.0f} (現金40%) [{icon}]"
+        hdr = (f"💰 TOP {len(top_rows)} (入場區共{len(entry_rows)}隻 · 完整 /mj)"
+               f"\n注碼 ${half:,}×{MJ_SPLIT_NOTES}注 · 每隻≤{_fmt_money_k(per_stock)} · "
+               f"池 {_fmt_money_k(mj_inv)}/{_fmt_money_k(mj_pool)} [{icon}]")
         if cash_pct_now < MJ_CASH_GATE:
-            hdr += f"\n  ⛔ 現金{cash_pct_now:.0f}% < {MJ_CASH_GATE}% — 建議暫停 MJ 新倉, 留錢俾 L型主軸"
+            hdr += f"\n⛔ 現金{cash_pct_now:.0f}% < {MJ_CASH_GATE}% — 建議暫停 MJ 新倉, 留錢俾 L型主軸"
+        if abs(target - MJ_NOTE_HKD) / MJ_NOTE_HKD > 0.25:
+            hdr += f"\n💡 注碼建議重估: 現金2% ≈ ${target:,.0f} (而家用 ${MJ_NOTE_HKD:,})"
         if top_rows:
             body.append(hdr + "\n" + "\n".join(top_rows))
         elif mj_inv > 0:
@@ -1538,7 +1561,8 @@ def build_mj_section(
     except (ValueError, TypeError):
         pass
 
-    age_str = f"，{age_days}日前" if age_days and age_days >= 2 else ""
+    age_paren = f"（{age_days}日前）" if age_days and age_days >= 2 else ""
+    header_line = f"📘 MJ 半新股 · 功課 {pdf_date}{age_paren}"
     reminder = ""
     now_hkt = datetime.now(timezone(timedelta(hours=8)))
     if age_days is not None:
@@ -1552,11 +1576,11 @@ def build_mj_section(
     if not body:
         # 冇信號都要出星期五提醒
         if reminder:
-            return f"📘 MJ 半新股 (功課 {pdf_date}{age_str}){reminder}", summary
+            return f"{header_line}{reminder}", summary
         return "", summary
 
     text = (
-        f"📘 MJ 半新股 (功課 {pdf_date}{age_str})\n"
+        f"{header_line}\n"
         "-------------------\n" + "\n".join(body) + reminder
     )
     return text, summary
@@ -2146,7 +2170,7 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         if anomaly_blocks:
             msg += f"\n\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}\n" + _numbered(anomaly_blocks)
         if mj_text:
-            msg += "\n\n" + mj_text
+            msg += "\n\n" + MJ_FOLD_START + "\n" + mj_text + "\n" + MJ_FOLD_END
         msg += nd_warning
         return msg
 
@@ -2164,7 +2188,7 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
         parts.append(f"\n📊 異常動向 ({len(anomaly_blocks)}隻)\n{dash}")
         parts.append(_numbered(anomaly_blocks))
     if mj_text:
-        parts.append("\n" + mj_text)
+        parts.append("\n" + MJ_FOLD_START + "\n" + mj_text + "\n" + MJ_FOLD_END)
     if sell_blocks or buy_blocks or anomaly_blocks or mj_text:
         parts.append("━━━━━━━━━━━━━━━━━━━━")
 
@@ -2468,48 +2492,159 @@ def intraday_alert() -> str | None:
 # Telegram
 # ============================================================
 
-def tg_send(msg: str) -> bool:
-    """發 TG。全部 chunk 都成功送到先返 True。
-    有 retry (429 honour retry_after; 網絡/HTTP 錯誤都重試), 令 caller 可以喺
-    送失敗時唔好靜靜吞咗信號 (state 應留返下次重試)。
+_MJ_STOCK_LINE_RE = re.compile(r"^\d+\.\s\d{4}\s")
+_MJ_HEADER_PREFIXES = (
+    "止賺信號 (", "建倉信號 (", "📊 異常動向 (", "📘 MJ 半新股",
+    "💰 TOP", "⚠ 報價失敗", "建議買入總額",
+)
+
+
+def tg_format_html(text: str) -> str:
+    """純文字 report → Telegram HTML parse_mode 格式。逐行處理:
+    1) 每行先 HTML-escape (& < >)
+    2) /buy /sell 指令行 → <code>...</code> (leading spaces 留喺外面)
+    3) Watchlist 首行 / section headers / "N. CODE " 股票行 → <b>...</b>
+       (含 "&gt;&gt;" 嘅行唔會 bold)
+    4) MJ_FOLD_START/END sentinel 行 → <blockquote expandable> / </blockquote> (原行, 唔 escape)
     """
+    out_lines = []
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if stripped == MJ_FOLD_START:
+            out_lines.append("<blockquote expandable>")
+            continue
+        if stripped == MJ_FOLD_END:
+            out_lines.append("</blockquote>")
+            continue
+
+        esc = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        esc_stripped = esc.strip()
+        leading_ws = esc[:len(esc) - len(esc.lstrip())]
+        body = esc_stripped
+
+        if body.startswith("/buy ") or body.startswith("/sell "):
+            body = f"<code>{body}</code>"
+
+        is_watchlist = esc_stripped.startswith("Watchlist")
+        is_header = esc_stripped.startswith(_MJ_HEADER_PREFIXES)
+        is_stock_line = bool(_MJ_STOCK_LINE_RE.match(esc_stripped))
+        has_gtgt = "&gt;&gt;" in esc_stripped
+        if (is_watchlist or is_header or is_stock_line) and not has_gtgt:
+            body = f"<b>{body}</b>"
+
+        out_lines.append(leading_ws + body)
+    return "\n".join(out_lines)
+
+
+def _tg_chunk_html_lines(formatted: str, limit: int = 3800) -> list[str]:
+    """行界chunk (唔喺行中間切斷 HTML tag)。追蹤 <blockquote expandable> 開合狀態 —
+    chunk 中途斷開一個未閉合 blockquote 就補 </blockquote>, 下個 chunk 開頭補返
+    <blockquote expandable>, 咁樣每個 chunk 送出時 HTML 都自成一份 balanced 嘅文檔。
+    """
+    lines = formatted.split("\n")
+    chunks: list[str] = []
+    cur: list[str] = []
+    open_bq = False
+
+    def _joined_len(parts: list[str]) -> int:
+        return sum(len(p) for p in parts) + max(0, len(parts) - 1)  # +1 per "\n" joiner
+
+    for line in lines:
+        prospective = _joined_len(cur) + (1 if cur else 0) + len(line)
+        if cur and prospective > limit:
+            chunk_text = "\n".join(cur)
+            if open_bq:
+                chunk_text += "\n</blockquote>"
+            chunks.append(chunk_text)
+            cur = ["<blockquote expandable>"] if open_bq else []
+        cur.append(line)
+        if line.strip() == "<blockquote expandable>":
+            open_bq = True
+        elif line.strip() == "</blockquote>":
+            open_bq = False
+    if cur:
+        chunk_text = "\n".join(cur)
+        if open_bq:
+            chunk_text += "\n</blockquote>"
+        chunks.append(chunk_text)
+    return chunks
+
+
+def _tg_post_chunk(chunk: str, html: bool = False) -> bool:
+    """單一 chunk 送出, 有 retry (429 honour retry_after; 網絡/HTTP 錯誤都重試)。"""
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": chunk,
+        "disable_web_page_preview": True,
+    }
+    if html:
+        payload["parse_mode"] = "HTML"
+    for attempt in range(3):
+        try:
+            r = requests.post(url, json=payload, timeout=15)
+        except requests.RequestException as e:
+            print(f"TG 送出異常 (第{attempt+1}次): {e}")
+            time.sleep(2 * (attempt + 1))
+            continue
+        # 429 限流: honour retry_after 再試
+        if r.status_code == 429:
+            try:
+                retry_after = int(r.json().get("parameters", {}).get("retry_after", 5))
+            except (ValueError, AttributeError):
+                retry_after = 5
+            print(f"TG 429 限流, {retry_after}s 後重試")
+            time.sleep(retry_after + 1)
+            continue
+        try:
+            res = r.json()
+        except ValueError:
+            res = {}
+        if r.status_code == 200 and res.get("ok"):
+            return True
+        print(f"TG 失敗 (第{attempt+1}次, HTTP {r.status_code}): {res.get('description')}")
+        time.sleep(2 * (attempt + 1))
+    return False
+
+
+def _tg_send_plain(msg: str) -> bool:
+    """原本 plain-text chunk (4000 chars) + retry 行為, 不變。"""
     all_ok = True
     for chunk in [msg[i:i+4000] for i in range(0, len(msg), 4000)]:
-        sent = False
-        for attempt in range(3):
-            try:
-                r = requests.post(url, json={
-                    "chat_id": CHAT_ID,
-                    "text": chunk,
-                    "disable_web_page_preview": True
-                }, timeout=15)
-            except requests.RequestException as e:
-                print(f"TG 送出異常 (第{attempt+1}次): {e}")
-                time.sleep(2 * (attempt + 1))
-                continue
-            # 429 限流: honour retry_after 再試
-            if r.status_code == 429:
-                try:
-                    retry_after = int(r.json().get("parameters", {}).get("retry_after", 5))
-                except (ValueError, AttributeError):
-                    retry_after = 5
-                print(f"TG 429 限流, {retry_after}s 後重試")
-                time.sleep(retry_after + 1)
-                continue
-            try:
-                res = r.json()
-            except ValueError:
-                res = {}
-            if r.status_code == 200 and res.get("ok"):
-                sent = True
-                break
-            print(f"TG 失敗 (第{attempt+1}次, HTTP {r.status_code}): {res.get('description')}")
-            time.sleep(2 * (attempt + 1))
-        if not sent:
+        if not _tg_post_chunk(chunk, html=False):
             all_ok = False
         time.sleep(0.3)
     return all_ok
+
+
+def _strip_mj_sentinels(msg: str) -> str:
+    return (msg.replace(MJ_FOLD_START + "\n", "")
+               .replace("\n" + MJ_FOLD_END, "")
+               .replace(MJ_FOLD_START, "")
+               .replace(MJ_FOLD_END, ""))
+
+
+def tg_send(msg: str, html: bool = False) -> bool:
+    """發 TG。全部 chunk 都成功送到先返 True。
+    html=True: tg_format_html 排版 (sentinel → <blockquote expandable> 摺疊)。
+    若果任何一個 HTML chunk 送失敗 → abort HTML mode, 剝走 sentinel 後用返
+    plain path send 全文 (寧願 fallback 都唔可以整個 alert 靜靜咁跌咗)。
+    """
+    if html:
+        formatted = tg_format_html(msg)
+        chunks = _tg_chunk_html_lines(formatted)
+        all_ok = True
+        for chunk in chunks:
+            if not _tg_post_chunk(chunk, html=True):
+                all_ok = False
+                break
+            time.sleep(0.3)
+        if all_ok:
+            return True
+        print("[tg_send] HTML 送出失敗 — fallback 去 plain text 全文重送")
+        return _tg_send_plain(_strip_mj_sentinels(msg))
+    else:
+        return _tg_send_plain(_strip_mj_sentinels(msg))
 
 
 # ============================================================
@@ -2584,7 +2719,7 @@ if __name__ == "__main__":
         pre_mj    = MJ_STATE_FILE.read_text(encoding="utf-8") if MJ_STATE_FILE.exists() else None
         report = monitor_report(alert_only=True)
         print(report)
-        ok = tg_send(report)
+        ok = tg_send(report, html=True)
         if ok:
             # Reset intraday flags after morning report
             st = load_state()
@@ -2604,7 +2739,7 @@ if __name__ == "__main__":
         msg = intraday_alert()
         if msg:
             print(msg)
-            tg_send(msg)
+            tg_send(msg, html=True)
         else:
             print(f"[{datetime.now(timezone(timedelta(hours=8))).strftime('%H:%M')}] 暫無新觸發")
 
@@ -2645,4 +2780,4 @@ if __name__ == "__main__":
         # 預設：全部報告 + 發 TG
         report = monitor_report(alert_only=False)
         print(report)
-        tg_send(report)
+        tg_send(report, html=True)
