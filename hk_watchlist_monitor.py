@@ -49,7 +49,7 @@ TRANCHE_SIZE = 6_000    # default; 開 alert 時動態 = TOTAL / 100 (cash + mar
 MIN_BUY_HKD  = 1_000    # 最低買入信號 $1,000，細過唔出
 
 # ── 資金管理 ─────────────────────────────────────────────
-TOTAL_PORTFOLIO = 331_831   # 初始入金 (cash + invested). 2026-08-13 對齊 broker. 入金/抽資需更新
+TOTAL_PORTFOLIO = 338_676   # 初始入金 (cash + invested). 2026-09-09 對齊 broker. 入金/抽資需更新
 MIN_CASH_PCT    = 0.20      # 保持至少20%現金
 
 # ── 主板買入觸發市值 (百萬 HKD) ───────────────────────────
@@ -102,8 +102,12 @@ SCREENER_DB  = Path(__file__).parent / "data" / "screener.db"
 # 由 mj_import.py 匯入每日功課 PDF。系統動能係課程專有指標，冇得自己計。
 MJ_STATE_FILE = Path(__file__).parent / "data" / "mj_state.json"
 MJ_MOM_FLOOR  = 55      # 動能下限，低過就係「要放棄」
-MJ_BUDGET_CAP = 25_000  # MJ 倉總投入上限 (L型優先, MJ 用剩餘資金)
-MJ_CASH_GATE  = 25      # 現金 % 低過呢個數 → 提示暫停 MJ 新倉
+# MJ 資金規則 (2026-09-09 用戶): 池 = 現金 40%; 每隻上限 = 池嘅 10% (即現金 4%);
+# 注碼 = 每隻上限 ÷ 2 → 每隻分 2 注 (首注 + 向下撈), L型永遠優先用剩餘現金
+MJ_POOL_PCT     = 0.40   # MJ 池 = 現金 × 40%
+MJ_STOCK_PCT    = 0.10   # 每隻 ≤ 池嘅 10%
+MJ_SPLIT_NOTES  = 2      # 每隻分注數
+MJ_CASH_GATE    = 25     # 現金 % 低過呢個數 → 提示暫停 MJ 新倉
 
 # ── CCASS 集中度警戒設定 ──────────────────────────────────
 # top10_pct 在最近 N 個交易日內升幅達此門檻 → 觸發 CCASS IN 警示
@@ -1431,9 +1435,8 @@ def build_mj_section(
         cands.sort(key=lambda e: (not e["featured"], not e["mcap_ok"], -(e["mom"] - e["dist"] / 3)))
         top_rows = [("  ⭐" + e["row"][2:]) if e["mcap_ok"] else e["row"]
                     for e in cands[:10]]
-        half = max(100, round(TRANCHE_SIZE / 2 / 100) * 100)
-
-        # ── 資金紀律 (L型優先): MJ 預算上限 + 現金 gate ──
+        # ── 資金紀律 (2026-09-09 用戶規則):
+        #   MJ 池 = 現金 × 40%; 每隻 ≤ 池嘅 10% (現金 4%); 注碼 = 每隻上限 ÷ 2 (分注)
         mj_inv = 0.0
         total_inv_all = 0.0
         cleared_pnl = 0.0
@@ -1452,12 +1455,15 @@ def build_mj_section(
         cash_now = TOTAL_PORTFOLIO - total_inv_all + cleared_pnl
         cash_pct_now = cash_now / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
 
-        hdr = (f"💰 TOP 建議買入 ({len(top_rows)}隻精選 / 入場區共{len(entry_rows)}隻) — "
-               f"注碼 ${half:,}/注, 完整名單: /mj"
+        mj_pool   = max(0, cash_now) * MJ_POOL_PCT
+        per_stock = mj_pool * MJ_STOCK_PCT
+        half      = max(100, round(per_stock / MJ_SPLIT_NOTES / 100) * 100)
+
+        hdr = (f"💰 TOP 建議買入 ({len(top_rows)}隻精選 / 入場區共{len(entry_rows)}隻) — 完整名單: /mj"
+               f"\n  注碼 ${half:,}/注 · 每隻上限 ${per_stock:,.0f} (分{MJ_SPLIT_NOTES}注)"
                f"\n  🔸=MJ重點名單 · ⭐=主板≤2億/GEM≤0.8億 · 排名=重點+動能+貼位")
-        if mj_inv > 0:
-            icon = "⚠️ 爆Cap" if mj_inv >= MJ_BUDGET_CAP else "OK"
-            hdr += f"\n  📊 MJ倉已投 ${mj_inv:,.0f} / 上限 ${MJ_BUDGET_CAP:,} [{icon}]"
+        icon = "⚠️ 爆Cap" if mj_inv >= mj_pool else "OK"
+        hdr += f"\n  📊 MJ池已投 ${mj_inv:,.0f} / 上限 ${mj_pool:,.0f} (現金40%) [{icon}]"
         if cash_pct_now < MJ_CASH_GATE:
             hdr += f"\n  ⛔ 現金{cash_pct_now:.0f}% < {MJ_CASH_GATE}% — 建議暫停 MJ 新倉, 留錢俾 L型主軸"
         if top_rows:
