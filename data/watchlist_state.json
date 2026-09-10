@@ -956,7 +956,15 @@
   },
   "1957": {
     "tier_reached": 0,
-    "tranches": [],
+    "tranches": [
+      {
+        "price": 0.285,
+        "hkd": 2849.9999999999995,
+        "shares": 10000,
+        "date": "2026-09-10 06:30",
+        "note": "via TG"
+      }
+    ],
     "zero_cost_achieved": false,
     "post_zero_done": [],
     "notes": [],
