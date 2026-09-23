@@ -1811,39 +1811,11 @@
     "tier_reached": 0,
     "tranches": [
       {
-        "price": 0.145,
-        "hkd": 6090,
-        "shares": 42000,
-        "date": "2026-06-03 07:36",
-        "note": "via TG"
-      },
-      {
         "price": 0.11,
-        "hkd": 5280,
-        "shares": 48000,
-        "date": "2026-08-27 07:49",
-        "note": "via TG"
-      },
-      {
-        "price": 0.089,
-        "hkd": 2492,
-        "shares": 28000,
-        "date": "2026-09-16 06:53",
-        "note": "via TG"
-      },
-      {
-        "price": 0.089,
-        "hkd": 178,
-        "shares": 2000,
-        "date": "2026-09-17 11:44",
-        "note": "via TG"
-      },
-      {
-        "price": 0.089,
-        "hkd": 3382,
-        "shares": 38000,
-        "date": "2026-09-23 02:24",
-        "note": "via TG"
+        "hkd": 17380,
+        "shares": 158000,
+        "date": "2026-09-23 02:25",
+        "note": "modified via TG"
       }
     ],
     "zero_cost_achieved": false,
@@ -1859,7 +1831,10 @@
     "board": "main",
     "debt_ratio": 25.5,
     "ipo_date": "2021-07-13",
-    "debt_updated": "2026-09-23"
+    "debt_updated": "2026-09-23",
+    "zero_cost_initial_shares": null,
+    "zero_cost_tier": null,
+    "cleared": false
   },
   "6939": {
     "tier_reached": 1,
