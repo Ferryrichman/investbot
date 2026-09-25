@@ -104,7 +104,8 @@ MJ_STATE_FILE = Path(__file__).parent / "data" / "mj_state.json"
 MJ_MOM_FLOOR  = 55      # 動能下限，低過就係「要放棄」
 # MJ 資金規則 (2026-09-09 用戶): 池 = 現金 40%; 每隻上限 = 池嘅 10% (即現金 4%);
 # 注碼 = 每隻上限 ÷ 2 → 每隻分 2 注 (首注 + 向下撈), L型永遠優先用剩餘現金
-MJ_POOL_PCT     = 0.40   # MJ 池 = 現金 × 40%
+MJ_POOL_PCT     = 0.30   # MJ 池 = (現金 + MJ已投) × 30% — 用「未投MJ前嘅現金」做基數,
+                         # 唔會買一注縮一格 (2026-09-25 用戶定)
 MJ_STOCK_PCT    = 0.10   # 每隻 ≤ 池嘅 10%
 MJ_SPLIT_NOTES  = 2      # 每隻分注數
 MJ_NOTE_HKD = 2_500   # 注碼固定 (手動校準制); 現金2% 偏離 >25% 時 alert 提示重估
@@ -1454,10 +1455,11 @@ def build_mj_section(
         cash_now = TOTAL_PORTFOLIO - total_inv_all + cleared_pnl
         cash_pct_now = cash_now / TOTAL_PORTFOLIO * 100 if TOTAL_PORTFOLIO > 0 else 0
 
-        mj_pool   = max(0, cash_now) * MJ_POOL_PCT
+        # 池基數 = 現金 + MJ已投 (即「未投MJ前」嘅現金) — 買 MJ 唔會令池自己縮
+        mj_pool   = (max(0, cash_now) + mj_inv) * MJ_POOL_PCT
         per_stock = mj_pool * MJ_STOCK_PCT
         half      = MJ_NOTE_HKD                    # 注碼固定 (手動校準制, 見 MJ_NOTE_HKD)
-        target    = per_stock / MJ_SPLIT_NOTES      # 理論注碼 = 現金2% (池40%×股10%÷2注)
+        target    = per_stock / MJ_SPLIT_NOTES      # 理論注碼 = 池30%×股10%÷2注 = 基數1.5%
 
         def _fmt_money_k(v: float) -> str:
             """money ≥$10K 顯示 $NN.NK (1位小數), 否則 $X,XXX 全數"""
@@ -1470,7 +1472,7 @@ def build_mj_section(
         if cash_pct_now < MJ_CASH_GATE:
             hdr += f"\n⛔ 現金{cash_pct_now:.0f}% < {MJ_CASH_GATE}% — 建議暫停 MJ 新倉, 留錢俾 L型主軸"
         if abs(target - MJ_NOTE_HKD) / MJ_NOTE_HKD > 0.25:
-            hdr += f"\n💡 注碼建議重估: 現金2% ≈ ${target:,.0f} (而家用 ${MJ_NOTE_HKD:,})"
+            hdr += f"\n💡 注碼建議重估: 理論注碼 ≈ ${target:,.0f} (而家用 ${MJ_NOTE_HKD:,})"
         if top_rows:
             body.append(hdr + "\n" + "\n".join(top_rows))
         elif mj_inv > 0:
