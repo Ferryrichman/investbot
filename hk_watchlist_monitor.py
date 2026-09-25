@@ -1881,13 +1881,15 @@ def monitor_report(alert_only: bool = False, readonly: bool = False) -> str:
             ])
 
         def _classify(alerts: list[str]) -> tuple[bool, bool]:
-            """(in_sell, in_anomaly) — 用同一套規則, 分別餵 fresh (TG) / raw (Dashboard)。"""
+            """(in_sell, in_anomaly) — 用同一套規則, 分別餵 fresh (TG) / raw (Dashboard)。
+            止賺 section 只放真 /sell 信號 (2026-09-25 用戶定: 警示/負債唔當要止賺);
+            派貨類警示 (蠟燭/減持/CCASS OUT) 有持倉冇 /sell → 歸 📊 異常動向。"""
             st_alerts = [a for a in alerts if _is_sell_trigger(a)]
             an_alerts = [a for a in alerts if not _is_sell_trigger(a)]
-            sell = has_pos and bool(valid_tp or st_alerts)
+            sell = has_pos and bool(valid_tp)
             other = sell or in_buy_section
             watch_only = (not has_pos) and bool(st_alerts or an_alerts)
-            anomaly = bool(an_alerts and not other) or watch_only
+            anomaly = bool((st_alerts or an_alerts) and not other) or watch_only
             return sell, anomaly
 
         # TG message: 用 fresh (suppression 只用喺 outbound text)
