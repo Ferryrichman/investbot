@@ -43,7 +43,12 @@ export default {
       const text = msg.text.trim();
       const reply = await handleCommand(text, env);
       if (reply) {
-        await sendTG(env.TELEGRAM_TOKEN.trim(), chatId, reply);
+        // handleCommand 通常返 plain string; /mj 部分路徑返 { text, html } 用 HTML 排版
+        if (typeof reply === "object") {
+          await sendTG(env.TELEGRAM_TOKEN.trim(), chatId, reply.text, !!reply.html);
+        } else {
+          await sendTG(env.TELEGRAM_TOKEN.trim(), chatId, reply);
+        }
       }
       return new Response("OK", { status: 200 });
     } catch (err) {
@@ -892,8 +897,27 @@ function _mjPos(s) {
   return null;
 }
 
-async function getMj(code, env) {
-  const mj = await getMjState(env);
+// HTML escape — TG parse_mode:"HTML" 淨係識 &amp; &lt; &gt; (唔使 quot/#39, 屬性都冇用到)
+function _esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// pdf_date (DD-MM-YYYY) 距今幾多日 (以 HKT = UTC+8 嘅「今日」計) — parse 唔到就返 null
+function _mjAgeDays(pdfDate) {
+  const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(pdfDate || "");
+  if (!m) return null;
+  const pdfUTC = Date.UTC(+m[3], +m[2] - 1, +m[1]);
+  const nowHkt = new Date(Date.now() + 8 * 3600 * 1000);
+  const todayHktUTC = Date.UTC(nowHkt.getUTCFullYear(), nowHkt.getUTCMonth(), nowHkt.getUTCDate());
+  return Math.round((todayHktUTC - pdfUTC) / 86400000);
+}
+
+// fixtures: 測試用注入 {mjState, mainState} — 冇傳就正常向 GitHub 攞 (行為不變)
+async function getMj(code, env, fixtures) {
+  const mj = fixtures ? fixtures.mjState : await getMjState(env);
   if (!mj || !mj.stocks || !Object.keys(mj.stocks).length) {
     return (
       "📘 MJ 半新股: 未有功課數據\n" +
@@ -902,21 +926,22 @@ async function getMj(code, env) {
   }
   const meta = mj._meta || {};
   const stocks = mj.stocks;
-  const { state } = await getState(env);
+  const state = fixtures ? fixtures.mainState : (await getState(env)).state;
 
   // ── /mj CODE — 單隻全部數據 ──
   if (code) {
     const c4 = String(code).padStart(4, "0");
     const s = stocks[c4];
-    if (!s) return `${c4} 唔喺 MJ 名單 (功課 ${meta.pdf_date || "?"})`;
+    if (!s) return `${c4} 唔喺 MJ 名單 (功課 ${_esc(meta.pdf_date || "?")})`;
     const p = _mjPrice(s);
     const h = _mjHold(state, c4);
     const st = state[c4];
+    const name = _esc(s.name || "");
     const lines = [
-      `📘 ${c4} ${s.name || ""} (功課 ${meta.pdf_date || "?"})`,
+      `<b>📘 ${_esc(c4)} ${name} (功課 ${_esc(meta.pdf_date || "?")})</b>`,
       `動能 ${(s.mom || 0).toFixed(2)} (變化${(s.mom_chg || 0) >= 0 ? "+" : ""}${(s.mom_chg || 0).toFixed(2)})`,
       `現價 $${p.toFixed(3)}${s.last_check ? "" : " (PDF價)"} | 狀態 ${(s.status_pct || 0) >= 0 ? "+" : ""}${(s.status_pct || 0).toFixed(1)}%`,
-      `留意日 ${s.watch_date || "?"} 收$${(s.watch_close || 0).toFixed(3)}`,
+      `留意日 ${_esc(s.watch_date || "?")} 收$${(s.watch_close || 0).toFixed(3)}`,
       `🛑 放棄位 $${(s.abandon || 0).toFixed(3)}${s.abandon && p <= s.abandon ? "  ← 已到!" : ""}`,
       `位置0 $${(s.p0 || 0).toFixed(3)} | 位置2 $${(s.p2 || 0).toFixed(3)} | 位置3 $${(s.p3 || 0).toFixed(3)}`,
     ];
@@ -925,9 +950,9 @@ async function getMj(code, env) {
     lines.push(
       `每手$${(s.lot_hkd || 0).toLocaleString()} | 市值${(s.mcap_y || 0).toFixed(2)}億`,
       `CCASS Top5 ${(s.ccass5 || 0).toFixed(1)}% | 券商${s.brokers || 0}間`,
-      `IPO ${s.ipo || "?"}`
+      `IPO ${_esc(s.ipo || "?")}`
     );
-    if (s.info && s.info.length) lines.push(`Tags: ${s.info.join(" ")}`);
+    if (s.info && s.info.length) lines.push(`Tags: ${s.info.map(_esc).join(" ")}`);
     if (st && st.strategy === "mj") {
       lines.push("📘 已標記 MJ倉 (止賺: 5億/2億 + 100%)");
     }
@@ -941,17 +966,21 @@ async function getMj(code, env) {
     } else {
       lines.push(`\n你嘅持倉: 冇 (${h.tag})`);
     }
-    return lines.join("\n");
+    return { text: lines.join("\n"), html: true };
   }
 
-  // ── /mj — 摘要 ──
+  // ── /mj — 摘要 (mobile-first, 同 daily alert 風格) ──
   const codes = Object.keys(stocks).sort();
-  const drop = [];
-  const entry = [];  // 💰 入場區: 現價貼近留意位 ±30%
-  let nLowMom = 0, nDanger = 0, nHeldDrop = 0;
+  const rowsHeld = [];
+  const rowsPlain = [];
+  const entry = [];  // 💰 入場區 fallback: 現價貼近留意位 ±30% (entry_top 冇數先用)
+  let nLowMom = 0, nDanger = 0, nHeldDrop = 0, nSuspended = 0;
   for (const c of codes) {
     const s = stocks[c];
     const p = _mjPrice(s);
+    const cEsc = _esc(c);
+    const name = _esc(s.name || "");
+    if (s.suspended) nSuspended++;
     const rs = [];
     if ((s.mom || 0) < MJ_MOM_FLOOR) {
       rs.push(`低動能${(s.mom || 0).toFixed(1)}`);
@@ -960,37 +989,42 @@ async function getMj(code, env) {
     if (s.abandon && p && p <= s.abandon) {
       rs.push(`到放棄位$${s.abandon.toFixed(3)}`);
     }
-    if (_mjPos(s)) nDanger++;
+    if (!s.suspended && _mjPos(s)) nDanger++;
     if (rs.length) {
       const h = _mjHold(state, c);
-      if (h.held > 0) nHeldDrop++;
-      drop.push(
-        `${h.held > 0 ? "⚠️ " : ""}${c} ${s.name || ""} ${h.tag}\n   ${rs.join(" ")}`
-      );
-    } else {
-      // 入場區: 建議買入位 = 留意日收市價, 差距 ±30% 內 (排除已叫放棄)
+      const line = `  ${h.held > 0 ? "⚠️" : ""}${cEsc} ${name}${h.held > 0 ? ` 持${h.held.toLocaleString()}股` : ""} — ${rs.join(" ")}`;
+      if (h.held > 0) {
+        nHeldDrop++;
+        rowsHeld.push(line);
+      } else {
+        rowsPlain.push(line);
+      }
+    } else if (!s.suspended) {
+      // 入場區 fallback: 建議買入位 = 留意日收市價, 差距 ±30% 內 (排除已叫放棄/停牌)
       const wc = s.watch_close || 0;
       if (wc && p) {
         const st_pct = (p - wc) / wc * 100;
         if (st_pct >= -30 && st_pct <= 30) {
-          const h = _mjHold(state, c);
-          entry.push({ d: Math.abs(st_pct),
-            row: `${c} ${s.name || ""} ${st_pct >= 0 ? "+" : ""}${st_pct.toFixed(0)}% 留意$${wc.toFixed(3)} 現$${p.toFixed(3)} 動能${(s.mom || 0).toFixed(0)} ${h.tag}` });
+          entry.push({
+            d: Math.abs(st_pct),
+            row: `  ${cEsc} ${name} ${st_pct >= 0 ? "+" : ""}${st_pct.toFixed(0)}% 動${(s.mom || 0).toFixed(0)}`,
+          });
         }
       }
     }
   }
+  const drop = rowsHeld.concat(rowsPlain);   // held 先
 
+  const ageDays = _mjAgeDays(meta.pdf_date);
+  const ageSuffix = ageDays !== null && ageDays >= 2 ? `（${ageDays}日前）` : "";
   const out = [
-    `📘 MJ 半新股系統`,
-    `功課日期 ${meta.pdf_date || "?"} | 共 ${codes.length} 隻`,
-    `匯入 ${meta.imported_at || "?"}`,
-    "-------------------",
+    `<b>📘 MJ 半新股 · 功課 ${_esc(meta.pdf_date || "?")}${ageSuffix}</b>`,
+    "━━━━━━━━━━━━━━",
   ];
   if (drop.length) {
-    out.push(`🛑 要放棄 ${drop.length}隻${nHeldDrop ? ` (其中 ${nHeldDrop} 隻你有持倉!)` : ""}`);
-    out.push(drop.slice(0, 15).join("\n"));
-    if (drop.length > 15) out.push(`…及其他${drop.length - 15}隻`);
+    out.push(`<b>🛑 要放棄 ${drop.length}隻${nHeldDrop ? ` (${nHeldDrop}隻有持倉)` : ""}</b>`);
+    out.push(drop.slice(0, 12).join("\n"));
+    if (drop.length > 12) out.push(`…及其他${drop.length - 12}隻`);
   } else {
     out.push("🛑 要放棄: 冇");
   }
@@ -998,21 +1032,20 @@ async function getMj(code, env) {
   const mjSig = (state._meta && state._meta.signals && state._meta.signals.mj) || {};
   const entryTop = mjSig.entry_top || [];
   if (entryTop.length) {
-    out.push("-------------------");
-    out.push(`💰 TOP 建議買入 (頭${entryTop.length} / 入場區共${mjSig.n_entry_zone || entry.length}隻)`);
-    out.push(entryTop.map(r => r.trim()).join("\n"));
-    out.push("🔸=重點 ⭐=市值合L型");
+    out.push(`<b>💰 TOP ${entryTop.length} (入場區共${mjSig.n_entry_zone || entry.length}隻)</b>`);
+    out.push(entryTop.map((r) => "  " + _esc(String(r).trim())).join("\n"));
   } else if (entry.length) {
-    // fallback (未 run alert): 舊計法頭十
     entry.sort((a, b) => a.d - b.d);
-    out.push("-------------------");
-    out.push(`💰 入場區 ±30% (頭10 / 共${entry.length}隻)`);
-    out.push(entry.slice(0, 10).map(e => e.row).join("\n"));
+    const top10 = entry.slice(0, 10);
+    out.push(`<b>💰 TOP ${top10.length} (入場區共${entry.length}隻)</b>`);
+    out.push(top10.map((e) => e.row).join("\n"));
   }
-  out.push("-------------------");
-  out.push(`⚡ 到危險位置: ${nDanger}隻 · 📉 低動能<${MJ_MOM_FLOOR}: ${nLowMom}隻`);
-  out.push("💡 只係警告, 自己決定 · /mj CODE 睇單隻");
-  return out.join("\n");
+  out.push("━━━━━━━━━━━━━━");
+  let bottom = `⚡危險位 ${nDanger} · 📉低動能 ${nLowMom}`;
+  if (nSuspended) bottom += ` · 🚫停牌 ${nSuspended}`;
+  out.push(bottom);
+  out.push("/mj CODE 睇單隻 · 信號只係警告");
+  return { text: out.join("\n"), html: true };
 }
 
 // ── GitHub Actions workflow_dispatch ──
@@ -1042,10 +1075,22 @@ async function triggerGitHubWorkflow(mode, env) {
 
 // ── Telegram ──
 
-async function sendTG(token, chatId, text) {
-  return fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+async function sendTG(token, chatId, text, html = false) {
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const payload = { chat_id: chatId, text };
+  if (html) payload.parse_mode = "HTML";
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text }),
+    body: JSON.stringify(payload),
   });
+  // HTML 送失敗 (多數係 tag 冇平衡/entity 漏轉) → retry 一次冇 parse_mode, 保住條 reply
+  if (html && !res.ok) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+  }
+  return res;
 }
