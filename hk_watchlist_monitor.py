@@ -249,9 +249,28 @@ def _get_yf_crumb() -> tuple[requests.Session, str]:
     return s, _yf_crumb
 
 
-def fetch_hk_quote(code: str) -> dict | None:
-    """取即時報價 + 市值，使用 Yahoo Finance v7 API + crumb"""
+def fetch_hk_quote(code: str, _retries: int = 2) -> dict | None:
+    """取即時報價 + 市值，使用 Yahoo Finance v7 API + crumb
+
+    Retry: Yahoo 間中有短暫 throttling 窗口 (2026-09-25: 連續 11 隻 22xx-26xx
+    中招之後自動恢復) — 失敗後 backoff 2s/5s 重試, 最後一次重建 crumb session.
+    """
     symbol = f"{int(code):04d}.HK"
+    for attempt in range(_retries + 1):
+        if attempt > 0:
+            time.sleep(2 if attempt == 1 else 5)
+            if attempt == _retries:
+                # 最後一擊: 掉咗個 cached session, 由頭嚟過 (crumb 可能死咗)
+                global _yf_session_obj, _yf_crumb
+                _yf_session_obj = None
+                _yf_crumb = None
+        q = _fetch_hk_quote_once(symbol)
+        if q is not None:
+            return q
+    return None
+
+
+def _fetch_hk_quote_once(symbol: str) -> dict | None:
     try:
         s, crumb = _get_yf_crumb()
         url = (
