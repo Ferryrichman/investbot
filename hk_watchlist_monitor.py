@@ -76,21 +76,21 @@ GEM_SHELL_M  = 60    # 創業板殼價保守下限（百萬）
 # M1 觸發邏輯：(市值≥4億 AND 浮盈≥100%)  OR  浮盈≥200%
 # mcap_m + mcap_gain_pct = 市值條件組合；gain_pct = 純浮盈獨立觸發
 POST_ZERO_MAIN = [
-    {"mcap_m": 500,  "mcap_gain_pct": 100.0, "gain_pct": 300.0, "sell_frac": None, "label": "M1 (5億+100% / 300%)"},
-    {"mcap_m": 800,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (8億)"},
-    {"mcap_m": 1200, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (12億)"},
-    {"mcap_m": 1600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (16億)"},
-    {"mcap_m": 2000, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M5 (20億)"},
+    {"mcap_m": 800,  "mcap_gain_pct": 100.0, "gain_pct": 500.0, "sell_frac": None, "label": "M1 (8億+100% / 500%)"},
+    {"mcap_m": 1200, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (12億)"},
+    {"mcap_m": 1800, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (18億)"},
+    {"mcap_m": 2400, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (24億)"},
+    {"mcap_m": 3600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M5 (36億)"},
 ]
 # 每個 M 賣 0成本初始股數 × 20%, M2-M5 合共 80%, 餘 20% 自由操作
 
 # 創業板（主板門檻 × 0.4）
 POST_ZERO_GEM = [
-    {"mcap_m": 200, "mcap_gain_pct": 100.0, "gain_pct": 300.0, "sell_frac": None, "label": "M1 (2億+100% / 300%)"},
-    {"mcap_m": 300, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (3億)"},
-    {"mcap_m": 450, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (4.5億)"},
-    {"mcap_m": 600, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (6億)"},
-    {"mcap_m": 750, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M5 (7.5億)"},
+    {"mcap_m": 300,  "mcap_gain_pct": 100.0, "gain_pct": 500.0, "sell_frac": None, "label": "M1 (3億+100% / 500%)"},
+    {"mcap_m": 400,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M2 (4億)"},
+    {"mcap_m": 700,  "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M3 (7億)"},
+    {"mcap_m": 1000, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M4 (10億)"},
+    {"mcap_m": 1500, "mcap_gain_pct": None,  "gain_pct": None,  "sell_frac": 0.20, "label": "M5 (15億)"},
 ]
 
 # ── 狀態檔案 ─────────────────────────────────────────────
@@ -938,9 +938,9 @@ def build_stock_block(
         # 已套現金額 = abs(淨 hkd) — 若 net_inv < 0 表示套現超出本金
         net_inv = sum(t.get("hkd", 0) for t in tranches)
         if net_inv < 0:
-            lines.append(f"  🆓 {z_shares:,}股 值${z_val:,.0f} (已套現+${abs(net_inv):,.0f})")
+            lines.append(f"  🆓 0成本 {z_shares:,}股 值${z_val:,.0f} (已套現+${abs(net_inv):,.0f})")
         else:
-            lines.append(f"  🆓 {z_shares:,}股 值${z_val:,.0f} (本金已回收)")
+            lines.append(f"  🆓 0成本 {z_shares:,}股 值${z_val:,.0f}")
         if is_mj:
             lines.append("  📘 MJ倉 已0成本 — 跟 MJ 位置2/3 警報自由操作")
         # 顯示0成本之後嘅新買入
@@ -952,7 +952,7 @@ def build_stock_block(
             pz_avg = pz_inv / pz_shares if pz_shares > 0 else 0
             pz_val = pz_shares * price
             pz_gain = ((price - pz_avg) / pz_avg * 100) if pz_avg > 0 else 0
-            lines.append(f"  ➕ 新買{pz_shares:,}股 @${pz_avg:.3f} 值${pz_val:,.0f} [{pz_gain:+.0f}%]")
+            lines.append(f"  🔁 再買 {pz_shares:,}股 @${pz_avg:.3f} 值${pz_val:,.0f} ({pz_gain:+.0f}%)")
     elif tranches:
         shares = _get_shares(tranches, lot_size)
         val = shares * price
@@ -1011,32 +1011,13 @@ def build_stock_block(
             lines.append(f"  /sell {code} {ss} {price}")
         elif sig["type"] == "POST_ZERO_REBUY":
             pz_gain = sig.get("pz_gain", 0)
-            lines.append(f"  >> 新買部分+{pz_gain:.0f}% 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股0成本")
+            lines.append(f"  >> 🔁再買止賺 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股轉0成本")
             lines.append(f"  /sell {code} {ss} {price}")
         else:
             lines.append(f"  >> {label} 賣{sl}手({ss:,}股) 收${rv:,.0f} 剩{rm:,}股")
             lines.append(f"  /sell {code} {ss} {price}")
 
-    # ── 0成本後市目標 ──
-    # 跳過已觸發 + 跳過 mcap 已過嘅 milestone, 顯示真正下一個目標
-    # 📘 MJ倉: 0成本後唔跟 M1-M5, 跟 MJ 層危險位置警報 — 唔顯示 L型下一目標
-    if zero_done and not is_mj:
-        z_shares = stock_st.get("zero_cost_shares", 0) or 0
-        milestones = POST_ZERO_MAIN if board == "main" else POST_ZERO_GEM
-        done_idx = set(stock_st.get("post_zero_done", []))
-        triggered_idx = {s.get("milestone_idx") for s in tp_signals
-                         if s.get("milestone_idx") is not None}
-        skip_idx = done_idx | triggered_idx
-        # 第一個冇 done 又 mcap 未過嘅 milestone
-        next_ms = None
-        for i, ms in enumerate(milestones):
-            if i in skip_idx:
-                continue
-            if mcap_m < ms["mcap_m"]:
-                next_ms = ms
-                break
-        if next_ms and z_shares > lot_size:
-            lines.append(f"  → 下一目標 {next_ms['label']}")
+    # (「→ 下一目標 MX」行已按用戶要求取消 2026-09-25 — M2-M5 觸發時自然會出信號)
 
     # ── CCASS + 備注 ──
     for a in (ccass_alerts or []):
@@ -1445,10 +1426,11 @@ def build_mj_section(
     if entry_rows:
         # TOP 建議買入: 未持倉, 🔸重點名單 → ⭐市值合格 → (動能-貼位/3), 最多 10 隻
         # (2026-08 用戶: 重點名單 40 隻優先; 只 show TOP 10, 完整留返 /mj)
-        # TOP 10 排名 (2026-09-09 用戶規則):
-        #   入場 gate = 狀態 ≤30% (entry_rows 已 filter) + 唔喺 L list (持倉/監察都剔, 用其他 MJ 股補位)
+        # TOP 10 排名 (2026-09-09 用戶規則; 09-25 加 3億硬 gate):
+        #   入場 gate = 狀態 ≤30% (entry_rows 已 filter) + 市值 ≤3億 (3億樓上唔考慮入)
+        #             + 唔喺 L list (持倉/監察都剔, 用其他 MJ 股補位)
         #   排序: ①動能為主 ②市值 (⭐ 主板≤2億/GEM≤0.8億 最優, 再細再好) ③James notes 參考
-        cands = [e for e in entry_rows if not e["in_watchlist"]]
+        cands = [e for e in entry_rows if not e["in_watchlist"] and e["mcap_now"] <= 3.0]
         cands.sort(key=lambda e: (-e["mom"], not e["mcap_ok"], e["mcap_now"], not e["has_note"], e["dist"]))
         top_rows = [("  ⭐" + e["row"][2:]) if e["mcap_ok"] else e["row"]
                     for e in cands[:10]]
