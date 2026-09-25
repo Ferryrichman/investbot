@@ -149,7 +149,8 @@ async function handleCommand(text, env) {
       return await delAll(parts[1], env);
     }
     if (delWL === "mj") {
-      return await untagMj(parts[1], env);
+      const force = (parts[3] || "").toLowerCase() === "force";
+      return await untagMj(parts[1], env, force);
     }
     return await delHolding(parts[1], env);
   }
@@ -163,11 +164,12 @@ async function handleCommand(text, env) {
         "例: /add 2625 main mj\n例: /add 8657 nomj — 取消 MJ倉標記"
       );
     }
-    const t2 = (parts[2] || "").toLowerCase();
-    const t3 = (parts[3] || "").toLowerCase();
+    const extras = parts.slice(2).map((t) => t.toLowerCase());
+    const t2 = extras[0] || "";
+    const force = extras.includes("force");
     let strategyOp = null;
-    if (t2 === "mj" || t3 === "mj") strategyOp = "mj";
-    else if (t2 === "nomj" || t3 === "nomj") strategyOp = "nomj";
+    if (extras.includes("mj")) strategyOp = "mj";
+    else if (extras.includes("nomj")) strategyOp = "nomj";
     // 板塊: 冇明確指定就靠 code 判斷 (8 字頭 = 創業板), 唔再一律 default main
     let board, boardExplicit = true;
     if (t2 === "gem") board = "gem";
@@ -176,7 +178,7 @@ async function handleCommand(text, env) {
       board = String(parts[1]).padStart(4, "0").startsWith("8") ? "gem" : "main";
       boardExplicit = false;
     }
-    return await addToWatchlist(parts[1], board, env, strategyOp, boardExplicit);
+    return await addToWatchlist(parts[1], board, env, strategyOp, boardExplicit, force);
   }
 
   if (cmd === "/remove") {
@@ -427,8 +429,20 @@ async function recordBuy(code, shares, price, env, force = false, mjTag = false)
     state[code4] = { tier_reached: 0, tranches: [], zero_cost_achieved: false, post_zero_done: [], notes: [] };
   }
   // /buy ... mj → 買入同時加監察 + 標記 MJ倉 (一條命令搞掂)
+  // ⚔️ 跨池防護 (2026-09-25): 有 L型舊倉嘅股唔俾 mj tag — 成個倉連舊數會搬入
+  // MJ 池, 兩邊資金撈亂. 雙重入選股: 邊個系統買就入邊個賬, 一隻股一個池.
   let mjNote = "";
   if (mjTag) {
+    const oldTr = state[code4].tranches || [];
+    const oldInv = oldTr.reduce((a, t) => a + (t.hkd > 0 ? t.hkd : 0), 0);
+    if (oldTr.length && state[code4].strategy !== "mj") {
+      return (
+        `⚠️ ${code4} 已有 L型持倉 (投$${oldInv.toLocaleString()}) — 唔可以加 mj tag\n` +
+        `一隻股只可以入一個池, 加 mj 會將成個倉連舊數搬入 MJ 池 (資金撈亂)\n` +
+        `想繼續入呢隻: 直接 /buy 唔好加 mj (錢照計 L型賬)\n` +
+        `堅持整個倉轉 MJ: 先 /add ${code4} mj force`
+      );
+    }
     if (!state[code4].board) state[code4].board = code4.startsWith("8") ? "gem" : "main";
     state[code4].strategy = "mj";
     mjNote = `\n📘 已標記 MJ倉 [${state[code4].board}] (止賺: 市值${state[code4].board === "gem" ? "2億" : "5億"}+100%)`;
@@ -475,24 +489,41 @@ async function recordBuy(code, shares, price, env, force = false, mjTag = false)
 
 // strategyOp: "mj" = 標記 MJ倉, "nomj" = 清 MJ倉標記, null = 唔特別指定
 // boardExplicit: 用戶有冇明確講板塊 (冇 → 我哋靠 code 判斷, 要 echo 出嚟)
-async function addToWatchlist(code, board, env, strategyOp = null, boardExplicit = true) {
+async function addToWatchlist(code, board, env, strategyOp = null, boardExplicit = true, force = false) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
   const mjTag = "📘 MJ倉策略 (止賺: 市值達標+100%)";
   if (state[code4] && state[code4].board) {
     // 已監察 (有 board): 只可以改 MJ倉標記
+    // ⚔️ 跨池防護: 有持倉嘅股轉池 (L↔MJ) 會連舊數搬賬, 要 force 先准
     const cur = state[code4].strategy === "mj";
+    const trs = state[code4].tranches || [];
+    const inv = trs.reduce((a, t) => a + (t.hkd > 0 ? t.hkd : 0), 0);
     if (strategyOp === "mj") {
       if (cur) return `${code4} 已經喺監察清單 (${state[code4].board}) 📘MJ倉`;
+      if (trs.length && !force) {
+        return (
+          `⚠️ ${code4} 有 L型持倉 (投$${inv.toLocaleString()}) — 標記 mj 會將成個倉搬入 MJ 池\n` +
+          `雙重入選股一隻股一個池, 資金唔好撈亂\n確認轉池: /add ${code4} mj force`
+        );
+      }
       state[code4].strategy = "mj";
       await saveState(state, sha, `tg: mark ${code4} mj`, env);
-      return `${code4} 已喺監察清單 (${state[code4].board}) — 現已標記\n${mjTag}`;
+      const moved = trs.length ? `\n💰 舊倉 $${inv.toLocaleString()} 已搬入 MJ 池` : "";
+      return `${code4} 已喺監察清單 (${state[code4].board}) — 現已標記\n${mjTag}${moved}`;
     }
     if (strategyOp === "nomj") {
       if (!cur) return `${code4} 已喺監察清單 (${state[code4].board}), 本身唔係 MJ倉`;
+      if (trs.length && !force) {
+        return (
+          `⚠️ ${code4} 係 MJ倉兼有持倉 (投$${inv.toLocaleString()}) — 取消標記會將成個倉搬入 L型賬\n` +
+          `確認轉池: /add ${code4} nomj force`
+        );
+      }
       delete state[code4].strategy;
       await saveState(state, sha, `tg: unmark ${code4} mj`, env);
-      return `${code4} 已取消 MJ倉標記 (仍喺監察清單 ${state[code4].board})`;
+      const moved = trs.length ? `\n💰 MJ倉 $${inv.toLocaleString()} 已搬入 L型賬` : "";
+      return `${code4} 已取消 MJ倉標記 (仍喺監察清單 ${state[code4].board})${moved}`;
     }
     return `${code4} 已經喺監察清單 (${state[code4].board})${cur ? " 📘MJ倉" : ""}`;
   }
@@ -522,14 +553,24 @@ async function addToWatchlist(code, board, env, strategyOp = null, boardExplicit
 }
 
 // 取消 MJ倉標記 (/del CODE mj): 只清 strategy, 唔郁 board/持倉
-async function untagMj(code, env) {
+async function untagMj(code, env, force = false) {
   const code4 = String(code).padStart(4, "0");
   const { state, sha } = await getState(env);
   if (!state[code4]) return `${code4} 唔存在`;
   if (state[code4].strategy !== "mj") return `${code4} 本身唔係 MJ倉, 無需取消`;
+  const trs = state[code4].tranches || [];
+  const inv = trs.reduce((a, t) => a + (t.hkd > 0 ? t.hkd : 0), 0);
+  if (trs.length && !force) {
+    return (
+      `⚠️ ${code4} 係 MJ倉兼有持倉 (投$${inv.toLocaleString()}) — 取消標記會將成個倉搬入 L型賬
+` +
+      `確認轉池: /del ${code4} mj force`
+    );
+  }
   delete state[code4].strategy;
   await saveState(state, sha, `tg: unmark ${code4} mj`, env);
-  return `${code4} 已取消 MJ倉標記`;
+  return `${code4} 已取消 MJ倉標記` + (trs.length ? `
+💰 MJ倉 $${inv.toLocaleString()} 已搬入 L型賬` : "");
 }
 
 async function removeFromWatchlist(code, env, force = false) {
